@@ -1,0 +1,7 @@
+id: workshop/workspace
+title: Workspace
+ordering: 10
+sections:
+- workshop/workspace/overview
+- workshop/workspace/sandbox
+- workshop/workspace/community

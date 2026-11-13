@@ -1,0 +1,21 @@
+# R-PROD-CLIN: Clinical Provider (SMART-on-FHIR)
+#
+# Deny-all by design. Clinical providers reach data through a SMART-on-FHIR
+# launch context (their patient's encounter), which resolves to a
+# per-patient fetch path rather than generic mart reads. The mart-level OPA
+# decision therefore denies; the fetch path goes through a separate FHIR
+# adapter.
+role:
+  id: R-PROD-CLIN
+  name: "Clinical Provider"
+  group: Producer
+  identity_provider: MoH-Keycloak
+  mfa_required: true
+  mfa_factor: WebAuthn
+  phase_activated: 2
+  audit_class: enhanced
+  notes: |
+    SMART-on-FHIR launch context. No bulk mart access: per-patient
+    fetches only, via the FHIR R5 adapter (not yet implemented).
+  intentional_deny: true
+  permissions: []

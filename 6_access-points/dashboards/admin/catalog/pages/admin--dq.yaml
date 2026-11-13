@@ -1,0 +1,8 @@
+id: admin/dq
+title: Quality & Lineage
+ordering: 40
+widgets:
+- id: adm-dq
+  col_span: 6
+  row_span: 1
+  ordering: 12

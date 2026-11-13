@@ -1,0 +1,454 @@
+{
+  "regions": [
+    {
+      "code": "10",
+      "name": "Central",
+      "population_mn": 4.0,
+      "facilities": 354,
+      "geo_name": "Central"
+    },
+    {
+      "code": "20",
+      "name": "Copperbelt",
+      "population_mn": null,
+      "facilities": 381,
+      "geo_name": "Copperbelt"
+    },
+    {
+      "code": "30",
+      "name": "Eastern",
+      "population_mn": null,
+      "facilities": 302,
+      "geo_name": "Eastern"
+    },
+    {
+      "code": "40",
+      "name": "Luapula",
+      "population_mn": null,
+      "facilities": 233,
+      "geo_name": "Luapula"
+    },
+    {
+      "code": "50",
+      "name": "Lusaka",
+      "population_mn": null,
+      "facilities": 285,
+      "geo_name": "Lusaka"
+    },
+    {
+      "code": "91",
+      "name": "Muchinga",
+      "population_mn": null,
+      "facilities": 134,
+      "geo_name": "Muchinga"
+    },
+    {
+      "code": "70",
+      "name": "North Western",
+      "population_mn": null,
+      "facilities": 247,
+      "geo_name": "North-Western"
+    },
+    {
+      "code": "60",
+      "name": "Northern",
+      "population_mn": null,
+      "facilities": 207,
+      "geo_name": "Northern"
+    },
+    {
+      "code": "80",
+      "name": "Southern",
+      "population_mn": null,
+      "facilities": 340,
+      "geo_name": "Southern"
+    },
+    {
+      "code": "90",
+      "name": "Western",
+      "population_mn": null,
+      "facilities": 324,
+      "geo_name": "Western"
+    }
+  ],
+  "programmes": [
+    {
+      "code": "ARV",
+      "name": "Antiretroviral Drugs"
+    },
+    {
+      "code": "c_arv",
+      "name": "CHAZ ARV"
+    },
+    {
+      "code": "c_em",
+      "name": "CHAZ Essential Medicine"
+    },
+    {
+      "code": "c_hiv",
+      "name": "CHAZ HIV"
+    },
+    {
+      "code": "c_lab",
+      "name": "CHAZ Lab"
+    },
+    {
+      "code": "CDH",
+      "name": "Cancer diseases hospital"
+    },
+    {
+      "code": "EM",
+      "name": "Essential Medicine"
+    },
+    {
+      "code": "HIV",
+      "name": "HIV Test Kits"
+    },
+    {
+      "code": "LAB",
+      "name": "Laboratory Commodities"
+    },
+    {
+      "code": "SUFP",
+      "name": "SUFP"
+    },
+    {
+      "code": "TB",
+      "name": "Tuberculosis"
+    }
+  ],
+  "commodities": [
+    {
+      "code": "LAB0010",
+      "name": "Abx Alphalse"
+    },
+    {
+      "code": "WB0001",
+      "name": "Acetyl Salicylic Acid  Tab 300Mg"
+    },
+    {
+      "code": "EM0003",
+      "name": "Acetazolamide Sodium, Tab 250Mg"
+    },
+    {
+      "code": "EM0023",
+      "name": "Aminophylline"
+    },
+    {
+      "code": "EQP0009",
+      "name": "Autoclave Tape"
+    },
+    {
+      "code": "LAB0467",
+      "name": "Bd Tritest Cd3/Cd4/Cd45 + Trucount Tubes"
+    },
+    {
+      "code": "WB0005",
+      "name": "Benzyl Penicillin Sodium  5Mu  Pwd For Inj"
+    },
+    {
+      "code": "LAB0542",
+      "name": "Bag Biohazard, Autoclavable Red Printed 1.5Mil 19 X 23In"
+    },
+    {
+      "code": "LAB1016",
+      "name": "Biohazard Bags"
+    },
+    {
+      "code": "TBA",
+      "name": "Biospot  Nadcc 2.5G Effervescent Tab"
+    },
+    {
+      "code": "LAB0539",
+      "name": "Cobas Ampliprep (Cobas Taqman) Hiv-1 Qualitative Test"
+    },
+    {
+      "code": "LAB0967",
+      "name": "Cobas Integra Precinorm L"
+    },
+    {
+      "code": "LAB1017",
+      "name": "Cobas,Taqman,Ampliprep, Spec Pre-Extraction Reag"
+    },
+    {
+      "code": "MS0002",
+      "name": "Cannular 18G"
+    },
+    {
+      "code": "EM1217",
+      "name": "Cefixime 100Mg/5Ml"
+    },
+    {
+      "code": "MS0206",
+      "name": "Chlorhexidine Gluconate ( Savlon )"
+    },
+    {
+      "code": "MS0038",
+      "name": "Chlorhexidine Gluconate ( Savlon )"
+    },
+    {
+      "code": "WB0038",
+      "name": "Condoms-Male  144 Pieces"
+    },
+    {
+      "code": "MS0164",
+      "name": "Cord Clamps 100 Each"
+    },
+    {
+      "code": "LAB0913",
+      "name": "Dbs Pcr"
+    },
+    {
+      "code": "HTK0002",
+      "name": "Determine Hiv 1/2 Rapid Test Inc Chase Buffer"
+    },
+    {
+      "code": "RH0014",
+      "name": "Depo Provera Injection With Needles & Syringes  150Mg/Ml"
+    },
+    {
+      "code": "EM0166",
+      "name": "Diazepam"
+    },
+    {
+      "code": "ARV0042",
+      "name": "Didanosine 25Mg Tablets"
+    },
+    {
+      "code": "ARV0040",
+      "name": "Didanosine 50 Mg Tab"
+    },
+    {
+      "code": "EM0662",
+      "name": "Digoxin 250Ug Injection"
+    },
+    {
+      "code": "ARV0078",
+      "name": "Dolutegravir Tablets"
+    },
+    {
+      "code": "WB0012",
+      "name": "Erythromycin Stearate  Tab 250Mg"
+    },
+    {
+      "code": "WB0069",
+      "name": "Gauze Bandage Bp13"
+    },
+    {
+      "code": "EM0741",
+      "name": "Gentamycin 0.3% Eyedrops"
+    },
+    {
+      "code": "EM0231",
+      "name": "Griseofulvin Tablets"
+    },
+    {
+      "code": "ARV0043",
+      "name": "Lopinavir/Ritonavir (Kaletra)  100Mg/25Mg"
+    },
+    {
+      "code": "EM1032",
+      "name": "Lignocaine"
+    },
+    {
+      "code": "WB0021",
+      "name": "Metronidazole Hcl  Tab 200Mg"
+    },
+    {
+      "code": "NCEM0064",
+      "name": "Multivitamin Tablets"
+    },
+    {
+      "code": "EQP1378",
+      "name": "Male Circumcision Essential Consumable Pack Dorsal Slit Method"
+    },
+    {
+      "code": "EQP0906",
+      "name": "Male Circumcision Re-Usable Instrument Kit (Option2 ) Dorsal Slit Method"
+    },
+    {
+      "code": "WB0025",
+      "name": "Oral Rehydration Salts  Who Formula  Sachet To Mak"
+    },
+    {
+      "code": "EM0342",
+      "name": "Paracetamol 120Mg/5Ml Suspension 100Ml Btl"
+    },
+    {
+      "code": "EM0835",
+      "name": "Povidine Iodine 10%"
+    },
+    {
+      "code": "EM0809",
+      "name": "Povidone Iodine 10%"
+    },
+    {
+      "code": "WB0030",
+      "name": "Quinine Sulphate  Tab 300Mg Sugar Coated"
+    },
+    {
+      "code": "MAL0015",
+      "name": "Rdt For Malaria (P Falciparum)"
+    },
+    {
+      "code": "MS0294",
+      "name": "Sodium Dichloroiscocyanulate"
+    },
+    {
+      "code": "MS0214",
+      "name": "Sodium Hypochloride Jik"
+    },
+    {
+      "code": "LAB1005",
+      "name": "Sputum Container, 40Ml With Screw Cap Polypropylne"
+    },
+    {
+      "code": "ARV0027",
+      "name": "Stavudine 15Mg Capsules"
+    },
+    {
+      "code": "ARV0028",
+      "name": "Stavudine 20Mg Tablet"
+    },
+    {
+      "code": "ARV0041",
+      "name": "Stavudine/Lamivudine 30/150Mg Tablets"
+    },
+    {
+      "code": "ARV0030",
+      "name": "Stavudine/Lamivudine 40/150Mg Tablets"
+    },
+    {
+      "code": "LAB0579",
+      "name": "Stool Containers  28 Ml  Screw Cap  With Scoop"
+    },
+    {
+      "code": "MS0059",
+      "name": "Surgical Gloves"
+    },
+    {
+      "code": "MS0102",
+      "name": "Syringes Disposable"
+    },
+    {
+      "code": "ARV0031",
+      "name": "Tenofovir 300Mg Tablets"
+    },
+    {
+      "code": "ARV0077",
+      "name": "Tenofovir/Lamivudine /Dolutegravir Tablets"
+    },
+    {
+      "code": "ARV0063",
+      "name": "Tenofovir/Lamivudine/Efavirenz Tablets"
+    },
+    {
+      "code": "ARV0074",
+      "name": "Tenofovir/Lamivudine/Efavirenz,300/300/400"
+    },
+    {
+      "code": "HTK0001",
+      "name": "Unigold Hiv 1/2 Rapid Test"
+    },
+    {
+      "code": "ARV0035",
+      "name": "Zidovudine 100Mg Capsules"
+    },
+    {
+      "code": "ARV0036",
+      "name": "Zidovudine 300Mg Tablets"
+    },
+    {
+      "code": "ARV0034",
+      "name": "Zidovudine Oral Solution 10Mg/Ml 100 Mls"
+    },
+    {
+      "code": "ARV0033",
+      "name": "Zidovudine Oral Solution 50Mg/Ml 240 Mls"
+    },
+    {
+      "code": "WB0035",
+      "name": "Zinc Oxide Adhesive Tape"
+    },
+    {
+      "code": "WB0036",
+      "name": "Zinc Oxide Adhesive Tape"
+    }
+  ],
+  "facility_tiers": [
+    {
+      "code": "CHAZHC",
+      "name": "CHAZ Health Center"
+    },
+    {
+      "code": "CHAZ1",
+      "name": "CHAZ level 1"
+    },
+    {
+      "code": "CHAZ2",
+      "name": "CHAZ level 2"
+    },
+    {
+      "code": "DATF",
+      "name": "District AIDS Task Force"
+    },
+    {
+      "code": "DHO",
+      "name": "District Health Office"
+    },
+    {
+      "code": "HC",
+      "name": "Health Center"
+    },
+    {
+      "code": "HP",
+      "name": "Health Post"
+    },
+    {
+      "code": "HBC",
+      "name": "Home Based Care"
+    },
+    {
+      "code": "LVL1",
+      "name": "Level 1 Hospital"
+    },
+    {
+      "code": "LVL2",
+      "name": "Level 2 Hospital"
+    },
+    {
+      "code": "LVL3",
+      "name": "Level 3 Hospital"
+    },
+    {
+      "code": "MILHC",
+      "name": "Military Health Center"
+    },
+    {
+      "code": "MILHOS",
+      "name": "Military Hospital"
+    },
+    {
+      "code": "MSL",
+      "name": "Non ELMIP DCMO"
+    },
+    {
+      "code": "Prog",
+      "name": "Program"
+    },
+    {
+      "code": "VCT",
+      "name": "Voluntary Counseling & Testing"
+    }
+  ],
+  "cadres": [],
+  "diseases": [],
+  "counts": {
+    "admin1": 10,
+    "programmes": 11,
+    "commodities": 64,
+    "diseases": 0
+  },
+  "_source": "eLMIS 2016-2018 reference tables, live from the warehouse",
+  "_note": "Zambia's reference data is real, not synthesised: these are the provinces, programmes, facility types and tracer products the ingested eLMIS archive actually carries. Diseases are empty: the eLMIS lane is a supply archive and carries no notifiable-disease surveillance, so the disease filter hides itself rather than offering options with no data."
+}

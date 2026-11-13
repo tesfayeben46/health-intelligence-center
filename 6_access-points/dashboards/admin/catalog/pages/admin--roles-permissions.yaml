@@ -1,0 +1,8 @@
+id: admin/roles-permissions
+title: Roles and Permissions
+ordering: 70
+widgets:
+- id: adm-roles-permissions
+  col_span: 6
+  row_span: 1
+  ordering: 10

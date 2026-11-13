@@ -1,0 +1,50 @@
+[
+  {
+    "id": "HIV",
+    "name": "HIV",
+    "icon": "i-virus",
+    "colour_token": "navy-700"
+  },
+  {
+    "id": "TB",
+    "name": "TB",
+    "icon": "i-shield",
+    "colour_token": "navy-600"
+  },
+  {
+    "id": "EPI",
+    "name": "EPI · Immunisation",
+    "icon": "i-syringe",
+    "colour_token": "navy-500"
+  },
+  {
+    "id": "MNCH",
+    "name": "MNCH",
+    "icon": "i-heart",
+    "colour_token": "navy-700"
+  },
+  {
+    "id": "NCD",
+    "name": "NCD",
+    "icon": "i-pill",
+    "colour_token": "navy-600"
+  },
+  {
+    "id": "MALARIA",
+    "name": "Malaria",
+    "icon": "i-thermo",
+    "colour_token": "navy-500"
+  },
+  {
+    "id": "FP",
+    "name": "Family Planning",
+    "icon": "i-handshake",
+    "colour_token": "navy-700"
+  },
+  {
+    "id": "NUTRITION",
+    "name": "Nutrition",
+    "icon": "i-leaf",
+    "colour_token": "navy-600"
+  }
+]

@@ -1,0 +1,8 @@
+id: ov-service-attainment
+title: Service attainment
+kind: kpi
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

@@ -1,0 +1,8 @@
+id: ov-resource-status
+title: Supply status
+kind: kpi
+requires:
+  subject: PRD
+  verb: read
+  granularity: aggregate
+  sensitivity: default

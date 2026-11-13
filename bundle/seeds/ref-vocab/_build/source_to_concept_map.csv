@@ -1,0 +1,188 @@
+source_code,source_vocabulary_id,source_code_description,target_concept_id,valid_from,valid_to,invalid_reason,change_source,loaded_by
+VAC-BCG,NHDW.commodityId,BCG vaccine,2000000061,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-BCG,HCMIS.commodityId,BCG vaccine,2000000061,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-OPV,NHDW.commodityId,OPV trivalent,2000000062,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-OPV,HCMIS.commodityId,OPV trivalent,2000000062,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-IPV,NHDW.commodityId,IPV (inactivated polio),2000000063,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-IPV,HCMIS.commodityId,IPV (inactivated polio),2000000063,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-PENTA,NHDW.commodityId,Pentavalent DTwP-HepB-Hib,2000000064,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-PENTA,HCMIS.commodityId,Pentavalent DTwP-HepB-Hib,2000000064,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-PCV13,NHDW.commodityId,PCV-13,2000000065,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-PCV13,HCMIS.commodityId,PCV-13,2000000065,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-ROTA,NHDW.commodityId,Rotavirus vaccine,2000000066,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-ROTA,HCMIS.commodityId,Rotavirus vaccine,2000000066,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-MR,NHDW.commodityId,Measles-Rubella,2000000067,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-MR,HCMIS.commodityId,Measles-Rubella,2000000067,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-HPV,NHDW.commodityId,HPV vaccine,2000000068,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-HPV,HCMIS.commodityId,HPV vaccine,2000000068,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-COVID,NHDW.commodityId,COVID-19 vaccine,2000000069,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-COVID,HCMIS.commodityId,COVID-19 vaccine,2000000069,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-TT,NHDW.commodityId,Tetanus toxoid,2000000070,2026-01-01,2099-12-31,,seed,build_vocab.py
+VAC-TT,HCMIS.commodityId,Tetanus toxoid,2000000070,2026-01-01,2099-12-31,,seed,build_vocab.py
+MN-OXYTOCIN,NHDW.commodityId,Oxytocin 10 IU/ml,2000000071,2026-01-01,2099-12-31,,seed,build_vocab.py
+MN-OXYTOCIN,HCMIS.commodityId,Oxytocin 10 IU/ml,2000000071,2026-01-01,2099-12-31,,seed,build_vocab.py
+MN-MGSO4,NHDW.commodityId,Magnesium sulphate 50%,2000000072,2026-01-01,2099-12-31,,seed,build_vocab.py
+MN-MGSO4,HCMIS.commodityId,Magnesium sulphate 50%,2000000072,2026-01-01,2099-12-31,,seed,build_vocab.py
+MN-IRON-FOL,NHDW.commodityId,Iron-folate,2000000073,2026-01-01,2099-12-31,,seed,build_vocab.py
+MN-IRON-FOL,HCMIS.commodityId,Iron-folate,2000000073,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-TLD,NHDW.commodityId,TLD · adult ART,2000000074,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-TLD,HCMIS.commodityId,TLD · adult ART,2000000074,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-PAED,NHDW.commodityId,Pediatric ART,2000000075,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-PAED,HCMIS.commodityId,Pediatric ART,2000000075,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-RDT,NHDW.commodityId,HIV RDT kit,2000000076,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-RDT,HCMIS.commodityId,HIV RDT kit,2000000076,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-RHZE,NHDW.commodityId,RHZE fixed-dose combo,2000000077,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-RHZE,HCMIS.commodityId,RHZE fixed-dose combo,2000000077,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-GENEXPERT,NHDW.commodityId,GeneXpert cartridge,2000000078,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-GENEXPERT,HCMIS.commodityId,GeneXpert cartridge,2000000078,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-ISO,NHDW.commodityId,Isoniazid 300mg,2000000079,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-ISO,HCMIS.commodityId,Isoniazid 300mg,2000000079,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-AL,NHDW.commodityId,Artemether-Lumefantrine,2000000080,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-AL,HCMIS.commodityId,Artemether-Lumefantrine,2000000080,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-RDT,NHDW.commodityId,Malaria RDT pf/pv,2000000081,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-RDT,HCMIS.commodityId,Malaria RDT pf/pv,2000000081,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-LLIN,NHDW.commodityId,LLIN bed net,2000000082,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-LLIN,HCMIS.commodityId,LLIN bed net,2000000082,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-IMPLANON,NHDW.commodityId,Implanon NXT,2000000083,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-IMPLANON,HCMIS.commodityId,Implanon NXT,2000000083,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-DEPO,NHDW.commodityId,Depo-Provera,2000000084,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-DEPO,HCMIS.commodityId,Depo-Provera,2000000084,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-COC,NHDW.commodityId,Combined oral contracept.,2000000085,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-COC,HCMIS.commodityId,Combined oral contracept.,2000000085,2026-01-01,2099-12-31,,seed,build_vocab.py
+NCD-AMLOD,NHDW.commodityId,Amlodipine 5mg,2000000086,2026-01-01,2099-12-31,,seed,build_vocab.py
+NCD-AMLOD,HCMIS.commodityId,Amlodipine 5mg,2000000086,2026-01-01,2099-12-31,,seed,build_vocab.py
+NCD-INSULIN,NHDW.commodityId,Insulin · regular 100 IU,2000000087,2026-01-01,2099-12-31,,seed,build_vocab.py
+NCD-INSULIN,HCMIS.commodityId,Insulin · regular 100 IU,2000000087,2026-01-01,2099-12-31,,seed,build_vocab.py
+NCD-METFORMIN,NHDW.commodityId,Metformin 500mg,2000000088,2026-01-01,2099-12-31,,seed,build_vocab.py
+NCD-METFORMIN,HCMIS.commodityId,Metformin 500mg,2000000088,2026-01-01,2099-12-31,,seed,build_vocab.py
+NCD-LOSARTAN,NHDW.commodityId,Losartan 50mg,2000000089,2026-01-01,2099-12-31,,seed,build_vocab.py
+NCD-LOSARTAN,HCMIS.commodityId,Losartan 50mg,2000000089,2026-01-01,2099-12-31,,seed,build_vocab.py
+NT-RUTF,NHDW.commodityId,RUTF (ready-to-use),2000000090,2026-01-01,2099-12-31,,seed,build_vocab.py
+NT-RUTF,HCMIS.commodityId,RUTF (ready-to-use),2000000090,2026-01-01,2099-12-31,,seed,build_vocab.py
+NT-FBF,NHDW.commodityId,Fortified blended food,2000000091,2026-01-01,2099-12-31,,seed,build_vocab.py
+NT-FBF,HCMIS.commodityId,Fortified blended food,2000000091,2026-01-01,2099-12-31,,seed,build_vocab.py
+NT-ORS,NHDW.commodityId,ORS sachet,2000000092,2026-01-01,2099-12-31,,seed,build_vocab.py
+NT-ORS,HCMIS.commodityId,ORS sachet,2000000092,2026-01-01,2099-12-31,,seed,build_vocab.py
+GEN-AMOX,NHDW.commodityId,Amoxicillin 250 DT,2000000093,2026-01-01,2099-12-31,,seed,build_vocab.py
+GEN-AMOX,HCMIS.commodityId,Amoxicillin 250 DT,2000000093,2026-01-01,2099-12-31,,seed,build_vocab.py
+GEN-PARA,NHDW.commodityId,Paracetamol 500mg,2000000094,2026-01-01,2099-12-31,,seed,build_vocab.py
+GEN-PARA,HCMIS.commodityId,Paracetamol 500mg,2000000094,2026-01-01,2099-12-31,,seed,build_vocab.py
+Basic Health Post,MFR.facilityType,MFR type -> tier HP,2000000109,2026-01-01,2099-12-31,,seed,build_vocab.py
+Comprehensive Health Post,MFR.facilityType,MFR type -> tier HP,2000000109,2026-01-01,2099-12-31,,seed,build_vocab.py
+Health Post,MFR.facilityType,MFR type -> tier HP,2000000109,2026-01-01,2099-12-31,,seed,build_vocab.py
+Health Center,MFR.facilityType,MFR type -> tier HC,2000000110,2026-01-01,2099-12-31,,seed,build_vocab.py
+Institution Based Primary Clinic,MFR.facilityType,MFR type -> tier PHC,2000000111,2026-01-01,2099-12-31,,seed,build_vocab.py
+Primary Clinic,MFR.facilityType,MFR type -> tier PHC,2000000111,2026-01-01,2099-12-31,,seed,build_vocab.py
+Institution Based Medium Clinic,MFR.facilityType,MFR type -> tier MC,2000000112,2026-01-01,2099-12-31,,seed,build_vocab.py
+Medium Clinic,MFR.facilityType,MFR type -> tier MC,2000000112,2026-01-01,2099-12-31,,seed,build_vocab.py
+Primary Hospital,MFR.facilityType,MFR type -> tier PH,2000000113,2026-01-01,2099-12-31,,seed,build_vocab.py
+General Hospital,MFR.facilityType,MFR type -> tier GH,2000000114,2026-01-01,2099-12-31,,seed,build_vocab.py
+Specialised,MFR.facilityType,MFR type -> tier SH,2000000115,2026-01-01,2099-12-31,,seed,build_vocab.py
+Specialized Hospital,MFR.facilityType,MFR type -> tier SH,2000000115,2026-01-01,2099-12-31,,seed,build_vocab.py
+Tertiary Hospital,MFR.facilityType,MFR type -> tier SH,2000000115,2026-01-01,2099-12-31,,seed,build_vocab.py
+Pharmacy,MFR.facilityType,MFR type -> tier PH-,2000000116,2026-01-01,2099-12-31,,seed,build_vocab.py
+pharmacy,MFR.facilityType,MFR type -> tier PH-,2000000116,2026-01-01,2099-12-31,,seed,build_vocab.py
+Drug Store,MFR.facilityType,MFR type -> tier DS,2000000117,2026-01-01,2099-12-31,,seed,build_vocab.py
+Addis Ababa City Administration,MFR.regionName,MFR region -> ET-AA,2000000097,2026-01-01,2099-12-31,,seed,build_vocab.py
+Afar Region,MFR.regionName,MFR region -> ET-AF,2000000105,2026-01-01,2099-12-31,,seed,build_vocab.py
+Amhara Region,MFR.regionName,MFR region -> ET-AM,2000000096,2026-01-01,2099-12-31,,seed,build_vocab.py
+Benishangul-Gumuz Region,MFR.regionName,MFR region -> ET-BG,2000000104,2026-01-01,2099-12-31,,seed,build_vocab.py
+Central Ethiopia Region,MFR.regionName,MFR region -> ET-CE,2000000100,2026-01-01,2099-12-31,,seed,build_vocab.py
+Dire Dawa City Administration,MFR.regionName,MFR region -> ET-DD,2000000107,2026-01-01,2099-12-31,,seed,build_vocab.py
+Gambella Region,MFR.regionName,MFR region -> ET-GA,2000000106,2026-01-01,2099-12-31,,seed,build_vocab.py
+Harari Region,MFR.regionName,MFR region -> ET-HA,2000000108,2026-01-01,2099-12-31,,seed,build_vocab.py
+Oromia Region,MFR.regionName,MFR region -> ET-OR,2000000095,2026-01-01,2099-12-31,,seed,build_vocab.py
+SNNP Region,MFR.regionName,MFR region -> ET-SE,2000000099,2026-01-01,2099-12-31,,seed,build_vocab.py
+Sidama Region,MFR.regionName,MFR region -> ET-SI,2000000103,2026-01-01,2099-12-31,,seed,build_vocab.py
+Somali Region,MFR.regionName,MFR region -> ET-SO,2000000098,2026-01-01,2099-12-31,,seed,build_vocab.py
+South Ethiopia Region,MFR.regionName,MFR region -> ET-SE,2000000099,2026-01-01,2099-12-31,,seed,build_vocab.py
+South West Ethiopia Region,MFR.regionName,MFR region -> ET-SW,2000000101,2026-01-01,2099-12-31,,seed,build_vocab.py
+Tigray Region,MFR.regionName,MFR region -> ET-TI,2000000102,2026-01-01,2099-12-31,,seed,build_vocab.py
+Other Government,MFR.ownership,MFR ownership -> public,2000000120,2026-01-01,2099-12-31,,seed,build_vocab.py
+Private Not for profit,MFR.ownership,MFR ownership -> ngo,2000000118,2026-01-01,2099-12-31,,seed,build_vocab.py
+Private for profit,MFR.ownership,MFR ownership -> private,2000000119,2026-01-01,2099-12-31,,seed,build_vocab.py
+Public/Government,MFR.ownership,MFR ownership -> public,2000000120,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-TEST,DHIS2.dataElement,HIV tests performed,2000000001,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-POS,DHIS2.dataElement,HIV positive identified,2000000001,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-ART-NEW,DHIS2.dataElement,ART new initiation,2000000001,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-ART-CURR,DHIS2.dataElement,ART currently active,2000000001,2026-01-01,2099-12-31,,seed,build_vocab.py
+HIV-VL-SUPP,DHIS2.dataElement,Viral load suppressed,2000000001,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-NOTIF,DHIS2.dataElement,TB cases notified,2000000002,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-BACT,DHIS2.dataElement,TB bacteriologically confirmed,2000000002,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-TX-NEW,DHIS2.dataElement,TB treatment initiated,2000000002,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-TX-SUCC,DHIS2.dataElement,TB treatment success,2000000002,2026-01-01,2099-12-31,,seed,build_vocab.py
+TB-LTFU,DHIS2.dataElement,TB lost-to-follow-up,2000000002,2026-01-01,2099-12-31,,seed,build_vocab.py
+BCG,DHIS2.dataElement,BCG dose given,2000000003,2026-01-01,2099-12-31,,seed,build_vocab.py
+PENTA1,DHIS2.dataElement,Penta-1 dose given,2000000003,2026-01-01,2099-12-31,,seed,build_vocab.py
+PENTA3,DHIS2.dataElement,Penta-3 dose given,2000000003,2026-01-01,2099-12-31,,seed,build_vocab.py
+MR1,DHIS2.dataElement,Measles-Rubella 1st dose,2000000003,2026-01-01,2099-12-31,,seed,build_vocab.py
+MR2,DHIS2.dataElement,Measles-Rubella 2nd dose,2000000003,2026-01-01,2099-12-31,,seed,build_vocab.py
+PENTA3-COV,DHIS2.dataElement,Penta-3 coverage under 1y,2000000003,2026-01-01,2099-12-31,,seed,build_vocab.py
+CC-EXCURSION,DHIS2.dataElement,parity: deployed CASE maps to OTHER (entity model says EPI; a stewarded change will align it),2000000010,2026-01-01,2099-12-31,,seed,supplement:dhis2_dataelement_programme_parity.csv
+AEFI-MILD,DHIS2.dataElement,parity: deployed CASE maps to OTHER (entity model says EPI; a stewarded change will align it),2000000010,2026-01-01,2099-12-31,,seed,supplement:dhis2_dataelement_programme_parity.csv
+AEFI-SERIOUS,DHIS2.dataElement,parity: deployed CASE maps to OTHER (entity model says EPI; a stewarded change will align it),2000000010,2026-01-01,2099-12-31,,seed,supplement:dhis2_dataelement_programme_parity.csv
+ANC1,DHIS2.dataElement,ANC1 visits,2000000004,2026-01-01,2099-12-31,,seed,build_vocab.py
+ANC4,DHIS2.dataElement,ANC4 visits,2000000004,2026-01-01,2099-12-31,,seed,build_vocab.py
+SBA,DHIS2.dataElement,Skilled birth attendance,2000000004,2026-01-01,2099-12-31,,seed,build_vocab.py
+PNC1,DHIS2.dataElement,PNC within 48h,2000000004,2026-01-01,2099-12-31,,seed,build_vocab.py
+ANC4-COV,DHIS2.dataElement,ANC4 coverage,2000000004,2026-01-01,2099-12-31,,seed,build_vocab.py
+SBA-COV,DHIS2.dataElement,Skilled birth attendance coverage,2000000004,2026-01-01,2099-12-31,,seed,build_vocab.py
+MMR,DHIS2.dataElement,Maternal mortality ratio,2000000004,2026-01-01,2099-12-31,,seed,build_vocab.py
+HTN-SCRN,DHIS2.dataElement,HTN screened (HEARTS),2000000005,2026-01-01,2099-12-31,,seed,build_vocab.py
+HTN-DX,DHIS2.dataElement,HTN newly diagnosed,2000000005,2026-01-01,2099-12-31,,seed,build_vocab.py
+HTN-TX,DHIS2.dataElement,HTN on treatment,2000000005,2026-01-01,2099-12-31,,seed,build_vocab.py
+HTN-CTRL,DHIS2.dataElement,HTN blood-pressure controlled,2000000005,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-SUSP,DHIS2.dataElement,Malaria suspected cases,2000000006,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-MICRO,DHIS2.dataElement,Malaria tested by microscopy,2000000006,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-CONF,DHIS2.dataElement,Malaria confirmed cases,2000000006,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-RDT,DHIS2.dataElement,Malaria RDTs performed,2000000006,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-TX-AL,DHIS2.dataElement,AL treatment courses given,2000000006,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-DEATH,DHIS2.dataElement,Inpatient malaria deaths,2000000006,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-INC,DHIS2.dataElement,Malaria incidence per 1,2000000006,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-ITN-COV,DHIS2.dataElement,ITN coverage,2000000006,2026-01-01,2099-12-31,,seed,build_vocab.py
+MAL-IRS-COV,DHIS2.dataElement,IRS coverage (last 12 months),2000000006,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-NEW,DHIS2.dataElement,FP new acceptors,2000000007,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-IMPL,DHIS2.dataElement,Implanon NXT inserted,2000000007,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-DEPO,DHIS2.dataElement,Depo-Provera dispensed,2000000007,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-CYP,DHIS2.dataElement,Couple Years of Protection,2000000007,2026-01-01,2099-12-31,,seed,build_vocab.py
+FP-MCPR,DHIS2.dataElement,Modern contraceptive prevalence rate,2000000007,2026-01-01,2099-12-31,,seed,build_vocab.py
+NUT-SAM,DHIS2.dataElement,SAM admissions,2000000008,2026-01-01,2099-12-31,,seed,build_vocab.py
+NUT-SAM-CURE,DHIS2.dataElement,SAM cure rate,2000000008,2026-01-01,2099-12-31,,seed,build_vocab.py
+NUT-STUNT,DHIS2.dataElement,U5 stunting prevalence,2000000008,2026-01-01,2099-12-31,,seed,build_vocab.py
+NUT-RUTF,DHIS2.dataElement,RUTF dispensed,2000000008,2026-01-01,2099-12-31,,seed,build_vocab.py
+PHEM-TIMELY,DHIS2.dataElement,parity: deployed CASE maps to OTHER (entity model says HIV; to be corrected),2000000010,2026-01-01,2099-12-31,,seed,supplement:dhis2_dataelement_programme_parity.csv
+PHEM-COMPL,DHIS2.dataElement,parity: deployed CASE maps to OTHER (entity model says HIV; to be corrected),2000000010,2026-01-01,2099-12-31,,seed,supplement:dhis2_dataelement_programme_parity.csv
+EPI-001,MBRANA.commodityCode,live-derived: BCG vaccine,2000000061,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+EPI-002,MBRANA.commodityCode,live-derived: OPV trivalent,2000000062,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+EPI-003,MBRANA.commodityCode,live-derived: IPV (inactivated polio),2000000063,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+EPI-004,MBRANA.commodityCode,live-derived: Pentavalent DTwP-HepB-Hib,2000000064,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+EPI-005,MBRANA.commodityCode,live-derived: PCV-13,2000000065,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+EPI-006,MBRANA.commodityCode,live-derived: Rotavirus vaccine,2000000066,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+EPI-007,MBRANA.commodityCode,live-derived: Measles-Rubella,2000000067,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+EPI-008,MBRANA.commodityCode,live-derived: HPV vaccine,2000000068,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+EPI-009,MBRANA.commodityCode,live-derived: COVID-19 vaccine,2000000069,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+EPI-010,MBRANA.commodityCode,live-derived: Tetanus toxoid,2000000070,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+FP-023,MBRANA.commodityCode,live-derived: Implanon NXT,2000000083,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+FP-024,MBRANA.commodityCode,live-derived: Depo-Provera,2000000084,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+FP-025,MBRANA.commodityCode,live-derived: Combined oral contracept.,2000000085,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+GEN-033,MBRANA.commodityCode,live-derived: Amoxicillin 250 DT,2000000093,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+GEN-034,MBRANA.commodityCode,live-derived: Paracetamol 500mg,2000000094,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+HIV-014,MBRANA.commodityCode,live-derived: TLD · adult ART,2000000074,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+HIV-015,MBRANA.commodityCode,live-derived: Pediatric ART,2000000075,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+HIV-016,MBRANA.commodityCode,live-derived: HIV RDT kit,2000000076,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+MAL-020,MBRANA.commodityCode,live-derived: Artemether-Lumefantrine,2000000080,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+MAL-021,MBRANA.commodityCode,live-derived: Malaria RDT pf/pv,2000000081,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+MAL-022,MBRANA.commodityCode,live-derived: LLIN bed net,2000000082,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+MNC-011,MBRANA.commodityCode,live-derived: Oxytocin 10 IU/ml,2000000071,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+MNC-012,MBRANA.commodityCode,live-derived: Magnesium sulphate 50%,2000000072,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+MNC-013,MBRANA.commodityCode,live-derived: Iron-folate,2000000073,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+NCD-026,MBRANA.commodityCode,live-derived: Amlodipine 5mg,2000000086,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+NCD-027,MBRANA.commodityCode,live-derived: Insulin · regular 100 IU,2000000087,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+NCD-028,MBRANA.commodityCode,live-derived: Metformin 500mg,2000000088,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+NCD-029,MBRANA.commodityCode,live-derived: Losartan 50mg,2000000089,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+NUT-030,MBRANA.commodityCode,live-derived: RUTF (ready-to-use),2000000090,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+NUT-031,MBRANA.commodityCode,live-derived: Fortified blended food,2000000091,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+NUT-032,MBRANA.commodityCode,live-derived: ORS sachet,2000000092,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+TB-017,MBRANA.commodityCode,live-derived: RHZE fixed-dose combo,2000000077,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+TB-018,MBRANA.commodityCode,live-derived: GeneXpert cartridge,2000000078,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv
+TB-019,MBRANA.commodityCode,live-derived: Isoniazid 300mg,2000000079,2026-01-01,2099-12-31,,seed,supplement:mbrana_commodity_codes.csv

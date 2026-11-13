@@ -1,0 +1,12 @@
+id: internal-bi/disease/outbreak-operations
+page_id: internal-bi/disease
+title: Outbreak Operations
+description: "Every active outbreak episode with its response readiness, so rising caseloads and thin countermeasure stock are visible together."
+ordering: 30
+columns: 12
+dense: true
+widgets:
+- id: dz-outbreaks-table
+  col_span: 12
+  row_span: 2
+  ordering: 0

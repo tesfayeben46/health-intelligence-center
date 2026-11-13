@@ -1,0 +1,8 @@
+id: dz-signal-chart
+title: Signal Detection
+kind: chart
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

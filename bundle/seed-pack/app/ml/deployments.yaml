@@ -1,0 +1,63 @@
+# Seed rows for ops_ml.model_deployment, the ML scheduling surface.
+#
+# Scheduling a model means a row here (or an INSERT at runtime); the nightly
+# Airflow DAG (5_orchestrator/dags/ml_batch_predict.py) reads every
+# enabled batch row and fans out one ml-runner `predict-batch <model_name>`
+# pod per row, and the daily ml_drift_check DAG iterates the same rows for
+# drift and performance monitoring. There are no per-model manifests or
+# per-model DAGs.
+#
+# Loaded by the bootstrap ML-seed step (upsert on model_name, which is
+# UNIQUE) after the seed packages under bundle/seed-pack/app/ml/<name>/ are trained.
+#
+# Columns of ops_ml.model_deployment:
+#   model_name       registry key (MLflow registered model)
+#   model_alias      which registry alias serves ('champion' unless testing
+#                    a challenger)
+#   deployment_kind  batch | on_demand (only batch rows are scheduled)
+#   schedule         informational cron; the inference DAG itself is nightly
+#                    (04:00 UTC, after the nightly ingest and dbt marts build)
+#   enabled          flip false to pause a model without deleting the row
+#   params           jsonb overrides passed to predict-batch --params
+#                    (merged over the package params.yaml defaults)
+
+- model_name: ears
+  model_alias: champion
+  deployment_kind: batch
+  schedule: "0 4 * * 1"
+  enabled: true
+  params: {}
+
+- model_name: outbreak
+  model_alias: champion
+  deployment_kind: batch
+  schedule: "0 4 * * 1"
+  enabled: true
+  params: {}
+
+- model_name: seasonal
+  model_alias: champion
+  deployment_kind: batch
+  schedule: "0 4 * * 1"
+  enabled: true
+  params: {}
+
+- model_name: ewars_lite
+  model_alias: champion
+  deployment_kind: batch
+  schedule: "0 4 * * 1"
+  enabled: true
+  params: {}
+
+- model_name: stockout_forecast
+  model_alias: champion
+  deployment_kind: batch
+  schedule: "0 4 * * 1"
+  enabled: true
+  params: {}
+- model_name: elmis_consumption_forecast
+  model_alias: champion
+  deployment_kind: batch
+  schedule: "0 4 * * 1"
+  enabled: true
+  params: {}

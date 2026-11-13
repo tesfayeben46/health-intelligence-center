@@ -1,0 +1,84 @@
+version: 2
+
+models:
+  - name: mart_health_workforce
+    description: |
+      Region by cadre health-worker counts + WHO density per 10k, from the MFR
+      facility staffing satellite (population from DHIS2 POP-TOTAL). Backs
+      rm-workforce.
+    columns:
+      - name: region_id
+        tests: [not_null, unique]
+  - name: mart_equipment_availability
+    description: |
+      National equipment inventory by type from the MFR FHIR Device satellite:
+      working (active) / broken (inactive) / missing (entered-in-error) counts
+      per equipment_type. Backs rm-equipment.
+    columns:
+      - name: equipment_type
+        tests: [not_null, unique]
+      - name: working
+        tests: [not_null]
+      - name: broken
+        tests: [not_null]
+      - name: missing
+        tests: [not_null]
+  - name: bi_dhis2_facility_with_region
+    description: "Every DHIS2 FAC-% facility org unit tagged with its level-2 (region) org_unit and its code-token tier."
+    columns:
+      - name: org_unit_code
+        description: "Source-system code (FAC-<region>-<tier>-<hash>). The FAC-% filter guarantees it."
+        tests: [not_null, unique]
+      - name: org_unit_name
+        tests: [not_null]
+      - name: facility_tier
+        description: "Tier token from the code: HP/HC/PHC/MC/PH/GH/SH/DS."
+        tests: [not_null]
+      - name: region_id
+        description: "Level-2 org_unit id from path."
+
+  - name: bi_facility_distribution
+    description: "Internal view: counts per region per facility tier. Visible to R-DEC, R-CONS-ANA."
+    columns:
+      - name: region_name
+        tests: [not_null]
+      - name: facility_tier
+        tests: [not_null]
+      - name: n_facilities
+        tests: [not_null]
+      - name: n_phcus
+        description: "PHCU anchors (HC count); non-zero only on the HC tier row."
+        tests: [not_null]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [region_id, facility_tier]
+
+  - name: bi_facility_distribution_public
+    description: "Public k-anonymised view (k>=5), collapsed across facility tiers."
+    columns:
+      - name: region_name
+        tests: [not_null, unique]
+      - name: n_facilities
+        tests: [not_null]
+
+  - name: mart_facility_capacity
+    description: >
+      One row per DHIS2 FAC-% facility: tier token, region, MFR
+      status/GPS, and the HCMIS reporting heartbeat (last stock-event
+      date of the facility's HCMIS environment) -> online/silent flag.
+    columns:
+      - name: facility_id
+        tests: [not_null, unique]
+      - name: facility_tier
+        description: "FAC-% code token (HP/HC/PHC/MC/PH/GH/SH/DS); the gateway facility widgets filter on these."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [HP, HC, PHC, MC, PH, GH, SH, DS]
+      - name: region_id
+        tests: [not_null]
+      - name: reporting_status
+        tests:
+          - not_null
+          - accepted_values:
+              values: [online, silent]

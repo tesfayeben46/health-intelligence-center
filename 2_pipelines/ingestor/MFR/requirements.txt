@@ -1,0 +1,6 @@
+# Minimal FHIR R4 client + dlt filesystem destination. No FHIR SDK: plain
+# requests is enough for Bundle pagination.
+dlt[filesystem,parquet]==1.4.0
+requests==2.32.3
+pyarrow==17.0.0
+setuptools<76

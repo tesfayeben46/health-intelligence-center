@@ -1,0 +1,33 @@
+# R-CONS-PRT: External Partner / Donor
+#
+# Aggregate programme-outcome reads only. A production deployment would
+# map partners to a narrow per-donor mart subset (e.g.
+# `marts_partner_pepfar.*`), which this reference deployment does not build.
+role:
+  id: R-CONS-PRT
+  name: "External Partner"
+  group: Consumer
+  identity_provider: MoH-Keycloak
+  mfa_required: true
+  mfa_factor: TOTP
+  phase_activated: 1
+  audit_class: enhanced
+  notes: |
+    Donor / partner agency access. Aggregate programme-outcome reads only
+    (HLR persona: donors verify funded-programme results; the principle is that
+    partners see stable, controlled, aggregated views, never raw or
+    individual data). Surfaces the granted internal-bi widgets (cascades,
+    flagship attainment, disease KPI strip/signal). No export, no scoped/
+    individual rows, no supply/facility raw: read-only aggregate PRG.
+  permissions:
+
+    # Programme outcomes, aggregate only. Enables the donor's granted
+    # cascade + flagship + disease-KPI widgets (subject PRG, DC.PRO/DC.CAT)
+    # without exposing any individual, raw, or scoped-sensitive data.
+    - subject: PRG
+      data_class: [DC.PRO, DC.CAT]
+      members: all
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [public-health]

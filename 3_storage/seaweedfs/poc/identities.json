@@ -1,0 +1,85 @@
+{
+  "identities": [
+    {
+      "name": "poc_admin",
+      "credentials": [
+        {
+          "accessKey": "pocadmin",
+          "secretKey": "pocadminsecret"
+        }
+      ],
+      "actions": [
+        "Admin",
+        "Read",
+        "Write",
+        "List",
+        "Tagging"
+      ]
+    },
+    {
+      "name": "nhdw_ingestor",
+      "credentials": [
+        {
+          "accessKey": "pocingestor",
+          "secretKey": "pocingestorsecret"
+        }
+      ],
+      "actions": [
+        "Read:nhdw-raw",
+        "Write:nhdw-raw",
+        "List:nhdw-raw",
+        "Tagging:nhdw-raw"
+      ]
+    },
+    {
+      "name": "nhdw_transformer",
+      "credentials": [
+        {
+          "accessKey": "poctransformer",
+          "secretKey": "poctransformersecret"
+        }
+      ],
+      "actions": [
+        "Read:nhdw-raw",
+        "List:nhdw-raw",
+        "Read:nhdw-processed",
+        "Write:nhdw-processed",
+        "List:nhdw-processed"
+      ]
+    },
+    {
+      "name": "nhdw_reader",
+      "credentials": [
+        {
+          "accessKey": "pocreader",
+          "secretKey": "pocreadersecret"
+        }
+      ],
+      "actions": [
+        "Read",
+        "List"
+      ]
+    },
+    {
+      "name": "project_sync",
+      "credentials": [
+        {
+          "accessKey": "pocprojsync",
+          "secretKey": "pocprojsyncsecret"
+        }
+      ],
+      "actions": [
+        "Read:nhdw-artifacts/projects/*",
+        "Write:nhdw-artifacts/projects/*",
+        "List:nhdw-artifacts/projects/*"
+      ]
+    },
+    {
+      "name": "anonymous",
+      "actions": [
+        "Read:nhdw-static",
+        "List:nhdw-static"
+      ]
+    }
+  ]
+}

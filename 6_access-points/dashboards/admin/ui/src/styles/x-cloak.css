@@ -1,0 +1,3 @@
+/* Hides any element that still carries the [x-cloak] attribute. React uses
+   conditional rendering; this rule covers markup that references x-cloak. */
+[x-cloak] { display: none !important; }

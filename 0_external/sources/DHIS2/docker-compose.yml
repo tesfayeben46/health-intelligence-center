@@ -1,0 +1,69 @@
+# DHIS2 source replica, external to the k8s cluster: stands in for the national
+# DHIS2 the ingestor pulls from. Real DHIS2 (dhis2/core) with a PostGIS backend.
+#
+# Seeding from a fresh clone (no dump needed):
+#   1. docker compose -f 0_external/sources/DHIS2/docker-compose.yml up -d
+#   2. wait 5-10 min for the Liquibase schema init (curl :8080/api/ping returns pong)
+#   3. python3 0_external/sources/DHIS2/scripts/seed_ethiopia.py   (org tree, data
+#      elements, HMIS Monthly data set and values, then the IDSR and population seeders)
+# The in-cluster dlt ingestor then pulls /api/* through host.k3d.internal:8080.
+#
+# Ports are published on 0.0.0.0 (not 127.0.0.1) so k3d pods can reach them through
+# host.k3d.internal. The stack has no nhdw_net attachment: it is the outside world.
+services:
+  dhis2-db:
+    image: postgis/postgis:14-3.3
+    container_name: dhis2-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DHIS2_DB_NAME:-dhis2}
+      POSTGRES_USER: ${DHIS2_DB_USER:-dhis}
+      POSTGRES_PASSWORD: ${DHIS2_DB_PASSWORD:-dhis}
+    command: ["postgres", "-c", "shared_buffers=512MB", "-c", "max_connections=200"]
+    ports:
+      - "5433:5432"        # 0.0.0.0: host-side debugging and restore
+    volumes:
+      - dhis2_db_data:/var/lib/postgresql/data
+      - ./dumps:/dumps
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DHIS2_DB_USER:-dhis} -d ${DHIS2_DB_NAME:-dhis2}"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    networks: [dhis2_net]
+
+  dhis2:
+    image: dhis2/core:${DHIS2_VERSION:-2.40.4}
+    container_name: dhis2-web
+    restart: unless-stopped
+    depends_on:
+      dhis2-db:
+        condition: service_healthy
+    environment:
+      DHIS2_DATABASE_HOST: dhis2-db
+      DHIS2_DATABASE_PORT: 5432
+      DHIS2_DATABASE_NAME: ${DHIS2_DB_NAME:-dhis2}
+      DHIS2_DATABASE_USERNAME: ${DHIS2_DB_USER:-dhis}
+      DHIS2_DATABASE_PASSWORD: ${DHIS2_DB_PASSWORD:-dhis}
+      # Heap capped at 4 GB; the empty-DB Liquibase init is the memory peak.
+      JAVA_OPTS: "-Xms1g -Xmx4g -XX:+UseG1GC -Dfile.encoding=UTF-8"
+    ports:
+      - "8080:8080"        # 0.0.0.0: reachable from k3d pods through host.k3d.internal
+    volumes:
+      - dhis2_home:/opt/dhis2
+      - ./config/dhis.conf:/opt/dhis2/dhis.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/api/system/info || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 40
+      start_period: 240s
+    networks: [dhis2_net]
+
+networks:
+  dhis2_net:
+    driver: bridge
+
+volumes:
+  dhis2_db_data:
+  dhis2_home:

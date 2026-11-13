@@ -1,0 +1,5 @@
+# EARS default hyperparameters (runner passes this dict to train(); scalar
+# keys may also be overridden at predict time via the deployment params jsonb).
+k: 3.0                 # threshold = endemic_mean + k * endemic_sd
+min_history_years: 2   # >= this many ISO-years per series activates the multi-year branch
+fallback_window: 8     # rolling preceding-N-week baseline when < min_history_years

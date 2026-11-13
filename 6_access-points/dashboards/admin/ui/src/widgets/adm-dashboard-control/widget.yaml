@@ -1,0 +1,8 @@
+id: adm-dashboard-control
+title: Dashboard Control
+kind: table
+description: >
+  Operator cockpit over the reconciled widget catalog: runtime
+  enable/disable at dashboard/page/section/widget/placement level
+  (catalog_override: survives re-seed, subtract-only) + the soft-orphan
+  panel with explicit purge.

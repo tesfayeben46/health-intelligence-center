@@ -1,0 +1,33 @@
+version: 2
+
+models:
+  - name: mart_programme_cascade
+    description: |
+      Programme funnel attainment per (region by programme by year by step).
+      Cascade steps are keyed on the seeded DHIS2 element codes
+      (HIV/TB/MNCH/NCD). value_total is measurement-kind aware (flow=annual
+      sum, stock=avg of monthly totals, cohort_pct=pct by previous step;
+      entity-model.yaml calc/unit is the authority); retention_pct_vs_entry
+      is each step vs step 1. Monotonicity guarded by
+      tests/cascade_monotonicity.sql.
+    columns:
+      - name: region_id
+        tests: [not_null]
+      - name: programme_id
+        tests:
+          - not_null
+          - accepted_values:
+              values: [HIV, TB, MNCH, NCD]
+      - name: year_id
+        tests: [not_null]
+      - name: step_order
+        tests: [not_null]
+      - name: step_indicator
+        tests: [not_null]
+      - name: retention_pct_vs_entry
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0 OR retention_pct_vs_entry IS NULL"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [region_id, programme_id, year_id, step_order]

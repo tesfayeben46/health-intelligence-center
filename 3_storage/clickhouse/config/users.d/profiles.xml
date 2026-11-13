@@ -1,0 +1,81 @@
+<!--
+  Per-workload settings profiles + quotas. This is how we get workload
+  isolation between staging refreshes and mart queries inside one engine
+  instead of spinning up two clusters (see README.md).
+
+  Profiles map to users in init/02_users.sql:
+    staging_writer  -> uses profile `staging`
+    mart_writer     -> uses profile `marts`
+    bi_reader       -> uses profile `reader`
+
+  Defaults are tuned for a dev box (31 GB total RAM shared with sources +
+  Airflow + Postgres + MinIO). Bump per-user max_memory_usage for production.
+-->
+<clickhouse>
+    <profiles>
+        <staging>
+            <!-- Bulk Parquet reads. Cap memory so a runaway s3() scan doesn't
+                 starve the mart workload. -->
+            <max_memory_usage>4000000000</max_memory_usage>        <!-- 4 GB -->
+            <max_threads>4</max_threads>
+            <max_execution_time>1800</max_execution_time>          <!-- 30 min -->
+            <load_balancing>random</load_balancing>
+            <!-- Allow remote s3() URLs (MinIO is technically a remote endpoint
+                 from CH's perspective). -->
+            <max_concurrent_queries_for_user>4</max_concurrent_queries_for_user>
+        </staging>
+
+        <marts>
+            <!-- Aggregations over the vault. Higher memory ceiling than
+                 staging since marts are query-side. -->
+            <max_memory_usage>6000000000</max_memory_usage>        <!-- 6 GB -->
+            <max_threads>6</max_threads>
+            <max_execution_time>600</max_execution_time>           <!-- 10 min -->
+            <max_concurrent_queries_for_user>4</max_concurrent_queries_for_user>
+        </marts>
+
+        <reader>
+            <!-- BI / dashboards / CloudBeaver. Read-only, modest cap to keep
+                 dashboards responsive without starving writers. -->
+            <max_memory_usage>2000000000</max_memory_usage>        <!-- 2 GB -->
+            <max_threads>2</max_threads>
+            <max_execution_time>120</max_execution_time>           <!-- 2 min -->
+            <readonly>2</readonly>                                  <!-- can SET sess opts but no DML -->
+            <max_concurrent_queries_for_user>10</max_concurrent_queries_for_user>
+        </reader>
+    </profiles>
+
+    <quotas>
+        <staging_quota>
+            <interval>
+                <duration>3600</duration>                          <!-- 1 hour -->
+                <queries>10000</queries>
+                <errors>500</errors>
+                <result_rows>0</result_rows>                       <!-- unlimited -->
+                <read_rows>0</read_rows>
+                <execution_time>3600</execution_time>
+            </interval>
+        </staging_quota>
+
+        <marts_quota>
+            <interval>
+                <duration>3600</duration>
+                <queries>5000</queries>
+                <errors>200</errors>
+                <result_rows>0</result_rows>
+                <read_rows>0</read_rows>
+                <execution_time>1800</execution_time>
+            </interval>
+        </marts_quota>
+
+        <reader_quota>
+            <interval>
+                <duration>3600</duration>
+                <queries>20000</queries>
+                <errors>500</errors>
+                <result_rows>1000000000</result_rows>              <!-- 1 B rows / hour -->
+                <execution_time>3600</execution_time>
+            </interval>
+        </reader_quota>
+    </quotas>
+</clickhouse>

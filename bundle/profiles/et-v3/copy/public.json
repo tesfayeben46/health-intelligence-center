@@ -1,0 +1,180 @@
+{
+  "_note": "Copy deck for the public dashboard. Extracted verbatim from the JSX that shipped before profiles existed; et-v3 must render identically. Placeholders in {braces} are filled from profile.yaml so a name is stated once.",
+  "govbar": {
+    "skip": "Skip to content",
+    "mark_text": "{platform.abbr}",
+    "mark_tag": "{ministry.name} · {country.name}",
+    "nav": {
+      "home": "Home",
+      "data": "Open data",
+      "articles": "Articles"
+    },
+    "request_access": "Request access",
+    "dashboards": "Dashboards"
+  },
+  "hero": {
+    "strip_volume": "Vol. 01",
+    "strip_series": "Public Series",
+    "strip_owner": "{ministry.name} · {ministry.native_name}",
+    "eyebrow": "Public health information service",
+    "headline_lead": "{country.name}'s health data,",
+    "headline_accent": "in one place.",
+    "headline_native": "{platform.native_name}",
+    "lede": "A single trusted entrance to dashboards, open data, and the analytic consoles that power public-health decisions, from a national bulletin down to a single {geography.admin3.singular_lower} in any of the {geography.admin1.count} {geography.admin1.plural_lower}.",
+    "trust": "Privacy-protected national health data",
+    "trust_title": "Aggregate and privacy-protected, k-anonymity at least 5, sourced from national health systems",
+    "cta_primary": "Open the data catalogue",
+    "cta_secondary": "Read the latest bulletins"
+  },
+  "footer": {
+    "brand_line": "{platform.name} · {platform.abbr}",
+    "owner_line": "{ministry.name} · {country.official_name}",
+    "columns": [
+      {
+        "title": "About",
+        "links": [
+          "Methodology",
+          "Governance",
+          "Contact"
+        ]
+      },
+      {
+        "title": "Open",
+        "links": [
+          "API docs",
+          "dbt docs",
+          "Code repository"
+        ]
+      },
+      {
+        "title": "Legal",
+        "links": [
+          "Privacy notice",
+          "Terms of use",
+          "Data licence"
+        ]
+      }
+    ]
+  },
+  "insights": {
+    "_note": "Offline fallback for the national KPI tiles, used only when the gateway returns nothing. Real published figures for this country: Ethiopia DHS 2024-25 plus routine-programme estimates. Lives in the profile because a Zambia deployment falling back to Ethiopian DHS numbers would be worse than showing nothing.",
+    "section_sub": "National coverage figures from the 2024-25 {country.adjective} Demographic and Health Survey, with programme and routine-reporting estimates.",
+    "fallback_kpis": [
+      {
+        "key": "PENTA3-COV",
+        "kind": "coverage",
+        "order": 1,
+        "tone": "alert",
+        "lbl": "Penta3 coverage",
+        "val": "40%",
+        "deltaTrend": "flat",
+        "deltaText": "EDHS 2024-25",
+        "target": "HSDIP target 95%"
+      },
+      {
+        "key": "ANC4-COV",
+        "kind": "coverage",
+        "order": 2,
+        "tone": "alert",
+        "lbl": "ANC4 coverage",
+        "val": "53%",
+        "deltaTrend": "up",
+        "deltaText": "EDHS 2024-25",
+        "target": "HSDIP target 81%"
+      },
+      {
+        "key": "SBA-COV",
+        "kind": "coverage",
+        "order": 3,
+        "tone": "watch",
+        "lbl": "Skilled birth attendance",
+        "val": "64%",
+        "deltaTrend": "up",
+        "deltaText": "up from 12% in 2011",
+        "target": "HSDIP target 76%"
+      },
+      {
+        "key": "FP-MCPR",
+        "kind": "coverage",
+        "order": 4,
+        "tone": "alert",
+        "lbl": "Modern contraceptive use",
+        "val": "35%",
+        "deltaTrend": "flat",
+        "deltaText": "unchanged since 2016",
+        "target": "HSDIP target 50%"
+      },
+      {
+        "key": "TB-TX-SUCC",
+        "kind": "outcome",
+        "order": 5,
+        "tone": "watch",
+        "lbl": "TB treatment success",
+        "val": "89%",
+        "deltaTrend": "flat",
+        "deltaText": "programme data",
+        "target": "HSDIP target 90%"
+      },
+      {
+        "key": "HIV-VL-SUPP",
+        "kind": "outcome",
+        "order": 6,
+        "tone": "watch",
+        "lbl": "ART viral suppression",
+        "val": "90%",
+        "deltaTrend": "up",
+        "deltaText": "programme data",
+        "target": "95-95-95 third 95"
+      },
+      {
+        "key": "NUT-STUNT",
+        "kind": "outcome",
+        "order": 7,
+        "tone": "alert",
+        "lbl": "Under-5 stunting",
+        "val": "40%",
+        "deltaTrend": "flat",
+        "deltaText": "EDHS 2024-25",
+        "target": "SDG target ≤25%"
+      },
+      {
+        "key": "PHEM-COMPL",
+        "kind": "trust",
+        "order": 8,
+        "tone": "info",
+        "lbl": "Reporting completeness",
+        "val": "92%",
+        "deltaTrend": "up",
+        "deltaText": "routine reporting",
+        "target": "HSDIP target 95%"
+      }
+    ]
+  },
+  "newsroom": {
+    "eyebrow": "Latest · News & bulletins",
+    "title": "What's happening",
+    "sub": "Weekly bulletins from PHEM, official press releases from {ministry.abbr}, and public-health advisories, most recent first."
+  },
+  "articles_page": {
+    "_note": "Masthead for the Articles (newsroom) page. {country.adjective} resolves to Ethiopian.",
+    "eyebrow": "Newsroom",
+    "title": "News and health bulletins",
+    "sub": "Weekly PHEM surveillance bulletins, official press releases and public-health advisories from {country.adjective} health institutions, most recent first."
+  },
+  "access": {
+    "_note": "Access-request modal. The identity-verification card is gated on profile.identity (Fayda), not on this copy. Placeholders are illustrative {country.adjective} examples.",
+    "title": "Request {platform.abbr} access",
+    "review_org": "{ministry.name} data governance",
+    "ph_name": "Dr Tigist Bekele",
+    "ph_email": "tigist.bekele@moh.gov.et",
+    "ph_phone": "+251 911 000000",
+    "ph_org": "FMoH / RHB / EPHI / Partner",
+    "ph_role": "Programme M&E officer, RHB director, Researcher"
+  },
+  "dashboards": {
+    "_note": "Audiences on the 'Open a dashboard' launcher. Only the first names sub-national bodies (RHB) that differ by country.",
+    "bi_audience": "FMoH staff · RHB · programme directors",
+    "admin_audience": "IT operations · security officers",
+    "workshop_audience": "Researchers · analysts · community contributors"
+  }
+}

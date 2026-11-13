@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opa
+  namespace: {{ .Values.namespace }}
+  labels: { app: opa, tier: security }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: opa } }
+  template:
+    metadata:
+      labels: { app: opa, tier: security }
+    spec:
+      containers:
+        - name: opa
+          image: openpolicyagent/opa:1.5.0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          # `--ignore=.*` makes OPA skip ConfigMap's internal symlink dirs
+          # (..data, ..2026_*) which would otherwise look like duplicate
+          # rego sources and fail with "multiple default rules" errors.
+          args: [ "run", "--server", "--addr=:8181",
+                  "--config-file=/config/opa-config.yaml",
+                  "--ignore=.*",
+                  "/policies" ]
+          ports: [ { containerPort: 8181, name: http } ]
+          volumeMounts:
+            - { name: policies, mountPath: /policies }
+            - { name: config,   mountPath: /config }
+          readinessProbe:
+            httpGet: { path: /health, port: 8181 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+      volumes:
+        - { name: policies, configMap: { name: opa-policies } }
+        - { name: config,   configMap: { name: opa-config } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opa
+  namespace: {{ .Values.namespace }}
+  labels: { app: opa, tier: security }
+spec:
+  type: ClusterIP
+  selector: { app: opa }
+  ports: [ { port: 8181, targetPort: http, name: http } ]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opa-config
+  namespace: {{ .Values.namespace }}
+data:
+  opa-config.yaml: |
+    decision_logs:
+      console: true

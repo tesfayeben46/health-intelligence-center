@@ -1,0 +1,87 @@
+name: 'nhdw_vault'
+version: '0.1.0'
+config-version: 2
+
+profile: 'nhdw_vault'
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# AutomateDV global config: used by hub/link/sat macros for hash column
+# names and types. SHA-256 is the AutomateDV recommended default.
+vars:
+  hash: SHA
+  # Vault-wide business-key treatment, fixed: every hash input is wrapped
+  # UPPER(TRIM(CAST(col AS VARCHAR))) before hashing ('upper' is also the
+  # AutomateDV default). Anyone reproducing hash keys outside dbt must apply
+  # the same wrapping. Switching to 'disabled' would re-key the entire vault.
+  hash_content_casing: 'upper'
+  null_placeholder_string: '^^'
+  enable_native_hashes: false
+  # Country world this deployment builds (e.g. ET or ZM). Filters
+  # the steward MDM decision log and namespaces master_entity_uid: one
+  # context per deployment, cross-context matching forbidden by definition.
+  deployment_context: 'ET'
+
+models:
+  nhdw_vault:
+    # Raw vault: tables in nhdw_vault_raw. Insert-only, enforced twice:
+    # AutomateDV macros emit only new rows (hub/link not-exists, sat
+    # hash_diff-changed) and the append strategy below means dbt can only
+    # ever INSERT them. No model may set unique_key: on dbt-postgres that
+    # silently selects the delete+insert strategy, which deletes prior
+    # history rows for a changed key and turns every satellite into SCD-1.
+    raw_vault:
+      +materialized: incremental
+      +incremental_strategy: append
+      +schema: nhdw_vault_raw
+      +on_schema_change: append_new_columns
+      climate:
+        +tags: ["raw_vault", "source:climate"]
+      dhis2:
+        +tags: ["raw_vault", "source:dhis2"]
+      ethioemr:
+        +tags: ["raw_vault", "source:ethioemr"]
+      hcmiswdm:
+        +tags: ["raw_vault", "source:hcmiswdm"]
+      mbrana:
+        +tags: ["raw_vault", "source:mbrana"]
+      mfr:
+        +tags: ["raw_vault", "source:mfr"]
+
+    # Business vault: conformed hubs, same-as links, the spine link
+    # (lnk_facility_indicator_period), derived sats, the current-record
+    # view layer (one v_<sat>_current per raw-vault satellite), and the
+    # thin dim views (dim_facility / dim_period / dim_programme) marts
+    # join through. Same insert-only contract as the raw vault: append,
+    # never unique_key.
+    business_vault:
+      +materialized: incremental
+      +incremental_strategy: append
+      +schema: nhdw_vault_business
+      +on_schema_change: append_new_columns
+      conformed_hubs:
+        +tags: ["business_vault", "conformed"]
+      same_as_links:
+        +tags: ["business_vault", "same_as"]
+      links:
+        +tags: ["business_vault", "spine"]
+      derived_sats:
+        +tags: ["business_vault", "derived"]
+      current:
+        +tags: ["business_vault", "current"]
+      dims:
+        +tags: ["business_vault", "dim"]
+
+# A "stage" layer in AutomateDV parlance is a thin view that pre-computes
+# hash_keys + hash_diff before the hub/link/sat models consume them. Ours
+# live in models/raw_vault/<source>/stage/ (v_stg_* views) and, for the
+# business vault, the v_*_resolution views next to their hubs/links. The
+# raw-sat payload / hashdiff single source of truth is macros/sat_payloads.sql.

@@ -1,0 +1,2 @@
+# Ignore rules are centralized in the repo-root .gitignore (backup policy).
+# Secrets (.env, *.key, dhis.conf, etc.) are excluded there globally.

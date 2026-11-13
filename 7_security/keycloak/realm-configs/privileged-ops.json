@@ -1,0 +1,158 @@
+{
+  "realm": "privileged-ops",
+  "displayName": "Palladium",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": false,
+  "sslRequired": "none",
+  "accessTokenLifespan": 1800,
+  "ssoSessionMaxLifespan": 14400,
+  "passwordPolicy": "length(14) and digits(1) and lowerCase(1) and upperCase(1) and specialChars(1) and notUsername(undefined)",
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "webAuthnPolicyRpEntityName": "NHDW Privileged Ops",
+  "webAuthnPolicyRpId": "127.0.0.1",
+  "webAuthnPolicyAttestationConveyancePreference": "direct",
+  "webAuthnPolicyAuthenticatorAttachment": "cross-platform",
+  "webAuthnPolicyRequireResidentKey": "Yes",
+  "webAuthnPolicyUserVerificationRequirement": "required",
+  "roles": {
+    "realm": [
+      {
+        "name": "R-OPS-ENG",
+        "description": "Data Engineer / Platform Operator"
+      },
+      {
+        "name": "R-OPS-ADM",
+        "description": "System Administrator"
+      },
+      {
+        "name": "R-OPS-SEC",
+        "description": "Security / Compliance Officer"
+      }
+    ]
+  },
+  "requiredActions": [
+    {
+      "alias": "webauthn-register-passwordless",
+      "name": "Webauthn Register Passwordless",
+      "enabled": true,
+      "defaultAction": true,
+      "providerId": "webauthn-register-passwordless"
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "ops-hub",
+      "name": "NHDW Ops Hub",
+      "description": "The base dashboard, restricted to privileged-ops realm users (R-OPS-*)",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "PLACEHOLDER-CYCLE-AFTER-FIRST-BOOT",
+      "redirectUris": [
+        "http://127.0.0.1:8085/*",
+        "http://localhost:8085/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8085",
+        "http://localhost:8085"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "post.logout.redirect.uris": "http://127.0.0.1:8085/*"
+      },
+      "defaultClientScopes": [
+        "basic"
+      ]
+    },
+    {
+      "clientId": "cloudbeaver",
+      "name": "CloudBeaver (ops view)",
+      "description": "Engineers see all DB connections including raw vault writer access.",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "PLACEHOLDER-CYCLE-AFTER-FIRST-BOOT",
+      "redirectUris": [
+        "http://127.0.0.1:8086/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8086"
+      ],
+      "standardFlowEnabled": true,
+      "defaultClientScopes": [
+        "basic"
+      ]
+    },
+    {
+      "clientId": "openbao",
+      "name": "OpenBao admin UI",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "PLACEHOLDER-CYCLE-AFTER-FIRST-BOOT",
+      "redirectUris": [
+        "http://127.0.0.1:8200/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8200"
+      ],
+      "standardFlowEnabled": true,
+      "defaultClientScopes": [
+        "basic"
+      ]
+    },
+    {
+      "clientId": "admin",
+      "name": "NHDW Admin console",
+      "description": "Operator-facing dashboard. R-OPS-ADM / R-OPS-ENG / R-OPS-SEC + R-OPS-ML-APPROVER for graduation promotions.",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "PLACEHOLDER-CYCLE-AFTER-FIRST-BOOT",
+      "redirectUris": [
+        "http://127.0.0.1:8086/*",
+        "http://localhost:8086/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8086",
+        "http://localhost:8086"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "post.logout.redirect.uris": "http://127.0.0.1:8086/*"
+      },
+      "defaultClientScopes": [
+        "basic"
+      ]
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "basic",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "config": {
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ]
+}

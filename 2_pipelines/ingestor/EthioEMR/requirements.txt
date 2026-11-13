@@ -1,0 +1,7 @@
+# EthioEMR ingestor: reads the facility OpenMRS EMR directly over MySQL and
+# reshapes rows into FHIR-shaped Parquet. PyMySQL is a pure-Python driver (no
+# build toolchain / libmysqlclient needed in the slim image).
+dlt[filesystem,parquet]==1.4.0
+PyMySQL==1.1.1
+pyarrow==17.0.0
+setuptools<76

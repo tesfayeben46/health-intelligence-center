@@ -1,0 +1,12 @@
+id: internal-bi/resource/stockout-model-kpi
+page_id: internal-bi/resource
+title: Stockout Forecast
+eyebrow: ML model · stockout_forecast @champion
+ordering: 15
+columns: 12
+dense: true
+widgets:
+- id: rm-stockout-risk-kpi
+  col_span: 12
+  row_span: 2
+  ordering: 0

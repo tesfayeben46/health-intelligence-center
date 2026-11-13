@@ -1,0 +1,14 @@
+id: internal-bi/resource
+title: Resource Management
+ordering: 30
+filters:
+- region
+- period
+- programme
+- commodity
+sections:
+- internal-bi/resource/stockout-headline
+- internal-bi/resource/stockout-model-kpi
+- internal-bi/resource/supply-stress-geography
+- internal-bi/resource/commodity-detail
+- internal-bi/resource/stockout-impact-service

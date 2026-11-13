@@ -1,0 +1,50 @@
+# R-OPS-ADM: System Administrator
+role:
+  id: R-OPS-ADM
+  name: "System Administrator"
+  group: Operator
+  identity_provider: Privileged-Keycloak
+  mfa_required: true
+  mfa_factor: WebAuthn
+  phase_activated: 1
+  audit_class: privileged
+  notes: |
+    Infrastructure team: Keycloak, K8s, Docker hosts, networking,
+    monitoring. Manages secrets, Keycloak realms/clients/users and infra
+    deploys.
+
+    Two-person rule for secret and policy changes affecting PHI paths
+    (co-approval from R-OPS-SEC). Cannot read data content; break-glass
+    available with R-OPS-SEC approval and full session recording.
+
+    Deny-all on the health-data plane. Operates only on
+    infrastructure surfaces: admin dashboard sections that don't go
+    through OPA.
+
+    Exception: DC.QLT, data-quality metrics
+    (completeness/timeliness/validity percentages per source x period,
+    bi_quality marts). These are operational pipeline metadata about the
+    system the admin runs, not patient or programme health data; the
+    admin dashboard's Quality & Lineage section reads them. The deny-all
+    on every health data class stands.
+
+    Second carve-out: DC.CAT, the ML model catalogue (model
+    versions, input/output schema, the operator's own ad-hoc run jobs) that
+    Admin > ML Health > Operator controls reads. Catalogue metadata, no
+    stored predictions and no health data.
+  intentional_deny: true
+  permissions:
+    - subject: PRG
+      data_class: [DC.QLT]
+      members: all
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [public-health]
+    - subject: PRG
+      data_class: [DC.CAT]
+      members: all
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [public-health]

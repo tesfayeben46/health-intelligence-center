@@ -1,0 +1,55 @@
+# Widgets and pages this profile turns off.
+#
+# Only disable is expressible (see the et-v3 file for why). gh-v1 has a complete
+# presentation layer but no ingested Ghana data, and the warehouse's marts and
+# the ops newsroom and catalogue hold the Ethiopian (and Zambian) data. Serving
+# any of them under Ghana would show another country's numbers, so every data-
+# or CMS-backed surface is off until a Ghana data layer is ingested additively
+# (a pipeline run that overwrote the shared marts would break et-v3). What
+# remains is country-neutral or profile-driven: the public masthead and the
+# Ghana public-insights tiles (published GDHS/WUENIC figures, rendered from the
+# profile copy via insights.fallback_only, not from the Ethiopian marts).
+disable:
+  # internal-BI pages
+  # Every analytic page reads the Ethiopian source marts (or, for the Control
+  # Tower, the Zambian eLMIS marts). None has Ghana data, so each would render
+  # another country's figures under a Ghana masthead. Disabling the page (not its
+  # widgets one by one) elides the tab; the app lands on the first page that
+  # survives, here Profile & Settings, which is country-neutral. Ghanaian BI
+  # pages need a Ghana data layer.
+  page:
+    - id: internal-bi/overview
+      why: HMIS coverage/benchmarks/woreda action-lists over the Ethiopian source marts; no Ghana data.
+    - id: internal-bi/disease
+      why: DHIS2/IDSR notifiable-disease surveillance; Ethiopian source, no Ghana equivalent ingested.
+    - id: internal-bi/service
+      why: Service performance over EthioEMR clinical encounters; no Ghana EMR in this deployment.
+    - id: internal-bi/resource
+      why: EPSS/HCMIS supply chain; Ethiopian national warehouse system, no Ghana supply data.
+    - id: internal-bi/control-tower
+      why: >-
+        The Control Tower reads the Zambian eLMIS supply marts. Under gh-v1 it
+        would render Zambian supply data on a Ghana masthead (a cross-country
+        leak), so it is off here, exactly as et-v3 disables it.
+    - id: internal-bi/export
+      why: >-
+        The Data Export & Query tool browses and queries the Ethiopian marts
+        directly; under Ghana it would expose another country's rows.
+
+  # public widgets
+  widget:
+    - id: pub-newsroom
+      why: >-
+        The home newsroom reads live articles from ops_governance.public_article,
+        which holds the Ethiopian deployment's bulletins. Shown again once a
+        Ghanaian newsroom is published.
+    - id: pub-articles
+      why: Same live Ethiopian newsroom on the Articles page; the page shows a "not yet available" note instead.
+    - id: pub-data-catalogue
+      why: >-
+        The Open Data catalogue is materialised from the Ethiopian bi_public
+        marts (catalogue.json). Under Ghana it would list Ethiopian datasets.
+    - id: pub-zm-supply
+      why: Zambia eLMIS public supply insights; off everywhere but zm-v1.
+    # pub-insights stays enabled: it renders Ghana's own published figures from
+    # the profile copy (insights.fallback_only), never the shared marts.

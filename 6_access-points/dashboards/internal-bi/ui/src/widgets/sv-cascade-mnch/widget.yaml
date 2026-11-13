@@ -1,0 +1,8 @@
+id: sv-cascade-mnch
+title: MNCH Continuum
+kind: funnel
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

@@ -1,0 +1,8 @@
+id: admin/infra
+title: Health & Topology
+ordering: 10
+widgets:
+- id: adm-topology
+  col_span: 6
+  row_span: 1
+  ordering: 7

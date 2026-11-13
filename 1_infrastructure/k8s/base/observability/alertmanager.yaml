@@ -1,0 +1,128 @@
+# Alertmanager: single replica, ephemeral (emptyDir). Receives alerts from
+# Prometheus (alerting.alertmanagers in prometheus.yaml) and, when email is
+# enabled, routes notifications to the same external SMTP relay the gateway's
+# app mailer uses (smtp-secrets), so there is one mail path and no in-cluster
+# sink. A fired platform alert appears in the gateway's /api/alerts/active feed
+# (routes/alerts.py reads the Alertmanager API), in the Alertmanager UI, and
+# by email when enabled.
+#
+# Wiring contracts:
+#   * Service DNS  alertmanager.nhdw.svc.cluster.local:9093  is the gateway's
+#     optional ALERTMANAGER_URL (routes/alerts.py) and Prometheus' alerting target.
+#   * SMTP: the global smtp_* block is rendered at pod start by the
+#     `render-config` initContainer from the smtp-secrets Secret
+#     (SMTP_HOST/PORT/USER/PASS/FROM). With email disabled or the secret empty,
+#     the config uses a null receiver, so Alertmanager still starts instead of
+#     crash-looping on a missing smarthost.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: alertmanager, namespace: nhdw, labels: { app: alertmanager, tier: observability } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: alertmanager } }
+  template:
+    metadata: { labels: { app: alertmanager, tier: observability } }
+    spec:
+      securityContext: { runAsUser: 65534, runAsNonRoot: true, fsGroup: 65534 }
+      initContainers:
+        # Render alertmanager.yml from smtp-secrets, using the alertmanager image
+        # itself (busybox /bin/sh), so no extra image is needed offline. The heredoc
+        # expands ${SMTP_*}; the recipient is the relay account (SMTP_USER). With
+        # email disabled or no credentials, the config uses a null receiver.
+        - name: render-config
+          image: prom/alertmanager:v0.27.0
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              OUT=/rendered/alertmanager.yml
+              # Email is opt-in via AM_EMAIL_ENABLED (default 0). Even with SMTP creds present the
+              # deploy stays silent unless email is explicitly turned on, so a boot never surprises a
+              # real inbox. Flip it on with an overlay env patch (AM_EMAIL_ENABLED=1).
+              if [ "${AM_EMAIL_ENABLED:-0}" = "1" ] && [ -n "${SMTP_HOST:-}" ] && [ -n "${SMTP_USER:-}" ]; then
+                echo "render-config: SMTP relay ${SMTP_HOST}:${SMTP_PORT:-587} -> ${SMTP_USER}"
+                cat > "$OUT" <<EOF
+              global:
+                resolve_timeout: 5m
+                smtp_smarthost: "${SMTP_HOST}:${SMTP_PORT:-587}"
+                smtp_from: "${SMTP_FROM:-alerts@nhdw.moh.gov.et}"
+                smtp_auth_username: "${SMTP_USER}"
+                smtp_auth_password: "${SMTP_PASS:-}"
+                smtp_require_tls: true
+              route:
+                group_by: ["alertname", "service"]
+                group_wait: 30s
+                group_interval: 5m
+                repeat_interval: 24h    # at most once/day per alert group, to avoid email spam
+                receiver: email
+                routes:
+                  - matchers: [ 'alertname = "Watchdog"' ]
+                    receiver: email
+                    repeat_interval: 24h
+              receivers:
+                - name: email
+                  email_configs:
+                    - to: "${SMTP_USER}"
+                      send_resolved: true
+                      require_tls: true
+              inhibit_rules:
+                - source_matchers: [ 'severity = "critical"' ]
+                  target_matchers: [ 'severity = "warning"' ]
+                  equal: ["service"]
+              EOF
+              else
+                echo "render-config: no SMTP creds -> null receiver (email disabled)"
+                cat > "$OUT" <<'EOF'
+              global:
+                resolve_timeout: 5m
+              route:
+                group_by: ["alertname", "service"]
+                group_wait: 30s
+                group_interval: 5m
+                repeat_interval: 3h
+                receiver: "null"
+              receivers:
+                - name: "null"
+              inhibit_rules:
+                - source_matchers: [ 'severity = "critical"' ]
+                  target_matchers: [ 'severity = "warning"' ]
+                  equal: ["service"]
+              EOF
+              fi
+          env:
+            # Email opt-in switch (default 0, no email). Patch to "1" in an overlay to send alert email.
+            - { name: AM_EMAIL_ENABLED, value: "0" }
+            - { name: SMTP_HOST, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_HOST, optional: true } } }
+            - { name: SMTP_PORT, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PORT, optional: true } } }
+            - { name: SMTP_USER, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_USER, optional: true } } }
+            - { name: SMTP_PASS, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PASS, optional: true } } }
+            - { name: SMTP_FROM, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_FROM, optional: true } } }
+          volumeMounts:
+            - { name: config, mountPath: /rendered }
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.27.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.file=/etc/alertmanager/alertmanager.yml
+            - --storage.path=/alertmanager
+          ports: [ { name: http, containerPort: 9093 } ]
+          readinessProbe: { httpGet: { path: /-/ready,   port: http }, initialDelaySeconds: 10, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /-/healthy, port: http }, initialDelaySeconds: 20, periodSeconds: 15 }
+          resources:
+            requests: { cpu: "10m", memory: "32Mi" }
+            limits:   { cpu: "100m", memory: "128Mi" }
+          volumeMounts:
+            - { name: config, mountPath: /etc/alertmanager }
+            - { name: data,   mountPath: /alertmanager }
+      volumes:
+        - { name: config, emptyDir: {} }
+        - { name: data,   emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: alertmanager, namespace: nhdw, labels: { app: alertmanager, tier: observability } }
+spec:
+  selector: { app: alertmanager }
+  ports: [ { name: http, port: 9093, targetPort: http } ]

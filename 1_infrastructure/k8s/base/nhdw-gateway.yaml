@@ -1,0 +1,171 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nhdw-gateway
+  namespace: nhdw
+  labels: { app: nhdw-gateway, tier: api }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: nhdw-gateway }
+  template:
+    metadata:
+      labels: { app: nhdw-gateway, tier: api }
+    spec:
+      serviceAccountName: nhdw-gateway
+      containers:
+        - name: gateway
+          image: nhdw-registry:5500/nhdw/gateway:1.0.0
+          imagePullPolicy: Always
+          ports: [ { containerPort: 8000, name: http } ]
+          # Resource requests are the HPA's scaling baseline (target = % of the
+          # requested CPU). The request is modest so a traffic spike crosses the
+          # threshold quickly and the HPA adds replicas (base/nhdw-gateway-hpa.yaml).
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "1",    memory: "512Mi" }
+          env:
+            - { name: KEYCLOAK_ALLOWED_ISSUERS, value: "http://127.0.0.1:8090/realms/moh-staff,http://127.0.0.1:8090/realms/privileged-ops" }
+            - { name: KEYCLOAK_PUBLIC_BASE,     value: "http://127.0.0.1:8090" }
+            - { name: KEYCLOAK_INTERNAL_BASE,   value: "http://keycloak.nhdw.svc.cluster.local:8080" }
+            # Keycloak Admin API for access-request provisioning: on admin approval,
+            # create the applicant's account and send the set-password email.
+            - { name: KEYCLOAK_ADMIN_USER,      value: "keycloak_admin" }
+            - { name: KEYCLOAK_ADMIN_PASSWORD,  valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KC_BOOTSTRAP_ADMIN_PASSWORD } } }
+            - { name: KEYCLOAK_PROVISION_REALM, value: "moh-staff" }
+            - { name: DEV_AUTH,                  value: "false" }
+            - { name: GATEWAY_PUBLIC_ANON,        value: "true" }
+            - { name: GATEWAY_DEMO_IMPERSONATION, value: "true" }
+            # Shared secret gating the X-Mock-* impersonation channel: without a
+            # matching X-Mock-Secret header the gateway ignores mock identity, so
+            # the public ingress cannot claim R-SUPER. Held by the console's view-as
+            # feature and the boot seed scripts. Empty disables the channel.
+            - { name: GATEWAY_IMPERSONATION_SECRET, valueFrom: { secretKeyRef: { name: nhdw-gateway-secrets, key: IMPERSONATION_SECRET, optional: true } } }
+            # Column masking hash/tokenize HMAC key. Optional: when absent those
+            # mask classes degrade to drop (fail-closed) and the gateway still boots.
+            - { name: MASKING_HMAC_KEY, valueFrom: { secretKeyRef: { name: nhdw-gateway-secrets, key: MASKING_HMAC_KEY, optional: true } } }
+            # OPA is the PDP and enforces: denials become 403 (no advisory mode);
+            # if OPA is unreachable, fail closed (deny).
+            - { name: OPA_ENFORCE,   value: "true" }
+            - { name: OPA_FAIL_OPEN, value: "false" }
+            # OPA, Trino and Ollama backends (opa.py PDP, trino_client.py federated
+            # SQL, chat.py LLM). Declared explicitly so the manifest shows the wiring
+            # and the topology graph derives the gateway->{opa,trino,llm} edges. OPA
+            # and Trino are in-cluster; the LLM is an external component
+            # (0_external/llm/) reached over the host route host.k3d.internal:11434,
+            # like the source replicas and Fayda (topology_graph.py renders it as an
+            # external node from this host ref).
+            - { name: OPA_URL,    value: "http://opa.nhdw.svc.cluster.local:8181" }
+            - { name: TRINO_HOST, value: "nhdw-trino.nhdw.svc.cluster.local" }
+            - { name: OLLAMA_URL, value: "http://host.k3d.internal:11434" }
+            # Agentic assistant model on the external host-GPU Ollama. 14b is the
+            # default (the 3b model cannot chain tool calls); gpu-detect.sh
+            # downgrades only if the host lacks the 14b weights. Set here so a
+            # gateway redeploy never reverts to the code fallback.
+            - { name: NHDW_LLM_MODEL, value: "qwen2.5:14b" }
+            # Keep the model resident in VRAM across long idle gaps. The per-request
+            # keep_alive overrides Ollama's own 30m; without it the 11GB model unloads
+            # after 30m and the next call cold-loads (about 15-20s), which the SPA
+            # reports as "model unreachable".
+            - { name: NHDW_LLM_KEEP_ALIVE, value: "24h" }
+            - { name: OPS_PG_HOST,    value: "postgres-vault.nhdw.svc.cluster.local" }
+            - { name: OPS_PG_PORT,    value: "5432" }
+            - { name: OPS_PG_DATABASE, value: "nhdw_ops" }
+            - { name: OPS_PG_USER,    value: "ops_gateway" }
+            - { name: OPS_PG_PASSWORD, valueFrom: { secretKeyRef: { name: nhdw-gateway-secrets, key: OPS_GATEWAY_PASSWORD } } }
+            # Object store (MINIO_* names are historical): the gateway reads dbt
+            # artifacts (manifest.json, run_results.json) from the nhdw-artifacts
+            # bucket to serve /api/dq/*.
+            - { name: MINIO_ENDPOINT,    value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway (artifacts, exports, docs)
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }   # botocore#3755 (zero-byte PUT)
+            - { name: MINIO_ACCESS_KEY,  valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER     } } }
+            - { name: MINIO_SECRET_KEY,  valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            # MLflow: gateway /api/ml/* routes proxy registry calls and read
+            # from ops_ml.ml_predictions in the same postgres-vault DB.
+            - { name: MLFLOW_URL,        value: "http://mlflow.nhdw.svc.cluster.local:5000" }
+            # Presigned downloads (ML result CSVs, exports, artifacts) are signed
+            # against the browser-reachable S3 host (ing-s3); the in-cluster
+            # endpoint above is not reachable from the browser.
+            - { name: MINIO_PUBLIC_ENDPOINT, value: "https://s3.127.0.0.1.nip.io" }
+            # Runner image for the ephemeral train / predict-adhoc Jobs the
+            # gateway spawns (/api/ml/{model}/retrain + /predict). A kustomize
+            # `images:` remap can't reach dynamically-created Jobs, so the dev
+            # overlay patches this env to nhdw/ml-runner:1.0.0 (same pattern as
+            # the airflow Deployment; keep the three in sync).
+            - { name: ML_RUNNER_IMAGE,   value: "nhdw-registry:5500/nhdw/ml-runner:1.0.0" }
+            # Workspace profile catalogue (Small/Medium/Large pod specs). The
+            # authoritative file is 6_access-points/jupyterhub/profiles.yaml,
+            # mounted via the workspace-profiles configMap. Without it,
+            # /api/workspace/profiles is empty and every resource request 404s.
+            - { name: WORKSPACE_PROFILES_PATH, value: "/app/config/profiles.yaml" }
+            # JupyterHub spawn proxy (/api/workspace/{spawn,status,stop}):
+            # in-cluster hub API + the shared service token (jupyterhub-secrets/
+            # API_TOKEN, the value the hub registers for the nhdw-gateway
+            # service). Optional: without the secret the hub reports 'not configured'.
+            - { name: JUPYTERHUB_URL, value: "http://jupyterhub.nhdw.svc.cluster.local:8081" }
+            - name: JUPYTERHUB_API_TOKEN
+              valueFrom: { secretKeyRef: { name: jupyterhub-secrets, key: API_TOKEN, optional: true } }
+            - { name: JUPYTER_PUBLIC_BASE, value: "https://jupyter.127.0.0.1.nip.io" }
+            # Mail for fired alerts and provisioning/reset messages. SMTP comes from
+            # the smtp-secrets Secret (external Google SMTP relay). HOST/PORT/TLS/FROM
+            # default to Gmail in settings.py; USER/PASS are the app password, and
+            # without them a send fails with an error. The service token authorizes
+            # the alert_evaluation DAG's POST /api/alerts/evaluate.
+            - { name: SMTP_HOST, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_HOST, optional: true } } }
+            - { name: SMTP_PORT, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PORT, optional: true } } }
+            - { name: SMTP_TLS,  valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_TLS,  optional: true } } }
+            - { name: SMTP_USER, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_USER, optional: true } } }
+            - { name: SMTP_PASS, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PASS, optional: true } } }
+            - { name: SMTP_FROM, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_FROM, optional: true } } }
+            - { name: ALERT_EVAL_MODEL, value: "ears" }
+            - { name: ALERT_EVAL_TOKEN, valueFrom: { secretKeyRef: { name: alert-eval-secrets, key: TOKEN } } }
+            # DQ detector service token (routes/dq.py /detect; Airflow dq_detection DAG).
+            # optional: without the secret the service path is off; admin bearer still works.
+            - { name: DQ_DETECT_TOKEN, valueFrom: { secretKeyRef: { name: dq-detect-secrets, key: TOKEN, optional: true } } }
+            - { name: NHDW_PROFILE_DIR, value: "/opt/nhdw-profiles" }
+            - { name: NHDW_PROFILE_STATE_DIR, value: "/opt/nhdw-state" }
+            - { name: DEMO_CONTROL_TOKEN, valueFrom: { secretKeyRef: { name: demo-control-secrets, key: TOKEN, optional: true } } }
+            # Fallback only: the active pointer file in that directory wins, so a
+            # swap does not need a redeploy.
+            - { name: NHDW_PROFILE, value: "et-v3" }
+          volumeMounts:
+            # Country profiles live on the host at /opt/nhdw-profiles: copy decks,
+            # geography and the manifest that says which country this deployment is
+            # about. hostPath rather than a configMap because the geometry runs to
+            # hundreds of KB (configMaps cap at ~1 MB) and because a profile swap
+            # must be a file write on the server, visible to the gateway without a
+            # rollout. Read-only: the gateway serves profiles, it never edits them.
+            - { name: profiles, mountPath: /opt/nhdw-profiles, readOnly: true }
+            # Writable, and only this: which profile is active is state, not
+            # content. Keeping them apart means the gateway can switch profiles
+            # but can never edit one.
+            - { name: profile-state, mountPath: /opt/nhdw-state }
+            - { name: workspace-profiles, mountPath: /app/config, readOnly: true }
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 15
+            periodSeconds: 15
+      volumes:
+        # hostPath is safe on a single node. On a multi-node cluster the profile
+        # store must move to the object store.
+        - name: profiles
+          hostPath: { path: /opt/nhdw-profiles, type: DirectoryOrCreate }
+        - name: profile-state
+          hostPath: { path: /opt/nhdw-state, type: DirectoryOrCreate }
+        - { name: workspace-profiles, configMap: { name: workspace-profiles } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nhdw-gateway
+  namespace: nhdw
+  labels: { app: nhdw-gateway, tier: api }
+spec:
+  type: ClusterIP
+  selector: { app: nhdw-gateway }
+  ports:
+    - { port: 8000, targetPort: http, name: http }

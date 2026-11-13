@@ -1,0 +1,17 @@
+{
+  "_note": "Shared chrome and vocabulary for the Zambia profile.",
+  "scope": {
+    "all_geography": "All {country.name}",
+    "all_programmes": "All programmes",
+    "all_periods": "All periods",
+    "national": "National"
+  },
+  "workshop": {
+    "footer_owner": "{ministry.name} · {country.official_name}"
+  },
+  "empty": {
+    "no_data": "No data for the selected filters.",
+    "no_scope": "No data within your assigned scope.",
+    "loading_failed": "Could not load this view. Try again, or check the source status in Admin."
+  }
+}

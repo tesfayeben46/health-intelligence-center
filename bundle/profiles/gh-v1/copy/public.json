@@ -1,0 +1,160 @@
+{
+  "_note": "Ghana public deck. English masthead (no native line). Figures are real published national indicators (GDHS 2022, WHO/UNICEF WUENIC 2022) with their source named on each line; never fabricated.",
+  "govbar": {
+    "skip": "Skip to content",
+    "mark_text": "{platform.abbr}",
+    "mark_tag": "{ministry.name} · {country.name}",
+    "nav": {
+      "home": "Home",
+      "data": "Open data",
+      "articles": "Articles"
+    },
+    "request_access": "Request access",
+    "dashboards": "Dashboards"
+  },
+  "hero": {
+    "strip_volume": "Vol. 01",
+    "strip_series": "Public Series",
+    "strip_owner": "{ministry.name} · {country.name}",
+    "eyebrow": "Public health information service",
+    "headline_lead": "{country.name}'s health data,",
+    "headline_accent": "in one place.",
+    "headline_native": "",
+    "lede": "A single trusted entrance to dashboards, open data, and the analytic consoles that power public-health decisions, from a national bulletin down to a single {geography.admin2.singular_lower} in any of the {geography.admin1.count} {geography.admin1.plural_lower}.",
+    "trust": "Privacy-protected national health data",
+    "trust_title": "Aggregate and privacy-protected, k-anonymity at least 5, sourced from national health systems",
+    "cta_primary": "Open the data catalogue",
+    "cta_secondary": "Read the latest bulletins"
+  },
+  "footer": {
+    "brand_line": "{platform.name} · {platform.abbr}",
+    "owner_line": "{ministry.name} · {country.official_name}",
+    "columns": [
+      {
+        "title": "About",
+        "links": ["Methodology", "Governance", "Contact"]
+      },
+      {
+        "title": "Open",
+        "links": ["API docs", "dbt docs", "Code repository"]
+      },
+      {
+        "title": "Legal",
+        "links": ["Privacy notice", "Terms of use", "Data licence"]
+      }
+    ]
+  },
+  "insights": {
+    "_note": "Published national figures for Ghana, each carrying its source. fallback_only=true because this deployment has no Ghana coverage marts; pub-insights renders these figures and ignores the shared (Ethiopian) widget-data seam, so no other country's numbers surface under Ghana.",
+    "fallback_only": true,
+    "section_sub": "National coverage figures for {country.name} from the 2022 Demographic and Health Survey and WHO/UNICEF estimates.",
+    "fallback_kpis": [
+      {
+        "key": "PENTA3-COV",
+        "kind": "coverage",
+        "order": 1,
+        "tone": "good",
+        "lbl": "Penta3 coverage",
+        "val": "97%",
+        "deltaTrend": "flat",
+        "deltaText": "WHO/UNICEF 2022",
+        "target": "GVAP target 95%"
+      },
+      {
+        "key": "ANC4-COV",
+        "kind": "coverage",
+        "order": 2,
+        "tone": "good",
+        "lbl": "ANC4 coverage",
+        "val": "89%",
+        "deltaTrend": "up",
+        "deltaText": "GDHS 2022",
+        "target": "national target 95%"
+      },
+      {
+        "key": "SBA-COV",
+        "kind": "coverage",
+        "order": 3,
+        "tone": "watch",
+        "lbl": "Skilled birth attendance",
+        "val": "88%",
+        "deltaTrend": "up",
+        "deltaText": "GDHS 2022, up from 79% in 2014",
+        "target": "national target 90%"
+      },
+      {
+        "key": "FP-MCPR",
+        "kind": "coverage",
+        "order": 4,
+        "tone": "alert",
+        "lbl": "Modern contraceptive use",
+        "val": "28%",
+        "deltaTrend": "flat",
+        "deltaText": "GDHS 2022 (married women)",
+        "target": "FP2030 commitment"
+      },
+      {
+        "key": "TB-TX-SUCC",
+        "kind": "outcome",
+        "order": 5,
+        "tone": "watch",
+        "lbl": "TB treatment success",
+        "val": "85%",
+        "deltaTrend": "flat",
+        "deltaText": "WHO 2022",
+        "target": "WHO target 90%"
+      },
+      {
+        "key": "NUT-STUNT",
+        "kind": "outcome",
+        "order": 6,
+        "tone": "good",
+        "lbl": "Under-5 stunting",
+        "val": "18%",
+        "deltaTrend": "down",
+        "deltaText": "GDHS 2022, down from 19% in 2014",
+        "target": "SDG target ≤25%"
+      },
+      {
+        "key": "DHIMS-COMPL",
+        "kind": "trust",
+        "order": 8,
+        "tone": "info",
+        "lbl": "Reporting completeness",
+        "val": "96%",
+        "deltaTrend": "up",
+        "deltaText": "DHIMS2 routine reporting",
+        "target": "national target 95%"
+      }
+    ]
+  },
+  "newsroom": {
+    "eyebrow": "Latest · News & bulletins",
+    "title": "What's happening",
+    "sub": "Surveillance bulletins, official press releases and public-health advisories, most recent first."
+  },
+  "articles_page": {
+    "_note": "Masthead for the Articles page. {country.adjective} resolves to Ghanaian. The list is empty until a live Ghanaian newsroom is published.",
+    "eyebrow": "Newsroom",
+    "title": "News and health bulletins",
+    "sub": "Surveillance bulletins, official press releases and public-health advisories from {country.adjective} health institutions, most recent first."
+  },
+  "access": {
+    "_note": "Access-request modal. Ghana ships no profile.identity block, so the modal drops the identity-verification card. Placeholders are illustrative Ghanaian examples.",
+    "title": "Request {platform.abbr} access",
+    "review_org": "{ministry.name} data governance",
+    "ph_name": "Dr Kwame Mensah",
+    "ph_email": "kwame.mensah@moh.gov.gh",
+    "ph_phone": "+233 24 000 0000",
+    "ph_org": "GHS / Regional Health Directorate / Partner",
+    "ph_role": "Programme officer, Regional Health Director, Researcher"
+  },
+  "dashboards": {
+    "_note": "Audiences on the 'Open a dashboard' launcher. The first names Ghana's sub-national bodies (Regional Health Directorates).",
+    "bi_audience": "GHS staff · Regional Health Directorates · programme directors",
+    "admin_audience": "IT operations · security officers",
+    "workshop_audience": "Researchers · analysts · community contributors"
+  },
+  "articles": [],
+  "_articles_note": "Empty. The newsroom is served live from ops_governance.public_article; when that is empty the page shows nothing rather than falling back to Ethiopian bulletins."
+}

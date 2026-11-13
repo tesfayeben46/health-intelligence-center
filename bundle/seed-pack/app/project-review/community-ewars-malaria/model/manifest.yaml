@@ -1,0 +1,20 @@
+name: community_ewars_malaria
+version: v1
+kind: forecaster
+deployment_kind: batch
+engine: python-statsmodels-nb2
+provenance: ewars
+description: >-
+  Climate-driven Negative-Binomial (NB2) GLM early-warning model: an offline
+  stand-in for WHO EWARS-CSD. Lagged rainfall/temp/humidity (lags 1..nlags) +
+  seasonal harmonics + region fixed effects + optional log-population offset.
+  Prediction bands and alarm_prob via NB posterior sampling (n_draws); alarm
+  threshold from the EARS endemic channel. Emits the flat forecast schema.
+actuals:
+  mart: bi_idsr.mart_ml_disease_input
+  value_col: cases
+  join_keys:
+    district: woreda_uid
+    disease: disease_code
+    year: year
+    week: week

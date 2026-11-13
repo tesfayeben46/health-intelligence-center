@@ -1,0 +1,79 @@
+# Profile · zm-v1 · Zambia
+#
+# The second country profile, exercising the profile mechanism on a different
+# country rather than a rename of the first.
+#
+# The administrative hierarchy, provinces, facilities, facility types and
+# programmes come from the eLMIS 2016-2018 demonstration data ingested through
+# the pipeline (see docs/data-provenance.md; 2,807 facilities across 10
+# provinces and 108 districts). Boundaries are geoBoundaries ADM1 (CC BY 4.0,
+# Zambia Data Hub via the national SDI). Published national indicators are
+# cited on each figure in the copy deck.
+#
+# `native_name` is absent throughout because Zambia's official language is
+# English; the presentation layer handles that without a placeholder, and the
+# hero's native line does not render.
+key: zm-v1
+label: Zambia
+revision: 1
+
+country:
+  name: Zambia
+  official_name: Republic of Zambia
+  adjective: Zambian
+  iso2: ZM
+  iso3: ZMB
+  # No native block: English is the official language, so there is no second
+  # script to render. The SPA omits the native headline rather than showing an
+  # empty element.
+
+ministry:
+  abbr: Palladium
+  name: Palladium
+  # logo omitted: the SPA falls back to the bundled Palladium wordmark. A
+  # production deployment ships the operating organisation's own file here.
+
+platform:
+  name: Data Intelligence Platform
+  abbr: Palladium
+
+geography:
+  # Zambia: Province -> District -> Facility. One level shallower than Ethiopia's
+  # region/zone/woreda/kebele, which is why the dashboards read these
+  # labels instead of saying "woreda" in their own markup.
+  levels:
+    - {code: admin1, singular: Province, plural: Provinces}
+    - {code: admin2, singular: District, plural: Districts}
+  admin1: geo/admin1.geojson
+  world: _shared/world-land-110m.geojson
+
+brand:
+  # Zambian national green, far from Ethiopia's blue so a profile
+  # swap is unmistakable on screen rather than a subtle copy change.
+  accent: "#1b7a44"
+
+locale:
+  default: en
+  fiscal_calendar: gregorian
+  currency: {code: ZMW, symbol: "K"}
+
+health_plan:
+  abbr: NHSP
+  name: National Health Strategic Plan
+
+layers:
+  appsec:
+    users: seed-pack/app/security/users.zm.yaml
+    note: a Zambian cast of demo users and their provincial scopes
+  data:
+    sources: bundle/seeds/sources
+    entity_model: bundle/seeds/entity-model/entity-model.zm.yaml
+    note: >-
+      the eLMIS 2017-2018 archive is already ingested and is Zambian:
+      provinces, districts, facilities, facility types, programmes and tracer
+      products all come from it. The entity model above carries those real
+      tables and synthesises what the archive does not hold (it is a supply
+      archive: no surveillance, no service indicators, no workforce), marking
+      each. The six generated source replicas still hold Ethiopian rows until
+      their generators are run against this model and the pipeline re-run:
+      that is the remaining work, and it costs a full pipeline run

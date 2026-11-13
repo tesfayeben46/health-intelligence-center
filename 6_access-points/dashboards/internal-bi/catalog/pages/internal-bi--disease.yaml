@@ -1,0 +1,13 @@
+id: internal-bi/disease
+title: Disease
+ordering: 20
+filters:
+- region
+- period
+- programme
+sections:
+- internal-bi/disease/signal-header
+- internal-bi/disease/geographic-risk
+- internal-bi/disease/outbreak-operations
+- internal-bi/disease/anomaly-trend
+- internal-bi/disease/climate-drivers

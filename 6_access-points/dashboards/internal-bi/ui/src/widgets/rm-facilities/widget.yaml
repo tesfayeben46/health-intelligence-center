@@ -1,0 +1,8 @@
+id: rm-facilities
+title: Resource · Facility tier coverage
+kind: chart
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

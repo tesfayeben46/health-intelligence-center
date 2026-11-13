@@ -1,0 +1,101 @@
+# R-SUPER: Super-User
+#
+# Universal access across every subject and granularity. Reserved for the
+# deployment administrator and break-glass scenarios. Assignment is audited
+# at the privileged class.
+role:
+  id: R-SUPER
+  name: "Super-User"
+  group: Privileged
+  identity_provider: Privileged-Keycloak
+  mfa_required: true
+  mfa_factor: WebAuthn
+  phase_activated: 1
+  audit_class: privileged
+  notes: |
+    Universal access. Use sparingly; every action is captured to the
+    privileged-class audit stream. Demonstrations rely on R-SUPER to
+    show how the rest of the system behaves when a wildcard role hits
+    every surface.
+  permissions:
+    - subject: PT
+      data_class: [DC.ENC, DC.CND, DC.OBS, DC.MED, DC.AEFI]
+      members: scoped
+      granularity: raw
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]
+    - subject: PT
+      data_class: [DC.ENC, DC.CND, DC.OBS, DC.MED, DC.AEFI]
+      members: scoped
+      granularity: deidentified
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]
+    - subject: PT
+      data_class: [DC.ENC, DC.CND, DC.OBS, DC.MED, DC.AEFI]
+      members: scoped
+      granularity: aggregate
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]
+
+    - subject: HP
+      data_class: [DC.PRO, DC.PRF]
+      members: scoped
+      granularity: raw
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]
+    - subject: HP
+      data_class: [DC.PRO, DC.PRF]
+      members: scoped
+      granularity: aggregate
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]
+
+    - subject: FAC
+      data_class: [DC.PRO, DC.PRF]
+      members: scoped
+      granularity: raw
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]
+    - subject: FAC
+      data_class: [DC.PRO, DC.PRF]
+      members: scoped
+      granularity: aggregate
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]
+
+    - subject: PRD
+      data_class: [DC.STK, DC.MED]
+      members: scoped
+      granularity: raw
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]
+    - subject: PRD
+      data_class: [DC.STK, DC.MED]
+      members: scoped
+      granularity: aggregate
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]
+
+    - subject: PRG
+      data_class: []
+      members: scoped
+      granularity: raw
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]
+    - subject: PRG
+      data_class: []
+      members: scoped
+      granularity: aggregate
+      sensitivity: [restricted, privileged]
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health, treatment, research, oversight]

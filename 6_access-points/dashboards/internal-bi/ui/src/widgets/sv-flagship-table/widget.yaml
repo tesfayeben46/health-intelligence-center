@@ -1,0 +1,8 @@
+id: sv-flagship-table
+title: Indicator Scorecard
+kind: table
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

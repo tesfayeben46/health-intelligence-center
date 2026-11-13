@@ -1,0 +1,11 @@
+id: internal-bi/service/flagship-attainment
+page_id: internal-bi/service
+title: Flagship Attainment
+ordering: 10
+columns: 12
+dense: true
+widgets:
+- id: sv-flagship-table
+  col_span: 8
+  row_span: 3
+  ordering: 0

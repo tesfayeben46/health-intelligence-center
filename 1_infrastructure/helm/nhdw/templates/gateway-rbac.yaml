@@ -1,0 +1,42 @@
+{{- $ns := .Values.namespace -}}
+# ServiceAccount, namespaced Role/RoleBinding and ClusterRole/Binding for nhdw-gateway:
+# read pods, services, events and logs; scale Deployments and HPAs; run ML Jobs; and
+# read cluster-scoped nodes and metrics for the topology cards.
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: nhdw-gateway, namespace: {{ $ns }} }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { name: nhdw-gateway, namespace: {{ $ns }} }
+rules:
+  - { apiGroups: [ "" ],               resources: [ pods, services, namespaces, configmaps, secrets ], verbs: [ get, list, watch ] }
+  - { apiGroups: [ "" ],               resources: [ events ],   verbs: [ get, list, watch ] }
+  - { apiGroups: [ "" ],               resources: [ pods/log ], verbs: [ get ] }
+  - { apiGroups: [ "metrics.k8s.io" ], resources: [ pods ],     verbs: [ get, list ] }
+  - { apiGroups: [ "apps" ],           resources: [ deployments, deployments/scale, statefulsets, replicasets ], verbs: [ get, list, watch, patch, update ] }
+  - { apiGroups: [ "autoscaling" ],    resources: [ horizontalpodautoscalers ], verbs: [ get, list, watch, patch, update ] }
+  - { apiGroups: [ "batch" ],          resources: [ jobs, cronjobs ], verbs: [ get, list, watch, create, delete ] }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: nhdw-gateway, namespace: {{ $ns }} }
+subjects:
+  - { kind: ServiceAccount, name: nhdw-gateway, namespace: {{ $ns }} }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: Role, name: nhdw-gateway }
+---
+# Cluster-scoped node reads for the topology node-usage and storage cards.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: nhdw-gateway-node-metrics }
+rules:
+  - { apiGroups: [ "" ],               resources: [ nodes ],       verbs: [ get, list ] }
+  - { apiGroups: [ "" ],               resources: [ nodes/proxy ], verbs: [ get ] }
+  - { apiGroups: [ "metrics.k8s.io" ], resources: [ nodes ],       verbs: [ get, list ] }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: nhdw-gateway-node-metrics }
+subjects:
+  - { kind: ServiceAccount, name: nhdw-gateway, namespace: {{ $ns }} }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: nhdw-gateway-node-metrics }

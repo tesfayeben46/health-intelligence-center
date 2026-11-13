@@ -1,0 +1,633 @@
+- role: R-DEC
+  dashboards:
+  - public
+  - internal-bi
+  widgets:
+    public:
+    - pub-articles-list
+    - pub-data-catalogue
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    internal-bi:
+    - bi-assistant
+    - dz-climate-corr
+    - dz-climate-ts
+    - dz-kpi-strip
+    - dz-outbreaks-table
+    - dz-region-map
+    - dz-signal-chart
+    - dz-woreda-table
+    - ex-audit-trail
+    - ex-saved-queries
+    - ex-sql-editor
+    - ex-templates
+    - ov-act-first-woredas
+    - ov-benchmarks
+    - ov-brief
+    - ov-disease-outbreaks
+    - ov-disease-pulse
+    - ov-disease-snapshot
+    - ov-national-kpis
+    - ov-reliability-table
+    - ov-resource-facilities
+    - ov-resource-status
+    - ov-service-attainment
+    - ov-service-cascade
+    - ov-trust-completeness
+    - ov-source-pulse
+    - ov-trust-mapping
+    - ov-trust-silent
+    - rm-cold-chain
+    - rm-equipment
+    - rm-events
+    - rm-facilities
+    - rm-forecast
+    - rm-hero
+    - rm-act-week
+    - rm-hotspots
+    - rm-map
+    - ct-filters
+    - ct-kpis
+    - ct-movement
+    - ct-dispatch
+    - rm-statboard
+    - rm-stock-heatmap
+    - rm-stockout-impact
+    - rm-stockout-risk-kpi
+    - rm-wastage
+    - rm-workforce
+    - st-alert-subs
+    - st-display
+    - st-profile
+    - st-security
+    - sv-agreement-donut
+    - sv-cascade-hiv
+    - sv-cascade-mnch
+    - sv-zero-dose
+    - sv-cascade-ncd
+    - sv-cascade-tb
+    - sv-compliance
+    - sv-continuity-mnch
+    - sv-data-trust-table
+    - sv-dropoff-region
+    - sv-facility-outliers
+    - sv-flagship-table
+    - sv-risk-woredas
+    - sv-topline-kpis
+- role: R-RHB-OROMIA
+  dashboards:
+  - public
+  - internal-bi
+  widgets:
+    public:
+    - pub-articles-list
+    - pub-data-catalogue
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    internal-bi:
+    - bi-assistant
+    - dz-kpi-strip
+    - dz-outbreaks-table
+    - dz-region-map
+    - dz-signal-chart
+    - dz-woreda-table
+    - ov-brief
+    - ov-benchmarks
+    - ov-reliability-table
+    - ov-act-first-woredas
+    - ov-source-pulse
+    - ov-trust-completeness
+    - ov-trust-mapping
+    - ov-trust-silent
+    - ov-disease-snapshot
+    - rm-equipment
+    - rm-events
+    - rm-facilities
+    - rm-forecast
+    - rm-hero
+    - rm-act-week
+    - rm-hotspots
+    - rm-map
+    - ct-filters
+    - ct-kpis
+    - ct-movement
+    - ct-dispatch
+    - rm-statboard
+    - rm-stock-heatmap
+    - rm-stockout-risk-kpi
+    - rm-workforce
+    - st-alert-subs
+    - st-display
+    - st-profile
+    - st-security
+    - sv-cascade-hiv
+    - sv-cascade-mnch
+    - sv-zero-dose
+    - sv-cascade-tb
+    - sv-compliance
+    - sv-flagship-table
+    - sv-risk-woredas
+
+# The Zambian counterpart of the block above. A geographic role belongs to a
+# country, not to the platform: zm-v1 users reference this one and et-v3 users
+# reference R-RHB-OROMIA, so neither profile's cast names a role that means
+# nothing where they work. Same catalogue, plus the PCT page widgets.
+- role: R-PHO-LUSAKA
+  dashboards:
+  - public
+  - internal-bi
+  widgets:
+    public:
+    - pub-articles-list
+    - pub-data-catalogue
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    internal-bi:
+    - bi-assistant
+    - dz-kpi-strip
+    - dz-outbreaks-table
+    - dz-region-map
+    - dz-signal-chart
+    - dz-woreda-table
+    - ov-brief
+    - ov-benchmarks
+    - ov-reliability-table
+    - ov-act-first-woredas
+    - ov-source-pulse
+    - ov-trust-completeness
+    - ov-trust-mapping
+    - ov-trust-silent
+    - ov-disease-snapshot
+    - rm-equipment
+    - rm-events
+    - rm-facilities
+    - rm-forecast
+    - rm-hero
+    - rm-act-week
+    - rm-hotspots
+    - rm-map
+    - ct-filters
+    - ct-kpis
+    - ct-movement
+    - ct-dispatch
+    - rm-statboard
+    - rm-stock-heatmap
+    - rm-stockout-risk-kpi
+    - rm-workforce
+    - st-alert-subs
+    - st-display
+    - st-profile
+    - st-security
+    - sv-cascade-hiv
+    - sv-cascade-mnch
+    - sv-zero-dose
+    - sv-cascade-tb
+    - sv-compliance
+    - sv-flagship-table
+    - sv-risk-woredas
+- role: R-PD-HIV
+  dashboards:
+  - public
+  - internal-bi
+  widgets:
+    public:
+    - pub-articles-list
+    - pub-data-catalogue
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    internal-bi:
+    - bi-assistant
+    - dz-kpi-strip
+    - dz-outbreaks-table
+    - dz-signal-chart
+    - dz-woreda-table
+    - ov-brief
+    - ov-benchmarks
+    - ov-reliability-table
+    - ov-act-first-woredas
+    - ov-source-pulse
+    - ov-trust-completeness
+    - ov-trust-mapping
+    - ov-trust-silent
+    - ov-disease-snapshot
+    - rm-hero
+    - rm-statboard
+    - rm-stock-heatmap
+    - rm-events
+    - rm-stockout-impact
+    - st-alert-subs
+    - st-display
+    - st-profile
+    - st-security
+    - sv-cascade-hiv
+    - sv-compliance
+    - sv-flagship-table
+- role: R-CONS-ANA
+  dashboards:
+  - public
+  - internal-bi
+  - workshop
+  widgets:
+    public:
+    - pub-articles-list
+    - pub-data-catalogue
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    internal-bi:
+    - bi-assistant
+    - dz-climate-corr
+    - dz-climate-ts
+    - dz-kpi-strip
+    - dz-outbreaks-table
+    - dz-region-map
+    - dz-signal-chart
+    - dz-woreda-table
+    - ex-audit-trail
+    - ex-saved-queries
+    - ex-sql-editor
+    - ex-templates
+    - ov-act-first-woredas
+    - ov-benchmarks
+    - ov-brief
+    - ov-disease-outbreaks
+    - ov-disease-pulse
+    - ov-disease-snapshot
+    - ov-national-kpis
+    - ov-reliability-table
+    - ov-resource-facilities
+    - ov-resource-status
+    - ov-service-attainment
+    - ov-service-cascade
+    - ov-trust-completeness
+    - ov-source-pulse
+    - ov-trust-mapping
+    - ov-trust-silent
+    - rm-cold-chain
+    - rm-equipment
+    - rm-events
+    - rm-facilities
+    - rm-forecast
+    - rm-hero
+    - rm-act-week
+    - rm-hotspots
+    - rm-map
+    - ct-filters
+    - ct-kpis
+    - ct-movement
+    - ct-dispatch
+    - rm-statboard
+    - rm-stock-heatmap
+    - rm-stockout-impact
+    - rm-stockout-risk-kpi
+    - rm-wastage
+    - rm-workforce
+    - st-alert-subs
+    - st-display
+    - st-profile
+    - st-security
+    - sv-agreement-donut
+    - sv-cascade-hiv
+    - sv-cascade-mnch
+    - sv-zero-dose
+    - sv-cascade-ncd
+    - sv-cascade-tb
+    - sv-compliance
+    - sv-continuity-mnch
+    - sv-data-trust-table
+    - sv-dropoff-region
+    - sv-facility-outliers
+    - sv-flagship-table
+    - sv-risk-woredas
+    - sv-topline-kpis
+    workshop:
+    - ws-running-labs
+    - ws-stats
+    - ws-group-inbox
+    - ws-my-groups
+    - ws-groups-discover
+    - ws-group-sent
+    - ws-group-invite
+    - ws-dataset-builder
+    - ws-datasets-table
+    - ws-models-table
+    - ws-model-workbench
+    - ws-projects-table
+    - ws-project-detail
+    - ws-project-files
+    - ws-project-artifacts
+    - ws-help-guides
+    - ws-settings-profile
+- role: R-CONS-SCI
+  dashboards:
+  - public
+  - workshop
+  widgets:
+    public:
+    - pub-articles-list
+    - pub-data-catalogue
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    workshop:
+    - ws-running-labs
+    - ws-stats
+    - ws-group-inbox
+    - ws-my-groups
+    - ws-groups-discover
+    - ws-group-sent
+    - ws-group-invite
+    - ws-dataset-builder
+    - ws-datasets-table
+    - ws-models-table
+    - ws-model-workbench
+    - ws-projects-table
+    - ws-project-detail
+    - ws-project-files
+    - ws-project-artifacts
+    - ws-help-guides
+    - ws-settings-profile
+- role: R-CONS-RES
+  dashboards:
+  - public
+  - workshop
+  widgets:
+    public:
+    - pub-articles-list
+    - pub-data-catalogue
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    workshop:
+    - ws-running-labs
+    - ws-stats
+    - ws-group-inbox
+    - ws-my-groups
+    - ws-groups-discover
+    - ws-group-sent
+    - ws-group-invite
+    - ws-dataset-builder
+    - ws-datasets-table
+    - ws-models-table
+    - ws-model-workbench
+    - ws-projects-table
+    - ws-project-detail
+    - ws-project-files
+    - ws-project-artifacts
+    - ws-help-guides
+    - ws-settings-profile
+- role: R-CONS-PRT
+  dashboards:
+  - public
+  - internal-bi
+  widgets:
+    public:
+    - pub-articles-list
+    - pub-data-catalogue
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    internal-bi:
+    - dz-kpi-strip
+    - dz-signal-chart
+    - ov-brief
+    - ov-disease-snapshot
+    - ex-audit-trail
+    - ex-templates
+    - sv-cascade-hiv
+    - sv-cascade-mnch
+    - sv-zero-dose
+    - sv-cascade-tb
+    - sv-flagship-table
+- role: R-STEW
+  dashboards:
+  - public
+  - internal-bi
+  - workshop
+  # admin: only the MDM stewardship page (governance and ops plane, no mart
+  # reads, so the data-plane separation of duties below is unaffected). This is
+  # the steward's decision console: the matcher's candidate queue and the
+  # append-only decision log the vault build replays.
+  - admin
+  widgets:
+    admin:
+    - adm-classification
+    - adm-mdm-review
+    public:
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    # The steward has no data-plane access by design (separation of duties,
+    # r-stew.yaml): OPA denies every mart read for R-STEW, so any mart-bound
+    # widget would render empty. The widget grants therefore match the policy:
+    # only the non-mart widgets that render (the assistant, the governance audit
+    # trail, user settings). The operational data pages (Overview, Disease,
+    # Resource, Service) elide because no widgets are granted. The steward works
+    # in the workshop (catalog, lineage, model governance) below and in admin
+    # governance. Giving stewards aggregate health reads would be an OPA change
+    # (widen r-stew.yaml), not a grant change.
+    internal-bi:
+    - bi-assistant
+    - ex-audit-trail
+    - st-alert-subs
+    - st-display
+    - st-profile
+    - st-security
+    workshop:
+    - ws-datasets-table
+    - ws-models-table
+    - ws-help-guides
+    - ws-settings-profile
+- role: R-OPS-ENG
+  dashboards:
+  - public
+  - admin
+  widgets:
+    public:
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    admin:
+    - adm-alerts-routing
+    - adm-documentation
+    - adm-dq
+    - adm-models-datasets
+    - adm-topology
+- role: R-OPS-ADM
+  dashboards:
+  - public
+  - admin
+  - internal-bi
+  - workshop
+  widgets:
+    public:
+    - pub-articles-list
+    - pub-data-catalogue
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    admin:
+    - adm-alerts-routing
+    - adm-classification
+    - adm-dashboard-control
+    - adm-documentation
+    - adm-dq
+    - adm-mdm-review
+    - adm-models-datasets
+    - adm-roles-permissions
+    - adm-sso-cards
+    - adm-topology
+    - adm-users-access
+    # R-OPS-ADM has no data-plane access by design (the same separation of
+    # duties as R-STEW: DC.QLT only, which OPA denies), so mart-bound internal-BI
+    # widgets would render empty. Its working surface is the admin dashboard
+    # above (topology, DQ, users, SSO). Only the non-mart widgets that render are
+    # granted here (governance audit trail, settings); the operational data
+    # pages elide.
+    internal-bi:
+    - ex-audit-trail
+    - st-alert-subs
+    - st-display
+    - st-profile
+    - st-security
+    workshop:
+    - ws-running-labs
+    - ws-stats
+    - ws-group-inbox
+    - ws-my-groups
+    - ws-groups-discover
+    - ws-group-sent
+    - ws-group-invite
+    - ws-dataset-builder
+    - ws-datasets-table
+    - ws-models-table
+    - ws-model-workbench
+    - ws-projects-table
+    - ws-project-detail
+    - ws-project-files
+    - ws-project-artifacts
+    - ws-help-guides
+    - ws-settings-profile
+- role: R-OPS-SEC
+  dashboards:
+  - public
+  - admin
+  widgets:
+    public:
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+    admin:
+    # Infrastructure group: the security officer monitors live system posture.
+    # The gateway authorises R-OPS-SEC on both feeds (topology OPS_ROLES; alerts
+    # view_ops_console capability); these grants make the widgets behind the
+    # static nav items render.
+    - adm-topology
+    - adm-alerts-routing
+    - adm-roles-permissions
+    - adm-sso-cards
+    - adm-users-access
+- role: R-PROD-SUBMIT
+  dashboards:
+  - public
+  widgets:
+    public:
+    - pub-hero
+    - pub-newsroom
+- role: R-PROD-CLIN
+  dashboards:
+  - public
+  widgets:
+    public:
+    - pub-hero
+    - pub-newsroom
+- role: R-PUB-ANON
+  dashboards:
+  - public
+  widgets:
+    public:
+    - pub-articles-list
+    - pub-data-catalogue
+    - pub-hero
+    - pub-insights
+    - pub-zm-supply
+    - pub-newsroom
+    - pub-region
+    - pub-zm-kpi
+    - pub-zm-province
+    - pub-supply
+- role: R-SUPER
+  dashboards: '*'
+  widgets: '*'
+# MDM workspace (append-only section)
+# R-STEW-APR: only the MDM stewardship page on admin (the Approvals tab).
+- role: R-STEW-APR
+  dashboards:
+  - admin
+  widgets:
+    admin:
+    - adm-mdm-review

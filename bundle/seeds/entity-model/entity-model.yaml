@@ -1,0 +1,284 @@
+# NHDW · shared entity model
+#
+# The demonstration entity model every source generator (DHIS2, EthioEMR,
+# HCMIS, mBrana, MFR) and every dbt model agree on (see docs/data-provenance.md).
+# Keys defined here appear verbatim in every layer so cross-source joins are
+# deterministic.
+#
+# Sizes are tuned so the generated data:
+#   - holds every category at least once (no empty pivots),
+#   - follows Ethiopian distributions (regions, ownership, facility tiers),
+#   - fits comfortably on a 31 GB shared VM,
+#   - can be regenerated end-to-end in well under 10 minutes.
+#
+# Workflow: edit this file, run build_sample.py, re-run each source's synthesize.py.
+
+version: 1
+generated_for: "NHDW demo · FY2018 EFY"
+random_seed: 20260624          # one knob; flip to reroll every distribution
+target_year: 2026              # Gregorian; used as 'now' anchor for synth
+history_years: 3               # how far back transactional data goes
+
+
+#  GEOGRAPHY · 14 regions matching the Ethiopian admin hierarchy.
+#  Weights are the public MFR facility share (2026-04-30 snapshot), rounded
+#  for readability; they sum to about 100%. The EPSS hub is the EPSS branch
+#  that serves the region per the HCMIS hub catalogue.
+regions:
+  - {id: ET-OR, name: Oromia Region,                  code: OR, weight: 34.9, epss_hub: ADAMA, capital: Adama,        population_mn: 38.0}
+  - {id: ET-AM, name: Amhara Region,                  code: AM, weight: 19.7, epss_hub: BAHR,  capital: Bahir Dar,   population_mn: 22.5}
+  - {id: ET-AA, name: Addis Ababa City Administration, code: AA, weight:  8.3, epss_hub: ADDIS, capital: Addis Ababa, population_mn:  3.9}
+  - {id: ET-SO, name: Somali Region,                  code: SO, weight:  7.1, epss_hub: JIJI,  capital: Jijiga,      population_mn:  6.4}
+  - {id: ET-SE, name: South Ethiopia Region,          code: SE, weight:  6.7, epss_hub: HAWA,  capital: Wolaita Sodo,population_mn:  4.8}
+  - {id: ET-CE, name: Central Ethiopia Region,        code: CE, weight:  5.2, epss_hub: HAWA,  capital: Hossana,     population_mn:  4.2}
+  - {id: ET-SW, name: South West Ethiopia Region,     code: SW, weight:  4.6, epss_hub: JIMM,  capital: Mizan Aman,  population_mn:  3.0}
+  - {id: ET-TI, name: Tigray Region,                  code: TI, weight:  4.6, epss_hub: MEKE,  capital: Mekele,      population_mn:  5.7}
+  - {id: ET-SI, name: Sidama Region,                  code: SI, weight:  2.6, epss_hub: HAWA,  capital: Hawassa,     population_mn:  4.6}
+  - {id: ET-BG, name: Benishangul-Gumuz Region,       code: BG, weight:  2.5, epss_hub: ASSA,  capital: Assosa,      population_mn:  1.2}
+  - {id: ET-AF, name: Afar Region,                    code: AF, weight:  1.5, epss_hub: ASAY,  capital: Semera,      population_mn:  2.1}
+  - {id: ET-GA, name: Gambella Region,                code: GA, weight:  1.2, epss_hub: GAMB,  capital: Gambella,    population_mn:  0.5}
+  - {id: ET-DD, name: Dire Dawa City Administration,  code: DD, weight:  0.6, epss_hub: DIRE,  capital: Dire Dawa,   population_mn:  0.5}
+  - {id: ET-HA, name: Harari Region,                  code: HA, weight:  0.5, epss_hub: HARA,  capital: Harar,       population_mn:  0.3}
+
+# How many woredas to sample (Ethiopia has about 1,400). 60 covers every
+# region at least once and gives multi-woreda regions enough variety.
+woreda_count: 60
+
+# Facility sample size and tier composition. The public MFR distribution skews
+# heavily commercial (drug stores / clinics). We re-bias toward service-
+# delivery facilities since the dashboards' KPIs are HMIS/IDSR-centred.
+# Total must equal facility_count.
+facility_count: 900
+facility_tiers:
+  # health-system pyramid (HP -> HC -> PH -> GH -> SH)
+  - {id: HP,  name: Health Post,             count: 320, weight_per_woreda: 6.0, ownership_mix: {public: 0.95, private: 0.0,  ngo: 0.04, military: 0.01}}
+  - {id: HC,  name: Health Centre,           count: 240, weight_per_woreda: 4.0, ownership_mix: {public: 0.88, private: 0.05, ngo: 0.06, military: 0.01}}
+  - {id: PHC, name: Primary Clinic,          count: 120, weight_per_woreda: 2.0, ownership_mix: {public: 0.25, private: 0.65, ngo: 0.08, military: 0.02}}
+  - {id: MC,  name: Medium Clinic,           count:  80, weight_per_woreda: 1.5, ownership_mix: {public: 0.15, private: 0.78, ngo: 0.06, military: 0.01}}
+  - {id: PH,  name: Primary Hospital,        count:  60, weight_per_woreda: 1.0, ownership_mix: {public: 0.85, private: 0.10, ngo: 0.04, military: 0.01}}
+  - {id: GH,  name: General Hospital,        count:  35, weight_per_woreda: 0.6, ownership_mix: {public: 0.78, private: 0.14, ngo: 0.06, military: 0.02}}
+  - {id: SH,  name: Specialised Hospital,    count:  10, weight_per_woreda: 0.2, ownership_mix: {public: 0.70, private: 0.20, ngo: 0.08, military: 0.02}}
+  # commodity-distribution endpoints (only HCMIS / mBrana care)
+  - {id: PH-,  name: Pharmacy,                count:  20, weight_per_woreda: 0.5, ownership_mix: {public: 0.10, private: 0.85, ngo: 0.04, military: 0.01}}
+  - {id: DS,  name: Drug Store,              count:  15, weight_per_woreda: 0.5, ownership_mix: {public: 0.05, private: 0.92, ngo: 0.02, military: 0.01}}
+
+
+#  TIME · Ethiopian + Gregorian dual calendar. Periods are precomputed at
+#  build_sample.py time so every source emits matching `period_id` strings.
+period:
+  grain:           [day, week_iso, month, quarter, fy_ec]   # what to precompute
+  fy_start_month_ec: 1                                       # Meskerem (Sept)
+  use_ethiopian_calendar_id: true                            # vs Gregorian
+
+
+#  PROGRAMMES · the 8 disease/service programmes every layer agrees on.
+#  Order matters; downstream UIs render in this order.
+programmes:
+  - {id: HIV,       name: HIV,                         icon: i-virus,      colour_token: navy-700}
+  - {id: TB,        name: TB,                          icon: i-shield,     colour_token: navy-600}
+  - {id: EPI,       name: EPI · Immunisation,          icon: i-syringe,    colour_token: navy-500}
+  - {id: MNCH,      name: MNCH,                        icon: i-heart,      colour_token: navy-700}
+  - {id: NCD,       name: NCD,                         icon: i-pill,       colour_token: navy-600}
+  - {id: MALARIA,   name: Malaria,                     icon: i-thermo,     colour_token: navy-500}
+  - {id: FP,        name: Family Planning,             icon: i-handshake,  colour_token: navy-700}
+  - {id: NUTRITION, name: Nutrition,                   icon: i-leaf,       colour_token: navy-600}
+
+
+#  INDICATORS · 40 cover every programme. Calc-type tells dbt how to
+#  aggregate (sum count, weighted percentage, age-standardised rate).
+indicators:
+  # HIV (5)
+  - {id: HIV-TEST,    programme: HIV,       name: HIV tests performed,           calc: count,        unit: tests}
+  - {id: HIV-POS,     programme: HIV,       name: HIV positive identified,       calc: count,        unit: persons}
+  - {id: HIV-ART-NEW, programme: HIV,       name: ART new initiation,            calc: count,        unit: persons}
+  - {id: HIV-ART-CURR,programme: HIV,       name: ART currently active,          calc: count,        unit: persons}
+  - {id: HIV-VL-SUPP, programme: HIV,       name: Viral load suppressed,         calc: pct_of,       denom: HIV-ART-CURR, unit: percent}
+
+  # TB (5)
+  - {id: TB-NOTIF,    programme: TB,        name: TB cases notified,             calc: count,        unit: cases}
+  - {id: TB-BACT,     programme: TB,        name: TB bacteriologically confirmed,calc: count,        unit: cases}
+  - {id: TB-TX-NEW,   programme: TB,        name: TB treatment initiated,        calc: count,        unit: cases}
+  - {id: TB-TX-SUCC,  programme: TB,        name: TB treatment success,          calc: pct_of,       denom: TB-TX-NEW, unit: percent}
+  - {id: TB-LTFU,     programme: TB,        name: TB lost-to-follow-up,          calc: count,        unit: cases}
+
+  # EPI (6)
+  - {id: BCG,         programme: EPI,       name: BCG dose given,                calc: count,        unit: doses}
+  - {id: PENTA1,      programme: EPI,       name: Penta-1 dose given,            calc: count,        unit: doses}
+  - {id: PENTA3,      programme: EPI,       name: Penta-3 dose given,            calc: count,        unit: doses}
+  - {id: MR1,         programme: EPI,       name: Measles-Rubella 1st dose,      calc: count,        unit: doses}
+  - {id: MR2,         programme: EPI,       name: Measles-Rubella 2nd dose,      calc: count,        unit: doses}
+  - {id: PENTA3-COV,  programme: EPI,       name: Penta-3 coverage under 1y,     calc: coverage,     denom: live_births, unit: percent}
+  # EPI safety surveillance (feeds mart_epi_cold_chain_safety -> rm-cold-chain):
+  # these ids must be in this catalog for the DHIS2 generator to produce
+  # values for the corresponding dataElements.
+  - {id: CC-EXCURSION, programme: EPI,      name: Cold-chain temperature excursions, calc: count,   unit: events}
+  - {id: AEFI-MILD,    programme: EPI,      name: AEFI · mild reactions,         calc: count,        unit: cases}
+  - {id: AEFI-SERIOUS, programme: EPI,      name: AEFI · serious reactions,      calc: count,        unit: cases}
+
+  # MNCH (6)
+  - {id: ANC1,        programme: MNCH,      name: ANC1 visits,                   calc: count,        unit: visits}
+  - {id: ANC4,        programme: MNCH,      name: ANC4 visits,                   calc: count,        unit: visits}
+  - {id: SBA,         programme: MNCH,      name: Skilled birth attendance,      calc: count,        unit: deliveries}
+  - {id: PNC1,        programme: MNCH,      name: PNC within 48h,                calc: count,        unit: visits}
+  - {id: ANC4-COV,    programme: MNCH,      name: ANC4 coverage,                 calc: coverage,     denom: expected_pregnancies, unit: percent}
+  - {id: SBA-COV,     programme: MNCH,      name: Skilled birth attendance coverage, calc: coverage, denom: expected_deliveries, unit: percent}
+  - {id: MMR,         programme: MNCH,      name: Maternal mortality ratio,      calc: rate_per_100k,denom: live_births, unit: per_100k}
+
+  # NCD (4)
+  - {id: HTN-SCRN,    programme: NCD,       name: HTN screened (HEARTS),         calc: count,        unit: persons}
+  - {id: HTN-DX,      programme: NCD,       name: HTN newly diagnosed,           calc: count,        unit: persons}
+  - {id: HTN-TX,      programme: NCD,       name: HTN on treatment,              calc: count,        unit: persons}
+  - {id: HTN-CTRL,    programme: NCD,       name: HTN blood-pressure controlled, calc: pct_of,       denom: HTN-TX, unit: percent}
+
+  # Malaria (core KPI set: suspected -> test-by-modality -> confirmed -> TPR ->
+  # per-1000 -> deaths, plus ITN/IRS vector-control coverage)
+  - {id: MAL-SUSP,    programme: MALARIA,   name: Malaria suspected cases,       calc: count,        unit: cases}
+  - {id: MAL-MICRO,   programme: MALARIA,   name: Malaria tested by microscopy,  calc: count,        unit: tests}
+  - {id: MAL-CONF,    programme: MALARIA,   name: Malaria confirmed cases,       calc: count,        unit: cases}
+  - {id: MAL-RDT,     programme: MALARIA,   name: Malaria RDTs performed,        calc: count,        unit: tests}
+  - {id: MAL-TX-AL,   programme: MALARIA,   name: AL treatment courses given,    calc: count,        unit: courses}
+  - {id: MAL-DEATH,   programme: MALARIA,   name: Inpatient malaria deaths,      calc: count,        unit: deaths}
+  - {id: MAL-INC,     programme: MALARIA,   name: Malaria incidence per 1,000,   calc: rate_per_1k,  denom: population_at_risk, unit: per_1k}
+  - {id: MAL-ITN-COV, programme: MALARIA,   name: ITN coverage,                  calc: coverage,     denom: population_at_risk, unit: percent}
+  - {id: MAL-IRS-COV, programme: MALARIA,   name: IRS coverage (last 12 months), calc: coverage,     denom: households_targeted, unit: percent}
+
+  # FP (4)
+  - {id: FP-NEW,      programme: FP,        name: FP new acceptors,              calc: count,        unit: persons}
+  - {id: FP-IMPL,     programme: FP,        name: Implanon NXT inserted,         calc: count,        unit: insertions}
+  - {id: FP-DEPO,     programme: FP,        name: Depo-Provera dispensed,        calc: count,        unit: doses}
+  - {id: FP-CYP,      programme: FP,        name: Couple Years of Protection,    calc: weighted_sum, unit: cyp}
+  - {id: FP-MCPR,     programme: FP,        name: Modern contraceptive prevalence rate, calc: coverage, denom: women_reproductive_age, unit: percent}
+
+  # Nutrition (4)
+  - {id: NUT-SAM,     programme: NUTRITION, name: SAM admissions,                calc: count,        unit: cases}
+  - {id: NUT-SAM-CURE,programme: NUTRITION, name: SAM cure rate,                 calc: pct_of,       denom: NUT-SAM, unit: percent}
+  - {id: NUT-STUNT,   programme: NUTRITION, name: U5 stunting prevalence,        calc: pct_of,       denom: children_u5_measured, unit: percent}
+  - {id: NUT-RUTF,    programme: NUTRITION, name: RUTF dispensed,                calc: count,        unit: sachets}
+
+  # PHEM cross-cutting (2)
+  - {id: PHEM-TIMELY, programme: HIV,       name: IDSR timeliness,               calc: pct_of,       denom: facility_reports_due, unit: percent}
+  - {id: PHEM-COMPL,  programme: HIV,       name: Reporting completeness,        calc: pct_of,       denom: facility_reports_due, unit: percent}
+
+
+#  COMMODITIES · 35 cover every programme + every VEN class. Each maps to
+#  one programme so HCMIS issuances + DHIS2 doses-given reconcile cleanly.
+# enables = the HMIS service indicator this commodity supports (a stockout of
+# the commodity throttles that service): the stockout->missed-services estimate
+# joins through it. Only clean 1:1 linkages are declared; commodities without
+# a seeded service indicator (ORS, paracetamol, LLIN campaigns, insulin…) have
+# no `enables`, and their service impact is NULL rather than guessed.
+# build_sample.py emits id/name/programme/enables as the marts seed
+# commodity_reference (name = the supply marts' join key).
+commodities:
+  # EPI vaccines (10)
+  - {id: VAC-BCG,       programme: EPI, name: BCG vaccine,               ven: V, form: vial,    pack_size: 20, supplier: GAVI, enables: BCG}
+  - {id: VAC-OPV,       programme: EPI, name: OPV trivalent,             ven: V, form: vial,    pack_size: 20, supplier: GAVI}
+  - {id: VAC-IPV,       programme: EPI, name: IPV (inactivated polio),   ven: V, form: vial,    pack_size: 10, supplier: GAVI}
+  - {id: VAC-PENTA,     programme: EPI, name: Pentavalent DTwP-HepB-Hib, ven: V, form: vial,    pack_size: 10, supplier: GAVI, enables: PENTA1}
+  - {id: VAC-PCV13,     programme: EPI, name: PCV-13,                    ven: V, form: vial,    pack_size: 1,  supplier: GAVI}
+  - {id: VAC-ROTA,      programme: EPI, name: Rotavirus vaccine,         ven: V, form: vial,    pack_size: 1,  supplier: GAVI}
+  - {id: VAC-MR,        programme: EPI, name: Measles-Rubella,           ven: V, form: vial,    pack_size: 10, supplier: GAVI, enables: MR1}
+  - {id: VAC-HPV,       programme: EPI, name: HPV vaccine,               ven: V, form: vial,    pack_size: 1,  supplier: GAVI}
+  - {id: VAC-COVID,     programme: EPI, name: COVID-19 vaccine,          ven: V, form: vial,    pack_size: 10, supplier: COVAX}
+  - {id: VAC-TT,        programme: EPI, name: Tetanus toxoid,            ven: V, form: vial,    pack_size: 10, supplier: GAVI}
+
+  # MNCH (3)
+  - {id: MN-OXYTOCIN,   programme: MNCH, name: Oxytocin 10 IU/ml,        ven: V, form: ampoule, pack_size: 10, supplier: UNFPA, enables: SBA}
+  - {id: MN-MGSO4,      programme: MNCH, name: Magnesium sulphate 50%,   ven: V, form: ampoule, pack_size: 10, supplier: UNFPA}
+  - {id: MN-IRON-FOL,   programme: MNCH, name: Iron-folate,              ven: E, form: tablet,  pack_size: 100, supplier: UNICEF, enables: ANC1}
+
+  # HIV (3)
+  - {id: HIV-TLD,       programme: HIV,  name: TLD · adult ART,           ven: V, form: tablet,  pack_size: 30, supplier: PEPFAR, enables: HIV-ART-CURR}
+  - {id: HIV-PAED,      programme: HIV,  name: Pediatric ART,             ven: V, form: tablet,  pack_size: 60, supplier: PEPFAR}
+  - {id: HIV-RDT,       programme: HIV,  name: HIV RDT kit,               ven: V, form: kit,     pack_size: 100,supplier: PEPFAR, enables: HIV-TEST}
+
+  # TB (3)
+  - {id: TB-RHZE,       programme: TB,   name: RHZE fixed-dose combo,     ven: V, form: tablet,  pack_size: 28, supplier: GFATM, enables: TB-TX-NEW}
+  - {id: TB-GENEXPERT,  programme: TB,   name: GeneXpert cartridge,       ven: V, form: cart,    pack_size: 1,  supplier: GFATM, enables: TB-BACT}
+  - {id: TB-ISO,        programme: TB,   name: Isoniazid 300mg,           ven: E, form: tablet,  pack_size: 100, supplier: GFATM}
+
+  # Malaria (3)
+  - {id: MAL-AL,        programme: MALARIA, name: Artemether-Lumefantrine, ven: V, form: tablet, pack_size: 24, supplier: GFATM, enables: MAL-TX-AL}
+  - {id: MAL-RDT,       programme: MALARIA, name: Malaria RDT pf/pv,       ven: V, form: kit,    pack_size: 25, supplier: GFATM, enables: MAL-RDT}
+  - {id: MAL-LLIN,      programme: MALARIA, name: LLIN bed net,            ven: E, form: net,    pack_size: 1,  supplier: GFATM}
+
+  # FP (3)
+  - {id: FP-IMPLANON,   programme: FP,   name: Implanon NXT,              ven: E, form: implant, pack_size: 1,  supplier: UNFPA, enables: FP-IMPL}
+  - {id: FP-DEPO,       programme: FP,   name: Depo-Provera,              ven: E, form: vial,    pack_size: 1,  supplier: UNFPA, enables: FP-DEPO}
+  - {id: FP-COC,        programme: FP,   name: Combined oral contracept., ven: E, form: cycle,   pack_size: 21, supplier: UNFPA}
+
+  # NCD (4)
+  - {id: NCD-AMLOD,     programme: NCD,  name: Amlodipine 5mg,            ven: E, form: tablet,  pack_size: 30, supplier: EPSS, enables: HTN-TX}
+  - {id: NCD-INSULIN,   programme: NCD,  name: Insulin · regular 100 IU,  ven: V, form: vial,    pack_size: 1,  supplier: EPSS}
+  - {id: NCD-METFORMIN, programme: NCD,  name: Metformin 500mg,           ven: E, form: tablet,  pack_size: 100, supplier: EPSS}
+  - {id: NCD-LOSARTAN,  programme: NCD,  name: Losartan 50mg,             ven: E, form: tablet,  pack_size: 30, supplier: EPSS, enables: HTN-TX}
+
+  # Nutrition (3)
+  - {id: NT-RUTF,       programme: NUTRITION, name: RUTF (ready-to-use),  ven: V, form: sachet,  pack_size: 1,  supplier: UNICEF, enables: NUT-RUTF}
+  - {id: NT-FBF,        programme: NUTRITION, name: Fortified blended food,ven: E, form: bag,    pack_size: 1,  supplier: WFP}
+  - {id: NT-ORS,        programme: NUTRITION, name: ORS sachet,           ven: V, form: sachet,  pack_size: 1,  supplier: UNICEF}
+
+  # General (3)
+  - {id: GEN-AMOX,      programme: GENERAL,  name: Amoxicillin 250 DT,        ven: V, form: tablet,  pack_size: 100, supplier: EPSS}
+  - {id: GEN-PARA,      programme: GENERAL,  name: Paracetamol 500mg,         ven: E, form: tablet,  pack_size: 100, supplier: EPSS}
+
+
+#  CADRES · 3 health-worker types every workforce widget agrees on.
+cadres:
+  - {id: PHYS,  name: Physician,            who_target_per_10k: 1.0, ratio: 0.07}
+  - {id: NURSE, name: Nurse / midwife,      who_target_per_10k: 3.6, ratio: 0.46}
+  - {id: HEW,   name: Health Extension W.,  who_target_per_10k: 1.0, ratio: 0.47}
+
+
+#  EPSS HUBS · 14 (one per region) drawn from the HCMIS hub catalogue.
+# Outbreak-response mapping: which tracked commodity answers which IDSR
+# disease (role: treatment | diagnostic | prevention | supportive). Diseases
+# with no tracked countermeasure in the catalogue (MEN: no MenA vaccine or
+# ceftriaxone; RELF: no tetracycline) are absent: the supply and
+# outbreak mart shows them as "no tracked countermeasure" rather than
+# inventing a linkage. build_sample.py emits this as the marts seed
+# disease_response_map (joined to supply marts on commodity name; the HCMIS
+# item names are generated from this same commodities catalogue).
+disease_response:
+  - {disease: CHOL, commodity: NT-ORS,       role: treatment}
+  - {disease: DENG, commodity: GEN-PARA,     role: supportive}
+  - {disease: MAL,  commodity: MAL-AL,       role: treatment}
+  - {disease: MAL,  commodity: MAL-RDT,      role: diagnostic}
+  - {disease: MAL,  commodity: MAL-LLIN,     role: prevention}
+  - {disease: MEA,  commodity: VAC-MR,       role: prevention}
+  - {disease: NNT,  commodity: VAC-TT,       role: prevention}
+  - {disease: TB,   commodity: TB-RHZE,      role: treatment}
+  - {disease: TB,   commodity: TB-GENEXPERT, role: diagnostic}
+  - {disease: TB,   commodity: TB-ISO,       role: prevention}
+  - {disease: TYPH, commodity: GEN-AMOX,     role: treatment}
+  - {disease: TYPH, commodity: NT-ORS,       role: supportive}
+  - {disease: YF,   commodity: GEN-PARA,     role: supportive}
+
+# region_id = the hub's home region (where the warehouse physically sits).
+# serves    = the hub's distribution catchment (EPSS hubs supply multi-
+#             region catchments; Central Ethiopia and South West Ethiopia have
+#             no hub of their own and are served from Adama/Shashemene/Hawassa
+#             and Jimma/Sodo respectively). Omitted serves = [region_id].
+# Every one of the 14 regions must appear in at least one serves list: supply marts
+# attribute regional availability through this mapping (build_sample.py emits
+# it as the marts seed epss_hub_catchment).
+epss_hubs:
+  - {id: CENT,  name: EPSS Central · Addis Ababa,  region_id: ET-AA}
+  - {id: ADDIS, name: EPSS Addis Hub,              region_id: ET-AA}
+  - {id: ADAMA, name: EPSS Adama Hub,              region_id: ET-OR, serves: [ET-OR, ET-CE]}
+  - {id: BAHR,  name: EPSS Bahir Dar Hub,          region_id: ET-AM}
+  - {id: DESS,  name: EPSS Dessie Hub,             region_id: ET-AM, serves: [ET-AM, ET-AF]}
+  - {id: DIRE,  name: EPSS Dire Dawa Hub,          region_id: ET-DD}
+  - {id: GAMB,  name: EPSS Gambella Hub,           region_id: ET-GA}
+  - {id: GOND,  name: EPSS Gondar Hub,             region_id: ET-AM}
+  - {id: HAWA,  name: EPSS Hawassa Hub,            region_id: ET-SI, serves: [ET-SI, ET-CE]}
+  - {id: HARA,  name: EPSS Harar Hub,              region_id: ET-HA}
+  - {id: JIJI,  name: EPSS Jijiga Hub,             region_id: ET-SO}
+  - {id: JIMM,  name: EPSS Jimma Hub,              region_id: ET-OR, serves: [ET-OR, ET-SW]}
+  - {id: MEKE,  name: EPSS Mekele Hub,             region_id: ET-TI}
+  - {id: NEKE,  name: EPSS Nekemte Hub,            region_id: ET-OR}
+  - {id: ASSA,  name: EPSS Assosa Hub,             region_id: ET-BG}
+  - {id: ASAY,  name: EPSS Semera (Asayita) Hub,   region_id: ET-AF}
+  - {id: SHAS,  name: EPSS Shashemene Hub,         region_id: ET-OR, serves: [ET-OR, ET-CE]}
+  - {id: SODD,  name: EPSS Sodo Hub,               region_id: ET-SE, serves: [ET-SE, ET-SW]}
+  - {id: ARBA,  name: EPSS Arba Minch Hub,         region_id: ET-SE}

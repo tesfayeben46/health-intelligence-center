@@ -1,0 +1,19 @@
+id: internal-bi/service/reported-vs-recorded
+page_id: internal-bi/service
+title: Reported vs Recorded
+ordering: 30
+columns: 12
+dense: true
+widgets:
+- id: sv-agreement-donut
+  col_span: 4
+  row_span: 2
+  ordering: 0
+- id: sv-data-trust-table
+  col_span: 8
+  row_span: 2
+  ordering: 1
+- id: sv-rr-timeliness
+  col_span: 12
+  row_span: 5
+  ordering: 2

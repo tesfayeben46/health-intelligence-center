@@ -1,0 +1,5 @@
+id: workshop/projects
+title: Projects
+ordering: 40
+sections:
+- workshop/projects/catalog

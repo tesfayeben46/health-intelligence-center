@@ -1,0 +1,8 @@
+id: ov-national-kpis
+title: National snapshot
+kind: kpi
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

@@ -1,0 +1,92 @@
+[
+  {
+    "id": "ZM-20",
+    "name": "Copperbelt Province",
+    "code": "20",
+    "weight": 13.6,
+    "epss_hub": "NDL",
+    "capital": "Ndola",
+    "population_mn": null
+  },
+  {
+    "id": "ZM-10",
+    "name": "Central Province",
+    "code": "10",
+    "weight": 12.6,
+    "epss_hub": "LSK",
+    "capital": "Kabwe",
+    "population_mn": 4.0
+  },
+  {
+    "id": "ZM-80",
+    "name": "Southern Province",
+    "code": "80",
+    "weight": 12.1,
+    "epss_hub": "LSK",
+    "capital": "Livingstone",
+    "population_mn": null
+  },
+  {
+    "id": "ZM-90",
+    "name": "Western Province",
+    "code": "90",
+    "weight": 11.5,
+    "epss_hub": "LSK",
+    "capital": "Mongu",
+    "population_mn": null
+  },
+  {
+    "id": "ZM-30",
+    "name": "Eastern Province",
+    "code": "30",
+    "weight": 10.8,
+    "epss_hub": "LSK",
+    "capital": "Chipata",
+    "population_mn": null
+  },
+  {
+    "id": "ZM-50",
+    "name": "Lusaka Province",
+    "code": "50",
+    "weight": 10.2,
+    "epss_hub": "LSK",
+    "capital": "Lusaka",
+    "population_mn": null
+  },
+  {
+    "id": "ZM-70",
+    "name": "North Western Province",
+    "code": "70",
+    "weight": 8.8,
+    "epss_hub": "NDL",
+    "capital": "Solwezi",
+    "population_mn": null
+  },
+  {
+    "id": "ZM-40",
+    "name": "Luapula Province",
+    "code": "40",
+    "weight": 8.3,
+    "epss_hub": "NDL",
+    "capital": "Mansa",
+    "population_mn": null
+  },
+  {
+    "id": "ZM-60",
+    "name": "Northern Province",
+    "code": "60",
+    "weight": 7.4,
+    "epss_hub": "NDL",
+    "capital": "Kasama",
+    "population_mn": null
+  },
+  {
+    "id": "ZM-91",
+    "name": "Muchinga Province",
+    "code": "91",
+    "weight": 4.8,
+    "epss_hub": "NDL",
+    "capital": "Chinsali",
+    "population_mn": null
+  }
+]

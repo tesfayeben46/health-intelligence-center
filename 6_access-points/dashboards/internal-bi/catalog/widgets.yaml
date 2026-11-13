@@ -1,0 +1,4 @@
+- id: bi-assistant
+  title: BI dashboard assistant (chatbot)
+  kind: assistant
+  placement: chrome.fab

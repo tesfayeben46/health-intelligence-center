@@ -1,0 +1,88 @@
+# Widgets this country's shape does not support.
+#
+# See the et-v3 file for why only disable is expressible.
+#
+# Zambia's administrative hierarchy is Province -> District -> Facility. Ethiopia
+# adds Zone and Kebele below Region, so widgets built at woreda grain have no
+# Zambian equivalent: they would render empty and read as a broken dashboard
+# rather than an inapplicable one.
+disable:
+  # pages
+  # A page whose whole subject has no Zambian source is turned off as a page.
+  # Disabling its widgets one by one would leave an empty tab that looks broken
+  # rather than inapplicable, and page-tab elision already drops a page with no
+  # visible sections.
+  page:
+    - id: internal-bi/overview
+      why: >-
+        The Overview is Ethiopia's executive summary: DHIS2/HMIS coverage
+        benchmarks, woreda action-lists, a disease snapshot and source-pulse over
+        the Ethiopian source systems. None has a Zambian counterpart in this
+        deployment. zm-v1 lands on the Control Tower, the eLMIS supply view built
+        on the country's real data.
+    - id: internal-bi/disease
+      why: >-
+        Disease surveillance is DHIS2 / IDSR: Ethiopian notifiable-disease data.
+        The eLMIS archive is a supply archive and carries no disease surveillance,
+        so there is neither the source nor the grain for a Zambian version here.
+    - id: internal-bi/service
+      why: >-
+        Service performance reads EthioEMR (an Ethiopian EMR) clinical encounters.
+        There is no Zambian EMR in this deployment.
+    - id: internal-bi/resource
+      why: >-
+        The Resource page is Ethiopia's EPSS supply chain, and every section of
+        it reads HCMIS WDM: the Ethiopian national warehouse system. There is no
+        Zambian HCMIS: the country's supply data is eLMIS, and its supply view is
+        the PCT page, which is built on it. Synthesising "Zambian HCMIS" rows
+        would be modelling a system that does not exist there.
+
+  # widgets
+  widget:
+    # Geography Zambia does not have. Province -> District -> Facility; no woreda.
+    # public dashboard: DHIS2/HCMIS-fed widgets replaced by pub-zm-supply
+    #    (Zambian eLMIS demonstration data). The Zambian widget is enabled here;
+    #    et-v3 disables it and keeps these.
+    - id: pub-insights
+      why: >-
+        DHIS2 HMIS coverage insights over Ethiopian regions/indicators. Zambia's
+        public supply story is pub-zm-supply, on the real eLMIS marts.
+    - id: pub-region
+      why: DHIS2 coverage by Ethiopian region; no Zambian equivalent source.
+    - id: pub-supply
+      why: HCMIS/DHIS2 service readiness; superseded by pub-zm-supply on eLMIS.
+    - id: pub-newsroom
+      why: >-
+        The home newsroom serves live articles from ops_governance.public_article,
+        which holds the Ethiopian deployment's bulletins (Somali Region cholera,
+        FMoH/HSDIP). Zambia has no published newsroom, so (per this profile's own
+        articles note) the page shows nothing rather than Ethiopian bulletins.
+    - id: pub-articles
+      why: Same shared Ethiopian newsroom on the Articles page; off until a Zambian newsroom is published.
+    - id: ov-act-first-woredas
+      why: >-
+        Ranks woredas for action. Zambia has no woreda level; the equivalent
+        national view would rank districts, which is a different widget against
+        a different mart rather than a relabelling of this one.
+    - id: dz-woreda-table
+      why: >-
+        Woreda-grain disease surveillance. The eLMIS archive is a supply archive
+        and carries no notifiable-disease surveillance at all, so this has
+        neither the grain nor the data.
+
+    # Sources that are Ethiopian products, not generic categories. mBrana is an
+    # Ethiopian mobile reporting product; MFR is Ethiopia's Master Facility
+    # Registry; EthioEMR is an Ethiopian EMR. None has a Zambian counterpart in
+    # this deployment, and the eLMIS data carries no equivalent.
+    - id: dz-signal-chart
+      why: >-
+        Disease signal chart over EthioEMR, HCMIS, mBrana and MFR. Zambia's
+        archive has none of those and reports zero diseases.
+    - id: sv-cascade-ncd
+      why: >-
+        NCD care cascade over HCMIS resource allocation. No Zambian source for
+        either the cascade or the allocation.
+    - id: rm-facilities
+      why: >-
+        Facility capacity from HCMIS and MFR. Zambia's facility list is real and
+        comes from eLMIS, but capacity is not in that archive.

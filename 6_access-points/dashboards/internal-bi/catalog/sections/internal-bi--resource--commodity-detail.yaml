@@ -1,0 +1,15 @@
+id: internal-bi/resource/commodity-detail
+page_id: internal-bi/resource
+title: Commodity Detail
+ordering: 30
+columns: 12
+dense: true
+widgets:
+- id: rm-wastage
+  col_span: 7
+  row_span: 3
+  ordering: 0
+- id: rm-cold-chain
+  col_span: 5
+  row_span: 3
+  ordering: 1

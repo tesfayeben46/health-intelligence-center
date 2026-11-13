@@ -1,0 +1,6 @@
+id: admin
+title: Infrastructure & Admin
+description: 'System admin: cluster topology, access requests, users & roles, SSO
+  identity sources, OPA policies, audit, DQ, backups, alerts, env.
+
+  '

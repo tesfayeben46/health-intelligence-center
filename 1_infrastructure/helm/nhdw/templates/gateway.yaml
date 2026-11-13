@@ -1,0 +1,125 @@
+{{- $c := index .Values.components "gateway" -}}
+{{- $ns := .Values.namespace -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nhdw-gateway
+  namespace: {{ $ns }}
+  labels: { app: nhdw-gateway, tier: api }
+spec:
+  replicas: {{ $c.replicas }}
+  selector:
+    matchLabels: { app: nhdw-gateway }
+  template:
+    metadata:
+      labels: { app: nhdw-gateway, tier: api }
+    spec:
+      serviceAccountName: nhdw-gateway
+      containers:
+        - name: gateway
+          image: {{ include "nhdw.image" (dict "name" "gateway" "ctx" .) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports: [ { containerPort: 8000, name: http } ]
+          # HPA scaling baseline (the target is a percentage of requested CPU); see gateway-hpa.
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "1",    memory: "512Mi" }
+          env:
+            - { name: KEYCLOAK_ALLOWED_ISSUERS, value: "{{ include "nhdw.kcPublicBase" . }}/realms/moh-staff,{{ include "nhdw.kcPublicBase" . }}/realms/privileged-ops" }
+            - { name: KEYCLOAK_PUBLIC_BASE,     value: {{ include "nhdw.kcPublicBase" . | quote }} }
+            # ML_RUNNER_IMAGE sits at index 2 because the overlay strategic merge prepends it; keep it here to match kustomize.
+            - { name: ML_RUNNER_IMAGE,          value: {{ include "nhdw.image" (dict "name" "ml-runner" "ctx" .) | quote }} }
+            - { name: KEYCLOAK_INTERNAL_BASE,   value: {{ .Values.keycloak.internalBase | quote }} }
+            - { name: KEYCLOAK_ADMIN_USER,      value: "keycloak_admin" }
+            - { name: KEYCLOAK_ADMIN_PASSWORD,  valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KC_BOOTSTRAP_ADMIN_PASSWORD } } }
+            - { name: KEYCLOAK_PROVISION_REALM, value: "moh-staff" }
+            - { name: DEV_AUTH,                  value: "false" }
+            - { name: GATEWAY_PUBLIC_ANON,        value: "true" }
+            - { name: GATEWAY_DEMO_IMPERSONATION, value: "true" }
+            - { name: GATEWAY_IMPERSONATION_SECRET, valueFrom: { secretKeyRef: { name: nhdw-gateway-secrets, key: IMPERSONATION_SECRET, optional: true } } }
+            # Column masking HMAC key for the hash/tokenize classes. Optional: when absent
+            # those mask classes degrade to drop (fail-closed) and the gateway still boots.
+            # Kept in step with base/nhdw-gateway.yaml so a Helm deploy does not drop a key
+            # that a kustomize deploy set.
+            - { name: MASKING_HMAC_KEY, valueFrom: { secretKeyRef: { name: nhdw-gateway-secrets, key: MASKING_HMAC_KEY, optional: true } } }
+            - { name: OPA_ENFORCE,   value: "true" }
+            - { name: OPA_FAIL_OPEN, value: "false" }
+            - { name: OPA_URL,    value: "http://opa.{{ $ns }}.svc.cluster.local:8181" }
+            - { name: TRINO_HOST, value: "nhdw-trino.{{ $ns }}.svc.cluster.local" }
+            - { name: OLLAMA_URL, value: "http://host.k3d.internal:11434" }
+            - { name: NHDW_LLM_MODEL, value: "qwen2.5:14b" }
+            - { name: NHDW_LLM_KEEP_ALIVE, value: "24h" }
+            - { name: OPS_PG_HOST,    value: "postgres-vault.{{ $ns }}.svc.cluster.local" }
+            - { name: OPS_PG_PORT,    value: "5432" }
+            - { name: OPS_PG_DATABASE, value: "nhdw_ops" }
+            - { name: OPS_PG_USER,    value: "ops_gateway" }
+            - { name: OPS_PG_PASSWORD, valueFrom: { secretKeyRef: { name: nhdw-gateway-secrets, key: OPS_GATEWAY_PASSWORD } } }
+            - { name: MINIO_ENDPOINT,    value: "http://seaweedfs-s3.{{ $ns }}.svc.cluster.local:8333" }   # SeaweedFS S3 API (MINIO_* names are historical)
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            - { name: MINIO_ACCESS_KEY,  valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER     } } }
+            - { name: MINIO_SECRET_KEY,  valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MLFLOW_URL,        value: "http://mlflow.{{ $ns }}.svc.cluster.local:5000" }
+            - { name: MINIO_PUBLIC_ENDPOINT, value: "https://s3.{{ .Values.hostBase }}" }
+            - { name: WORKSPACE_PROFILES_PATH, value: "/app/config/profiles.yaml" }
+            - { name: JUPYTERHUB_URL, value: "http://jupyterhub.{{ $ns }}.svc.cluster.local:8081" }
+            - name: JUPYTERHUB_API_TOKEN
+              valueFrom: { secretKeyRef: { name: jupyterhub-secrets, key: API_TOKEN, optional: true } }
+            - { name: JUPYTER_PUBLIC_BASE, value: "https://jupyter.{{ .Values.hostBase }}" }
+            - { name: SMTP_HOST, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_HOST, optional: true } } }
+            - { name: SMTP_PORT, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PORT, optional: true } } }
+            - { name: SMTP_TLS,  valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_TLS,  optional: true } } }
+            - { name: SMTP_USER, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_USER, optional: true } } }
+            - { name: SMTP_PASS, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PASS, optional: true } } }
+            - { name: SMTP_FROM, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_FROM, optional: true } } }
+            - { name: ALERT_EVAL_MODEL, value: "ears" }
+            - { name: ALERT_EVAL_TOKEN, valueFrom: { secretKeyRef: { name: alert-eval-secrets, key: TOKEN } } }
+            - { name: DQ_DETECT_TOKEN, valueFrom: { secretKeyRef: { name: dq-detect-secrets, key: TOKEN, optional: true } } }
+            - { name: NHDW_PROFILE_DIR, value: "/opt/nhdw-profiles" }
+            - { name: NHDW_PROFILE_STATE_DIR, value: "/opt/nhdw-state" }
+            - { name: DEMO_CONTROL_TOKEN, valueFrom: { secretKeyRef: { name: demo-control-secrets, key: TOKEN, optional: true } } }
+            # Fallback only: the active pointer file in that directory takes precedence,
+            # so a profile swap does not need a redeploy.
+            - { name: NHDW_PROFILE, value: {{ .Values.profile | default "et-v3" | quote }} }
+          volumeMounts:
+            # Country profiles live on the host at /opt/nhdw-profiles: copy decks,
+            # geography and the manifest naming the deployment's country. hostPath
+            # rather than a configMap because the geometry runs to hundreds of KB
+            # (configMaps cap at about 1 MB) and a profile swap must be a file write on
+            # the server, visible without a rollout. Read-only: the gateway serves
+            # profiles and never edits them.
+            - { name: profiles, mountPath: /opt/nhdw-profiles, readOnly: true }
+            # The only writable mount: which profile is active is state, not content.
+            # Keeping the two apart lets the gateway switch profiles but never edit one.
+            - { name: profile-state, mountPath: /opt/nhdw-state }
+            # The workspace-profiles configMap is created by the deploy role from
+            # 6_access-points/jupyterhub/profiles.yaml (external-file configMaps live
+            # outside the chart and are referenced by name; see the chart README).
+            - { name: workspace-profiles, mountPath: /app/config, readOnly: true }
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 15
+            periodSeconds: 15
+      volumes:
+        # hostPath assumes a single node; a multi-node cluster needs the profile store
+        # moved to shared storage such as the object store.
+        - name: profiles
+          hostPath: { path: /opt/nhdw-profiles, type: DirectoryOrCreate }
+        - name: profile-state
+          hostPath: { path: /opt/nhdw-state, type: DirectoryOrCreate }
+        - { name: workspace-profiles, configMap: { name: workspace-profiles } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nhdw-gateway
+  namespace: {{ $ns }}
+  labels: { app: nhdw-gateway, tier: api }
+spec:
+  type: ClusterIP
+  selector: { app: nhdw-gateway }
+  ports:
+    - { port: 8000, targetPort: http, name: http }

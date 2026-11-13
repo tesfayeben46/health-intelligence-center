@@ -1,0 +1,128 @@
+# Trino: the federated SQL engine over the marts and ops databases.
+# The gateway is the policy enforcement point: it calls OPA and applies the
+# row_filter before the query reaches Trino; Trino connects as least-privilege
+# readers (bi_reader, ops_reader).
+# Catalogs: marts (PG nhdw_vault bi_*), ops (PG nhdw_ops audit/export).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trino-etc
+data:
+  config.properties: |
+    coordinator=true
+    node-scheduler.include-coordinator=true
+    http-server.http.port=8080
+    discovery.uri=http://localhost:8080
+    query.max-memory=2GB
+    query.max-memory-per-node=1GB
+  jvm.config: |
+    -server
+    -Xmx2600m
+    -XX:+UseG1GC
+    -XX:G1HeapRegionSize=32M
+    -XX:+ExplicitGCInvokesConcurrent
+    -XX:+HeapDumpOnOutOfMemoryError
+    -XX:+ExitOnOutOfMemoryError
+    -Dfile.encoding=UTF-8
+  node.properties: |
+    node.environment=nhdw
+    node.data-dir=/data/trino
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trino-catalog
+data:
+  # decimal-mapping=allow_overflow: dbt marts emit unparameterized NUMERIC
+  # (round()/avg() outputs), and the connector's strict default hides such
+  # columns from every Trino consumer. Setting it on the catalog exposes them to
+  # all consumers; the gateway also sets the same session property.
+  marts.properties: |
+    connector.name=postgresql
+    connection-url=jdbc:postgresql://postgres-vault:5432/nhdw_vault
+    connection-user=bi_reader
+    connection-password=${ENV:BI_READER_PASSWORD}
+    case-insensitive-name-matching=true
+    postgresql.array-mapping=AS_ARRAY
+    decimal-mapping=allow_overflow
+    decimal-default-scale=4
+    decimal-rounding-mode=HALF_UP
+  ops.properties: |
+    connector.name=postgresql
+    connection-url=jdbc:postgresql://postgres-vault:5432/nhdw_ops
+    connection-user=ops_reader
+    connection-password=${ENV:OPS_READER_PASSWORD}
+    case-insensitive-name-matching=true
+    postgresql.array-mapping=AS_ARRAY
+    decimal-mapping=allow_overflow
+    decimal-default-scale=4
+    decimal-rounding-mode=HALF_UP
+  # No `lake` catalog (Iceberg over the object store) is configured: it needs the
+  # Trino 476 native-S3 Iceberg config and a job that writes Iceberg tables to the
+  # nhdw-lake bucket. A misconfigured catalog stops Trino from starting, so it is
+  # added only once both are validated.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nhdw-trino
+  # tier: compute. The topology graph (/api/topology/graph) reads this label as
+  # the node's tier.
+  labels: { app: nhdw-trino, tier: compute }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: nhdw-trino }
+  template:
+    metadata:
+      labels: { app: nhdw-trino, tier: compute }
+    spec:
+      containers:
+        - name: trino
+          image: trinodb/trino:476
+          ports:
+            - containerPort: 8080
+          env:
+            - name: BI_READER_PASSWORD
+              valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: BI_READER_PASSWORD } }
+            - name: OPS_READER_PASSWORD
+              valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: OPS_READER_PASSWORD } }
+            - name: MINIO_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER } }
+            - name: MINIO_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } }
+          volumeMounts:
+            - { name: etc, mountPath: /etc/trino/config.properties, subPath: config.properties }
+            - { name: etc, mountPath: /etc/trino/jvm.config, subPath: jvm.config }
+            - { name: etc, mountPath: /etc/trino/node.properties, subPath: node.properties }
+            - { name: catalog, mountPath: /etc/trino/catalog }
+            - { name: data, mountPath: /data/trino }
+          resources:
+            requests: { cpu: "250m", memory: "1800Mi" }
+            limits:   { cpu: "2",    memory: "3584Mi" }
+          readinessProbe:
+            httpGet: { path: /v1/info, port: 8080 }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet: { path: /v1/info, port: 8080 }
+            initialDelaySeconds: 60
+            periodSeconds: 20
+      volumes:
+        - name: etc
+          configMap: { name: trino-etc }
+        - name: catalog
+          configMap: { name: trino-catalog }
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nhdw-trino
+  labels: { app: nhdw-trino, tier: compute }
+spec:
+  selector: { app: nhdw-trino }
+  ports:
+    - { name: http, port: 8080, targetPort: 8080 }

@@ -1,0 +1,70 @@
+---
+# Legacy k3d (Docker-in-Docker) provisioning for the laptop form, selected by
+# nhdw_runtime=k3d. Follows bundle/scripts/bootstrap.sh steps 1-2.
+
+- name: Assert required host tools are on PATH
+  ansible.builtin.shell: "command -v {{ item }}"   # noqa: command-instead-of-shell
+  changed_when: false
+  loop: [docker, kubectl, k3d, python3]
+
+- name: Assert the Docker daemon is reachable
+  ansible.builtin.command: docker info
+  changed_when: false
+
+- name: Load the bundled k3s node image if present (offline cluster-create)
+  ansible.builtin.shell:
+    cmd: |
+      set -eo pipefail
+      shopt -s nullglob
+      for t in {{ nhdw_repo_root }}/bundle/images/system/node-*.tar; do
+        docker load -i "$t" >/dev/null
+      done
+    executable: /bin/bash
+  changed_when: false
+
+- name: List existing k3d clusters
+  ansible.builtin.command: k3d cluster list -o json
+  register: provision_k3d_list
+  changed_when: false
+
+- name: Create the k3d cluster (pinned k3s; host 80/443 -> Traefik; flannel off, Cilium is the CNI)
+  ansible.builtin.command: >-
+    k3d cluster create {{ nhdw_cluster_name }}
+    --image {{ nhdw_k3s_image }}
+    --servers 1 --agents {{ nhdw_k3d_agents }}
+    --port 80:80@loadbalancer --port 443:443@loadbalancer
+    --k3s-arg --disable=metrics-server@server:0
+    --k3s-arg --flannel-backend=none@server:0
+    --k3s-arg --disable-network-policy@server:0
+    --wait
+  when: nhdw_cluster_name not in (provision_k3d_list.stdout | from_json | map(attribute='name') | list)
+  register: provision_k3d_create
+  changed_when: true
+
+- name: Reused-cluster note (the cni role reconciles any Cilium node-IP drift)
+  ansible.builtin.debug:
+    msg: "k3d cluster '{{ nhdw_cluster_name }}' already existed; reusing it. The cni role heals Cilium node IPs."
+  when: provision_k3d_create is skipped
+
+- name: Pre-import the bundled k3s system images (offline boot needs no registry)
+  ansible.builtin.shell:
+    cmd: |
+      set -eo pipefail
+      shopt -s nullglob
+      sys=""
+      for t in {{ nhdw_repo_root }}/bundle/images/system/*.tar; do
+        case "$t" in */node-*) continue ;; esac
+        sys="$sys $t"
+      done
+      if [ -z "$sys" ]; then
+        echo "no system tars: run bundle/scripts/fetch-system-images.sh (boot will pull from a registry)"
+        exit 0
+      fi
+      if ! k3d image import $sys -c {{ nhdw_cluster_name }} --mode direct >/dev/null 2>&1; then
+        for t in $sys; do
+          k3d image import "$t" -c {{ nhdw_cluster_name }} --mode direct >/dev/null 2>&1 \
+            && echo "  imported $(basename "$t")" || echo "  ! import FAILED: $(basename "$t")"
+        done
+      fi
+    executable: /bin/bash
+  changed_when: true

@@ -1,0 +1,117 @@
+# One-shot Job that runs setup-keycloak.py inside the cluster against
+# the in-cluster Keycloak instance. Creates realm roles, imports the seed
+# users from users.yaml with their explicit kc_sub UUIDs, and configures the
+# Google and EHIA-SAML brokers and the dashboard PKCE clients.
+#
+# Idempotent and safe to rerun. Reapply with:
+#   kubectl -n nhdw delete job/keycloak-seed --ignore-not-found
+#   ~/.local/bin/kustomize build --load-restrictor=LoadRestrictionsNone \
+#     1_infrastructure/k8s/overlays/dev | kubectl apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: keycloak-seed
+  namespace: nhdw
+  labels: { app: keycloak-seed, tier: security }
+spec:
+  backoffLimit: 3
+  template:
+    metadata: { labels: { app: keycloak-seed, tier: security } }
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wait-for-keycloak
+          image: curlimages/curl:8.10.1
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              # First-boot Keycloak runs a full Liquibase schema migration
+              # before the master realm answers: be patient (24x10s = 240s) so
+              # the seed doesn't give up against a still-migrating Keycloak.
+              for i in $(seq 1 24); do
+                if curl -sf "$KC_URL/realms/master/.well-known/openid-configuration" >/dev/null; then
+                  echo "Keycloak ready"; exit 0
+                fi
+                echo "  not ready ($i/24): sleeping 10s"
+                sleep 10
+              done
+              echo "Keycloak never came up"; exit 1
+          env: [ { name: KC_URL, value: "http://keycloak.nhdw.svc.cluster.local:8080" } ]
+      containers:
+        - name: seed
+          image: python:3.12-alpine
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              set -e
+              pip install --quiet --retries 5 --timeout 60 pyyaml
+              python3 /scripts/setup-keycloak.py
+          env:
+            - { name: KEYCLOAK_BASE,               value: "http://keycloak.nhdw.svc.cluster.local:8080" }
+            - { name: KC_BOOTSTRAP_ADMIN_USERNAME, value: "keycloak_admin" }
+            - { name: KC_BOOTSTRAP_ADMIN_PASSWORD, valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KC_BOOTSTRAP_ADMIN_PASSWORD } } }
+            # Seed-user login password, read from demo-user-secrets.
+            - name: SEED_PASSWORD
+              valueFrom: { secretKeyRef: { name: demo-user-secrets, key: SEED_PASSWORD, optional: true } }
+            - { name: NHDW_USERS_YAML,             value: "/seeds/security/users.yaml" }
+            # Real Google OAuth client for the "Sign in with Google" broker.
+            # Optional: without the secret the Google broker is skipped (no mock
+            # fallback) and boot still succeeds (password and EHIA federation).
+            - name: GOOGLE_CLIENT_ID
+              valueFrom: { secretKeyRef: { name: keycloak-idp-secrets, key: GOOGLE_CLIENT_ID, optional: true } }
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: keycloak-idp-secrets, key: GOOGLE_CLIENT_SECRET, optional: true } }
+            # Confidential dbt-docs client secret; must match the dbt-docs
+            # Deployment's dbt-docs-secrets. Optional: when absent, setup-keycloak
+            # skips the dbt-docs client and its SSO is off.
+            - name: DBT_DOCS_OIDC_SECRET
+              valueFrom: { secretKeyRef: { name: dbt-docs-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - name: AIRFLOW_OIDC_SECRET
+              valueFrom: { secretKeyRef: { name: airflow-oidc-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - name: SUPERSET_OIDC_SECRET
+              valueFrom: { secretKeyRef: { name: superset-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - name: JUPYTERHUB_OIDC_SECRET
+              valueFrom: { secretKeyRef: { name: jupyterhub-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - name: OPENMETADATA_OIDC_SECRET
+              valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            # Browser-facing base URLs (OIDC single-host convention). Without them the
+            # script falls back to localhost defaults, and a rerun of this Job
+            # rewrites every client's redirect URIs to localhost. The base carries the
+            # dev values; provisioning rewrites them per hostBase, as in
+            # helm/templates/keycloak-seed-job.yaml.
+            - { name: PUBLIC_HOST_BASE,      value: "127.0.0.1.nip.io" }
+            - { name: DASH_BASE_INTERNAL_BI, value: "https://internal-bi.127.0.0.1.nip.io" }
+            - { name: DASH_BASE_WORKSHOP,    value: "https://workshop.127.0.0.1.nip.io" }
+            - { name: DASH_BASE_ADMIN,       value: "https://admin.127.0.0.1.nip.io" }
+            # Tool-gate confidential clients: one secret per gate, which must match
+            # the gate Deployment's OIDC_CLIENT_SECRET (tool-gates.yaml). Optional:
+            # when absent, setup-keycloak skips that gate client and its SSO is off.
+            - name: MLFLOW_GATE_OIDC_SECRET
+              valueFrom: { secretKeyRef: { name: mlflow-gate-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - name: PROMETHEUS_GATE_OIDC_SECRET
+              valueFrom: { secretKeyRef: { name: prometheus-gate-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - name: ALERTMANAGER_GATE_OIDC_SECRET
+              valueFrom: { secretKeyRef: { name: alertmanager-gate-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - name: HEADLAMP_GATE_OIDC_SECRET
+              valueFrom: { secretKeyRef: { name: headlamp-gate-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - name: SEAWEEDFS_GATE_OIDC_SECRET
+              valueFrom: { secretKeyRef: { name: seaweedfs-gate-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            # Realm SMTP (execute-actions-email) through the external Google SMTP
+            # relay. HOST/PORT/TLS default to Gmail in setup-keycloak; USER/PASS are
+            # the app password.
+            - name: SMTP_HOST
+              valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_HOST, optional: true } }
+            - name: SMTP_PORT
+              valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PORT, optional: true } }
+            - name: SMTP_TLS
+              valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_TLS, optional: true } }
+            - name: SMTP_USER
+              valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_USER, optional: true } }
+            - name: SMTP_PASS
+              valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PASS, optional: true } }
+          volumeMounts:
+            - { name: scripts,   mountPath: /scripts }
+            - { name: users-seed, mountPath: /seeds/security }
+      volumes:
+        - { name: scripts,    configMap: { name: keycloak-seed-script, defaultMode: 0o755 } }
+        - { name: users-seed, configMap: { name: keycloak-users-seed } }

@@ -1,0 +1,8 @@
+id: ct-filters
+title: Movement filters
+kind: custom
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

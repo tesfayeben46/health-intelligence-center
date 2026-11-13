@@ -1,0 +1,50 @@
+{{- $c := index .Values.components "internal-bi" -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: internal-bi
+  namespace: {{ .Values.namespace }}
+  labels: { app: internal-bi, tier: dashboard }
+spec:
+  replicas: {{ $c.replicas }}
+  selector:
+    matchLabels: { app: internal-bi }
+  template:
+    metadata:
+      labels: { app: internal-bi, tier: dashboard }
+    spec:
+      containers:
+        - name: dashboard
+          image: {{ include "nhdw.image" (dict "name" "internal-bi" "ctx" .) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports: [ { containerPort: 80, name: http } ]
+          # Env order matches the kustomize strategic-merge result (the overlay prepends the
+          # nip.io OIDC vars ahead of the base env), so Helm and kustomize render identically.
+          env:
+            - { name: KEYCLOAK_PUBLIC_BASE, value: {{ include "nhdw.kcPublicBase" . | quote }} }
+            - { name: OIDC_REDIRECT_URI,    value: "https://internal-bi.{{ .Values.hostBase }}/" }
+            - { name: APP_BASE,             value: "https://internal-bi.{{ .Values.hostBase }}" }
+            - { name: DEV_AUTH,             value: "false" }
+            - { name: KEYCLOAK_BASE,        value: {{ .Values.keycloak.internalBase | quote }} }
+            - { name: OIDC_REALM,           value: "moh-staff" }
+            - { name: OIDC_CLIENT_ID,       value: "internal-bi" }
+            - { name: GATEWAY_URL,          value: "http://nhdw-gateway.{{ .Values.namespace }}.svc.cluster.local:8000" }
+          {{- with $c.resources }}
+          resources: {{ toYaml . | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            httpGet: { path: /health, port: 80 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: internal-bi
+  namespace: {{ .Values.namespace }}
+  labels: { app: internal-bi, tier: dashboard }
+spec:
+  type: ClusterIP
+  selector: { app: internal-bi }
+  ports:
+    - { port: 80, targetPort: http, name: http }

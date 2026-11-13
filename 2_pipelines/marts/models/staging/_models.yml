@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: bi_facility_phcu_ratio
+    description: >
+      Sample staging mart: health-facility-to-PHCU ratio per region (PHCU
+      anchors = health centers), derived from bi_facility_distribution.
+      Lives in bi_staging until promoted to bi_facility via the gateway
+      graduation flow.
+    columns:
+      - name: region_name
+        tests: [not_null, unique]
+      - name: n_facilities
+        description: "Care-delivery facilities in the region (non-DS tiers). Must never be zero: zero means the tier classification regressed."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+      - name: n_phcus
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+      - name: facilities_per_phcu
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+
+  - name: bi_demo_patient_observations
+    description: >
+      Sample PHI mart demonstrating the consent_gate() macro:
+      every row is from a patient_id with no active revocation for
+      purpose=public-health. Lives in bi_staging.
+    columns:
+      - name: patient_id
+        tests: [not_null]
+      - name: encounter_date
+        tests: [not_null]

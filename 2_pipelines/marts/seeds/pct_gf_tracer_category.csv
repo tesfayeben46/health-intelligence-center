@@ -1,0 +1,10 @@
+product_code,product_name,gf_disease,gf_category,basis
+ARV0031,Tenofovir 300mg Tablets,HIV,HIV antiretrovirals,eLMIS tracer flag; product group arv
+ARV0036,Zidovudine 300mg Tablets,HIV,HIV antiretrovirals,eLMIS tracer flag; product group arv
+ARV0063,Tenofovir/Lamivudine/Efavirenz Tablets,HIV,HIV antiretrovirals,eLMIS tracer flag; product group arv
+ARV0074,"Tenofovir/Lamivudine/Efavirenz,300/300/400",HIV,HIV antiretrovirals,eLMIS tracer flag; product group arv
+ARV0077,Tenofovir/Lamivudine /Dolutegravir Tablets,HIV,HIV antiretrovirals,eLMIS tracer flag; product group arv
+ARV0078,Dolutegravir Tablets,HIV,HIV antiretrovirals,eLMIS tracer flag; product group arv
+HTK0001,UNIGOLD HIV 1/2 RAPID TEST,HIV,HIV diagnostics,eLMIS tracer flag; no product group - HIV rapid test by name and programme (HIV Test Kits)
+HTK0002,DETERMINE HIV 1/2 RAPID TEST INC CHASE BUFFER,HIV,HIV diagnostics,eLMIS tracer flag; product group tk
+MAL0015,RDT FOR MALARIA (P FALCIPARUM),Malaria,Malaria diagnostics,eLMIS tracer flag; product group mal - a rapid diagnostic test (no malaria treatment tracer exists in this archive)

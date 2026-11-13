@@ -1,0 +1,63 @@
+
+# who_codes.csv: the curated WHO subset, NHDW concepts -> ICD-10 / ATC.
+#
+# These are concept->concept edges (nhdw_ref.concept_relationship, 'Maps to'),
+# not source crosswalks: they say "our malaria is ICD-10 B54", which is what
+# lets an external partner or an exchange format read our data. The
+# source_to_concept_map stays the parity-critical path; nothing here touches a
+# conformed key.
+#
+# Curation rules (the same no-guessed-codes rule as the other supplements):
+#   * a specific code only when it is unambiguous for the item as we define it;
+#   * otherwise the ATC level-4 group, which is itself a valid ATC code, rather
+#     than inventing a subcode that might be wrong;
+#   * and where no WHO code legitimately exists (foods, diagnostics, vector
+#     control) the row is simply absent, with the reason recorded below.
+#
+# Not mapped:
+#   fortified blended food, rutf readytouse   nutrition products, not medicines
+#   genexpert cartridge, hiv rdt kit,
+#   malaria rdt pfpv                          in-vitro diagnostics (no ATC)
+#   llin bed net                              vector control commodity (no ATC)
+#
+nhdw_vocabulary_id,nhdw_concept_code,target_vocabulary_id,target_concept_code,target_concept_name,relationship_id,note
+# IDSR diseases -> ICD-10
+NHDW-DISEASE,CHOL,ICD10,A00,Cholera,Maps to,
+NHDW-DISEASE,DENG,ICD10,A90,Dengue fever,Maps to,
+NHDW-DISEASE,MAL,ICD10,B54,Unspecified malaria,Maps to,surveillance counts all species; B50-B54 is the block
+NHDW-DISEASE,MEA,ICD10,B05,Measles,Maps to,
+NHDW-DISEASE,NNT,ICD10,A33,Tetanus neonatorum,Maps to,
+NHDW-DISEASE,TB,ICD10,A15,"Respiratory tuberculosis, bacteriologically and histologically confirmed",Maps to,programme tracks the A15-A19 block; A15 is the confirmed-pulmonary anchor
+NHDW-DISEASE,TYPH,ICD10,A01.0,Typhoid fever,Maps to,
+NHDW-DISEASE,YF,ICD10,A95,Yellow fever,Maps to,
+# commodities -> ATC (specific where unambiguous)
+NHDW-COMMODITY,amlodipine 5mg,ATC,C08CA01,Amlodipine,Maps to,
+NHDW-COMMODITY,amoxicillin 250 dt,ATC,J01CA04,Amoxicillin,Maps to,
+NHDW-COMMODITY,artemetherlumefantrine,ATC,P01BF01,Artemether and lumefantrine,Maps to,
+NHDW-COMMODITY,bcg vaccine,ATC,J07AN01,"Tuberculosis, live attenuated",Maps to,
+NHDW-COMMODITY,depoprovera,ATC,G03AC06,Medroxyprogesterone,Maps to,injectable contraceptive
+NHDW-COMMODITY,implanon nxt,ATC,G03AC08,Etonogestrel,Maps to,contraceptive implant
+NHDW-COMMODITY,insulin  regular 100 iu,ATC,A10AB01,"Insulin (human), fast-acting",Maps to,
+NHDW-COMMODITY,ipv inactivated polio,ATC,J07BF03,"Poliomyelitis, trivalent, inactivated, whole virus",Maps to,
+NHDW-COMMODITY,isoniazid 300mg,ATC,J04AC01,Isoniazid,Maps to,
+NHDW-COMMODITY,losartan 50mg,ATC,C09CA01,Losartan,Maps to,
+NHDW-COMMODITY,magnesium sulphate 50,ATC,B05XA05,Magnesium sulfate,Maps to,injectable (eclampsia); the mineral-supplement form is A12CC02
+NHDW-COMMODITY,measlesrubella,ATC,J07BD54,"Measles, combinations with rubella",Maps to,
+NHDW-COMMODITY,metformin 500mg,ATC,A10BA02,Metformin,Maps to,
+NHDW-COMMODITY,opv trivalent,ATC,J07BF02,"Poliomyelitis oral, trivalent, live attenuated",Maps to,
+NHDW-COMMODITY,oxytocin 10 iuml,ATC,H01BB02,Oxytocin,Maps to,
+NHDW-COMMODITY,paracetamol 500mg,ATC,N02BE01,Paracetamol,Maps to,
+NHDW-COMMODITY,pcv13,ATC,J07AL02,"Pneumococcus, purified polysaccharides antigen conjugated",Maps to,
+NHDW-COMMODITY,rhze fixeddose combo,ATC,J04AM06,"Rifampicin, pyrazinamide, ethambutol and isoniazid",Maps to,four-drug fixed-dose combination
+NHDW-COMMODITY,tetanus toxoid,ATC,J07AM01,Tetanus toxoid,Maps to,
+# commodities -> ATC group (the specific subcode depends on product detail
+# we do not carry, so the level-4 group is the most precise valid code)
+NHDW-COMMODITY,combined oral contracept,ATC,G03AA,"Progestogens and estrogens, fixed combinations",Maps to,group: the specific progestogen is not recorded
+NHDW-COMMODITY,covid19 vaccine,ATC,J07BN,Covid-19 vaccines,Maps to,group: platform/manufacturer not recorded
+NHDW-COMMODITY,hpv vaccine,ATC,J07BM,Papillomavirus vaccines,Maps to,group: valency not recorded
+NHDW-COMMODITY,ironfolate,ATC,B03AD,Iron in combination with folic acid,Maps to,group: iron salt not recorded
+NHDW-COMMODITY,ors sachet,ATC,A07CA,Oral rehydration salt formulations,Maps to,
+NHDW-COMMODITY,pediatric art,ATC,J05AR,"Antivirals for treatment of HIV infections, combinations",Maps to,group: paediatric regimen composition not recorded
+NHDW-COMMODITY,pentavalent dtwphepbhib,ATC,J07CA,"Bacterial and viral vaccines, combined",Maps to,group: the exact pentavalent subcode depends on component order
+NHDW-COMMODITY,rotavirus vaccine,ATC,J07BH,Rotavirus diarrhea vaccines,Maps to,group: monovalent vs pentavalent not recorded
+NHDW-COMMODITY,tld  adult art,ATC,J05AR,"Antivirals for treatment of HIV infections, combinations",Maps to,"group: TLD (tenofovir/lamivudine/dolutegravir); the FDC subcode is not carried here"

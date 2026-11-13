@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://nhdw/seed-pack/manifest.schema.json",
+  "title": "NHDW seed-pack manifest",
+  "description": "Declarative contract for a swappable, versioned NHDW seed pack. The seed ENGINE (bundle/scripts/seed-pack-engine, part of the system) reads this; the DATA (files referenced here) is the swappable pack. Changing seeds means shipping a new pack that conforms to this schema; never editing the system apps.",
+  "type": "object",
+  "required": ["apiVersion", "seed_pack_version", "targets_system", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "apiVersion": {
+      "const": "nhdw.seed/v1",
+      "description": "Manifest schema version this pack is written against."
+    },
+    "seed_pack_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?([.-][A-Za-z0-9]+)*$",
+      "description": "This pack's own version (e.g. 2026.07.1). Bump it whenever the data changes."
+    },
+    "targets_system": {
+      "type": "string",
+      "description": "Version-range constraint on the DEPLOYED system this pack is compatible with (e.g. '>=1.4.0 <2.0.0'). The engine REFUSES to apply a pack whose range excludes the running system version; this is the fail-closed 'system won't break' guarantee. Space-separated constraints are ANDed; operators: >=, >, <=, <, ==, ~> (compatible-within-minor)."
+    },
+    "description": {
+      "type": "string",
+      "description": "Human summary of what this pack seeds."
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered list of seed operations. Entries run top-to-bottom; entries sharing a non-empty 'group' MAY run concurrently.",
+      "items": {
+        "type": "object",
+        "required": ["id", "target", "kind"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9][a-z0-9-]*$",
+            "description": "Unique, stable id for this entry (kebab-case)."
+          },
+          "target": {
+            "type": "string",
+            "description": "Logical seed target the adapter resolves (e.g. ethioemr, ops_perm, keycloak, minio, gateway-api)."
+          },
+          "kind": {
+            "type": "string",
+            "enum": ["mysql-dump", "sqlserver-bak", "pg-dump", "sql", "kcadm", "mc", "api", "csv", "loader"],
+            "description": "Adapter that applies this entry. mysql-dump/sqlserver-bak/pg-dump = load a source-DB dump; sql = ordered SQL files into an app DB; loader = run a system loader script (e.g. load_security_seed.py) over pack data files; kcadm = Keycloak realm/clients/users; mc = MinIO objects; api = call a system REST endpoint; csv = bulk-load CSV. Schema DDL and migrations are not seeds; they stay with the system (3_storage/*/init), never in a pack."
+          },
+          "loader": {
+            "type": "string",
+            "description": "For kind=loader: the system loader script that consumes this entry's data (repo-relative, e.g. 7_security/scripts/load_security_seed.py). The loader is system code; only its DATA lives in the pack."
+          },
+          "file": { "type": "string", "description": "Single data file, relative to the pack root. Mutually exclusive with glob/dir." },
+          "glob": { "type": "string", "description": "Glob of data files, relative to the pack root. Use 'order' to pin sequence. Mutually exclusive with file/dir." },
+          "dir": { "type": "string", "description": "Directory of data, relative to the pack root. Mutually exclusive with file/glob." },
+          "order": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Explicit filename order within a glob/dir (basenames). Files not listed run after, sorted."
+          },
+          "group": {
+            "type": "string",
+            "description": "Optional concurrency group. Entries with the same group value may run in parallel (e.g. independent source replicas)."
+          },
+          "when": {
+            "type": "string",
+            "description": "Optional gate expression (e.g. 'topology==fleet'); reserved for env-conditional seeds."
+          },
+          "description": { "type": "string" }
+        },
+        "oneOf": [
+          { "required": ["file"] },
+          { "required": ["glob"] },
+          { "required": ["dir"] },
+          { "not": { "anyOf": [ {"required": ["file"]}, {"required": ["glob"]}, {"required": ["dir"]} ] }, "description": "api/kcadm entries may carry their payload inline via target resolution and need no file." }
+        ]
+      }
+    }
+  }
+}

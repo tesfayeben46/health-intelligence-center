@@ -1,0 +1,8 @@
+id: public/data-catalogue
+title: Open Data
+ordering: 20
+widgets:
+- id: pub-data-catalogue
+  col_span: 6
+  row_span: 1
+  ordering: 5

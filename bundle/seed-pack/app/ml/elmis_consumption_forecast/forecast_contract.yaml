@@ -1,0 +1,19 @@
+# Forecast contract schema (docs/pct-forecast-contract.md, section 5): the keys every
+# prediction row of this model must carry in ops_ml.ml_predictions.attrs, and
+# their types. bi_supply.mart_pct_forecast unpacks exactly these.
+contract_version: 1
+target: adjusted_demand            # bi_supply.mart_pct_demand_month
+series_keys: [facility_code, product_code]
+horizons_produced: [1]
+quantiles: [p10, p50, p90]
+attrs:
+  facility_code: string
+  product_code:  string
+  as_of_month:   string   # 'YYYY-MM': last month the forecast may see
+  target_month:  string   # 'YYYY-MM': the month forecast
+  horizon:       integer  # months from as_of to target (1)
+  p10:           number
+  p50:           number
+  p90:           number
+  demand_class:  string   # smooth | erratic | intermittent | lumpy
+  method:        string   # the comparator/model that produced this series' forecast

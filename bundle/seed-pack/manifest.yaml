@@ -1,0 +1,68 @@
+# NHDW seed pack: baseline manifest (conforms to seed-pack-engine/manifest.schema.json).
+#
+# The data side of the seed decoupling: declares what is seeded, in what order, and which
+# system versions the pack is compatible with. The seed engine
+# (bundle/scripts/seed-pack-engine/) reads it and applies each entry through the matching
+# adapter. To change the seeded data, ship a new pack (bump seed_pack_version) rather than
+# editing the apps.
+#
+# The entries mirror what the bash seeders do at boot (seed-app-security.sh, seed-realistic.sh,
+# seed-ml/projects/graduation/docs, the sources' restore.sh). bootstrap.sh runs those seeders;
+# seed-app-security.sh uses this manifest as a compatibility gate (validate.py). Some entry
+# paths (sources/*, app/keycloak, app/projects, app/resource, app/graduation, app/docs) are a
+# target layout and do not exist in this directory; the data they name lives with the seeders.
+apiVersion: nhdw.seed/v1
+seed_pack_version: "2026.07.1-baseline"
+targets_system: ">=1.0.0 <2.0.0"
+description: "NHDW demo seed pack: Ethiopia synthetic health data (sources) + RBAC/identity/ML/projects (app)."
+
+entries:
+  # 1. source-layer seeds (loaded into the external replicas; may run in parallel)
+  - {id: src-dhis2,     target: dhis2,     kind: pg-dump,       dir: sources/dhis2,     group: sources, description: "DHIS2 aggregate/tracker demo DB"}
+  - {id: src-ethioemr,  target: ethioemr,  kind: mysql-dump,    file: sources/ethioemr/clean_openmrs.sql, group: sources, description: "EthioEMR (OpenMRS) clinical records"}
+  - {id: src-hcmiswdm,  target: hcmiswdm,  kind: sqlserver-bak, file: sources/hcmiswdm/hcmis.bak, group: sources, description: "HCMIS/EPSS logistics (stock, consumption, shipments)"}
+  - {id: src-mbrana,    target: mbrana,    kind: pg-dump,       dir: sources/mbrana,    group: sources, description: "mBrana community data"}
+  - {id: src-climate,   target: climate,   kind: csv,           dir: sources/climate,   group: sources, description: "Climate/weather feed"}
+  - {id: src-mfr,       target: mfr,       kind: csv,           dir: sources/mfr,        group: sources, description: "Master Facility Registry"}
+
+  # 2. app security / RBAC: the swappable data (loaders over YAML)
+  # Boundary: the numbered ops DDL and migrations that seed-app-security.sh re-applies
+  # (17,22,23,25,26,27,28,29,32,33) are system schema. They live in 3_storage/postgres/init
+  # and are re-applied by the system to survive restore-state's `pg_restore --clean`; they
+  # are not seeds and never enter a pack. Only the data the loaders consume is packed here
+  # (schema belongs to the system, data to the pack).
+  - id: app-rbac
+    target: ops_perm
+    kind: loader
+    loader: 7_security/scripts/load_security_seed.py
+    dir: app/security          # role_grants / mart_attrs / role_scope / users YAML + bundle/roles r-*.yaml + collected catalog.json
+    description: "RBAC / permission model + users (roles, dashboards, pages, widgets, filters, grants)"
+  - id: app-articles
+    target: ops_governance
+    kind: loader
+    loader: 7_security/scripts/load_public_articles.py
+    file: app/articles/articles.yaml
+    description: "public-dashboard CMS articles (ops_governance.public_article)"
+  - id: app-program-demo
+    target: nhdw_vault
+    kind: sql
+    file: app/program-demo/program_demo_data.sql
+    description: "directly-seeded facility-detail demo DATA (programme_metrics/submission_funnel/stock_status; TRUNCATE+INSERT). Schema+views stay in 3_storage/postgres/init/03_program_demo.sql (system)."
+  # Workshop-group rosters (app/workshop-groups/15_*.sh, 34_*.sh) are data-bearing shell
+  # wrappers run by seed-app-security.sh; they have no manifest entry.
+
+  # 3. identity + policy
+  - {id: app-keycloak, target: keycloak, kind: kcadm, dir: app/keycloak, description: "realms, clients, roles, demo users (moh-staff + privileged-ops)"}
+  - {id: app-opa,      target: opa,      kind: api,   description: "compile + deliver role_r_*.rego from the permission store (regen-opa-policy)"}
+
+  # 4. ML tier
+  - {id: app-ml, target: mlflow, kind: api, dir: app/ml, description: "platform ML models -> MLflow registry + ops_ml.ml_predictions"}
+
+  # 5. project-centric app state (via the gateway APIs; ordered)
+  - {id: app-projects,          target: gateway-api, kind: api, dir: app/projects,   description: "demo projects + datasets"}
+  - {id: app-model-projects,    target: gateway-api, kind: api, dir: app/ml,          description: "adopt the 5 platform models as workshop projects"}
+  - {id: app-resource-requests, target: gateway-api, kind: api, dir: app/resource,    description: "seed compute resource-requests"}
+  - {id: app-graduation,        target: gateway-api, kind: api, dir: app/graduation,  description: "project-review submit/approve/reject"}
+
+  # 6. Served docs
+  - {id: app-docs, target: minio, kind: mc, dir: app/docs, description: "curated operator docs -> MinIO nhdw-docs"}

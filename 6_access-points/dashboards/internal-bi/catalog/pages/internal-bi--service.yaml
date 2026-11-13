@@ -1,0 +1,12 @@
+id: internal-bi/service
+title: Service Performance
+ordering: 40
+filters:
+- region
+- period
+- programme
+sections:
+- internal-bi/service/topline
+- internal-bi/service/flagship-attainment
+- internal-bi/service/care-cascades
+- internal-bi/service/reported-vs-recorded

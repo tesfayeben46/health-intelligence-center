@@ -1,0 +1,27 @@
+id: internal-bi/overview/trust
+page_id: internal-bi/overview
+title: System Trust at a Glance
+ordering: 30
+columns: 12
+dense: true
+widgets:
+- id: ov-source-pulse
+  col_span: 12
+  row_span: 1
+  ordering: 0
+- id: ov-trust-completeness
+  col_span: 3
+  row_span: 1
+  ordering: 1
+- id: ov-trust-mapping
+  col_span: 3
+  row_span: 1
+  ordering: 2
+- id: ov-trust-silent
+  col_span: 3
+  row_span: 1
+  ordering: 3
+- id: ov-disease-snapshot
+  col_span: 3
+  row_span: 1
+  ordering: 4

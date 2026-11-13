@@ -1,0 +1,12 @@
+id: workshop/workspace/sandbox
+page_id: workshop/workspace
+title: Your labs
+eyebrow: Running JupyterLab sessions · one per project
+ordering: 10
+columns: 12
+dense: true
+widgets:
+- id: ws-running-labs
+  col_span: 12
+  row_span: 1
+  ordering: 0

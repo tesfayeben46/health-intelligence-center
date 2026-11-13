@@ -1,0 +1,332 @@
+{
+  "realm": "moh-staff",
+  "displayName": "Palladium",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 1800,
+  "ssoSessionMaxLifespan": 28800,
+  "passwordPolicy": "length(10) and digits(1) and lowerCase(1) and upperCase(1) and notUsername(undefined) and notEmail(undefined)",
+  "roles": {
+    "realm": [
+      {
+        "name": "R-DEC",
+        "description": "Decision-Maker / Oversight (R-DEC)"
+      },
+      {
+        "name": "R-PROD-SUBMIT",
+        "description": "Data Submitter (R-PROD-SUBMIT)"
+      },
+      {
+        "name": "R-CONS-ANA",
+        "description": "Internal Data Analyst (R-CONS-ANA)"
+      },
+      {
+        "name": "R-CONS-SCI",
+        "description": "Data Scientist / ML Engineer (R-CONS-SCI)"
+      },
+      {
+        "name": "R-CONS-RES",
+        "description": "External Researcher (R-CONS-RES)"
+      },
+      {
+        "name": "R-CONS-PRT",
+        "description": "External Partner (R-CONS-PRT)"
+      },
+      {
+        "name": "R-STEW",
+        "description": "Data Steward (R-STEW)"
+      },
+      {
+        "name": "R-PROD-CLIN",
+        "description": "Clinical Provider (R-PROD-CLIN)"
+      }
+    ]
+  },
+  "groups": [
+    {
+      "name": "decision-makers",
+      "attributes": {
+        "assigned_geography_level": [
+          "national"
+        ],
+        "assigned_program": [
+          "all"
+        ]
+      }
+    },
+    {
+      "name": "submitters",
+      "attributes": {
+        "assigned_facility": [
+          ""
+        ],
+        "assigned_program": [
+          ""
+        ]
+      }
+    }
+  ],
+  "requiredActions": [
+    {
+      "alias": "CONFIGURE_TOTP",
+      "name": "Configure OTP",
+      "enabled": true,
+      "defaultAction": false,
+      "providerId": "CONFIGURE_TOTP"
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "ops-hub",
+      "name": "NHDW Ops Hub",
+      "description": "Internal dashboard at 6_access-points/dashboards/base/. (Cross-realm: ops users use the privileged-ops realm; this client only exists on moh-staff if non-ops people need the surface.)",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "PLACEHOLDER-CYCLE-AFTER-FIRST-BOOT",
+      "redirectUris": [
+        "http://127.0.0.1:8085/*",
+        "http://localhost:8085/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8085",
+        "http://localhost:8085"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "post.logout.redirect.uris": "http://127.0.0.1:8085/*"
+      },
+      "defaultClientScopes": [
+        "basic"
+      ]
+    },
+    {
+      "clientId": "internal-bi",
+      "name": "NHDW Internal BI",
+      "description": "Custom analytics dashboard at 6_access-points/dashboards/internal-bi/.",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "PLACEHOLDER-CYCLE-AFTER-FIRST-BOOT",
+      "redirectUris": [
+        "http://127.0.0.1:8087/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8087"
+      ],
+      "standardFlowEnabled": true,
+      "attributes": {
+        "post.logout.redirect.uris": "http://127.0.0.1:8087/*"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "nhdw-flat-roles"
+      ]
+    },
+    {
+      "clientId": "cloudbeaver",
+      "name": "CloudBeaver SQL workbench",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "PLACEHOLDER-CYCLE-AFTER-FIRST-BOOT",
+      "redirectUris": [
+        "http://127.0.0.1:8086/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8086"
+      ],
+      "standardFlowEnabled": true,
+      "attributes": {
+        "post.logout.redirect.uris": "http://127.0.0.1:8086/*"
+      },
+      "defaultClientScopes": [
+        "basic"
+      ]
+    },
+    {
+      "clientId": "submission-portal",
+      "name": "NHDW Submission Portal",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "PLACEHOLDER-CYCLE-AFTER-FIRST-BOOT",
+      "redirectUris": [
+        "http://127.0.0.1:8088/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8088"
+      ],
+      "standardFlowEnabled": true,
+      "attributes": {
+        "post.logout.redirect.uris": "http://127.0.0.1:8088/*"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "nhdw-flat-roles"
+      ]
+    },
+    {
+      "clientId": "jupyterhub",
+      "name": "NHDW DS Workspace",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "PLACEHOLDER-CYCLE-AFTER-FIRST-BOOT",
+      "redirectUris": [
+        "http://127.0.0.1:8089/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8089"
+      ],
+      "standardFlowEnabled": true,
+      "attributes": {
+        "post.logout.redirect.uris": "http://127.0.0.1:8089/*"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "nhdw-flat-roles"
+      ]
+    },
+    {
+      "clientId": "workshop",
+      "name": "NHDW Community Workshop",
+      "description": "Community contribution portal: artifact submissions, JupyterHub spawning, peer review. R-CONS-* roles.",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "PLACEHOLDER-CYCLE-AFTER-FIRST-BOOT",
+      "redirectUris": [
+        "http://127.0.0.1:8085/*",
+        "http://localhost:8085/*"
+      ],
+      "webOrigins": [
+        "http://127.0.0.1:8085",
+        "http://localhost:8085"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "attributes": {
+        "post.logout.redirect.uris": "http://127.0.0.1:8085/*"
+      },
+      "defaultClientScopes": [
+        "basic",
+        "profile",
+        "email",
+        "nhdw-flat-roles"
+      ]
+    }
+  ],
+  "clientScopes": [
+    {
+      "id": "6c72c92b-a9da-4d71-afd6-e60ed7c19223",
+      "name": "nhdw-flat-roles",
+      "description": "Flattens realm_access.roles into top-level `roles` claim so OpenBao JWT bound_claims can match against it.",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "id": "74f5d9da-46e3-4379-84a2-7870dc87e906",
+          "name": "flat-realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "roles",
+            "jsonType.label": "String"
+          }
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "full name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-full-name-mapper",
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "email",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "basic",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "false",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "config": {
+            "access.token.claim": "true",
+            "introspection.token.claim": "true",
+            "id.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "defaultDefaultClientScopes": [
+    "nhdw-flat-roles"
+  ]
+}

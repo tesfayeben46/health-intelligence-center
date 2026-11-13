@@ -1,0 +1,105 @@
+# Federated identity-source catalog. Loaded into ops_identity.identity_source.
+#
+# Wired end to end: fayda, google, ehia-saml, moh-staff-direct.
+# Catalog-only (status=available): microsoft, who-azure, aau-moshe.
+#
+# When the admin SSO page edits a source, it updates this row and calls the
+# Keycloak Admin API to apply the change in Keycloak. Dashboards never
+# see Fayda/Google/SAML directly; they always see Keycloak Bearer
+# tokens with normalised claims.
+
+# Direct (in-system Keycloak accounts)
+- code: moh-staff-direct
+  name: FMoH Direct (Keycloak)
+  kind: direct
+  protocol: null
+  status: active
+  config_json:
+    realm: moh-staff
+    mfa: TOTP
+    notes: FMoH staff sign in with Keycloak username + TOTP. Source of truth for staff.
+  keycloak_alias: null
+
+# Government / national identity
+- code: fayda
+  name: Fayda (Ethiopian National ID)
+  kind: fayda
+  protocol: oidc
+  status: active
+  config_json:
+    # Verification-only integration, not a login realm. The public
+    # access-request form pops the Fayda Replica directly (no Keycloak broker).
+    issuer_url: http://localhost:8096             # Fayda Replica (0_external/fayda)
+    client_id: nhdw-citizen-portal                # the Replica's OAuth client
+    attribute_mappings:
+      sub:           kc_sub
+      fayda_id:      external_id
+      name:          full_name
+      given_name:    given_name
+      family_name:   family_name
+      gender:        gender
+      birthdate:     birthdate
+      phone_number:  phone
+    purpose: |
+      Optional citizen identity verification on the public-dashboard
+      access-request form. Pre-fills name + sets verified_via='fayda'.
+      Not a gate; non-Fayda requests still flow through. This is not a
+      login: there is no "sign in with Fayda".
+  keycloak_alias: null
+
+# Social
+- code: google
+  name: Google
+  kind: social
+  protocol: oidc
+  status: active
+  config_json:
+    realm: moh-staff
+    issuer_url: https://accounts.google.com
+    client_id: TODO_GOOGLE_CLIENT_ID
+    notes: For non-PHI surfaces (workshop, public). Never grants PHI access.
+  keycloak_alias: google
+
+- code: microsoft
+  name: Microsoft (social)
+  kind: social
+  protocol: oidc
+  status: available
+  config_json: null
+  keycloak_alias: null
+
+# SAML federations
+- code: ehia-saml
+  name: EHIA SAML Federation (mock)
+  kind: saml
+  protocol: saml
+  status: active
+  config_json:
+    realm: moh-staff
+    idp_entity_id: http://ehia-mock:8096/saml/idp/metadata
+    sp_entity_id:  http://keycloak:8080/realms/moh-staff
+    metadata_url:  http://ehia-mock:8096/saml/idp/metadata
+    attribute_mappings:
+      NameID:                kc_sub
+      "urn:oid:0.9.2342.19200300.100.1.3": email     # email
+      "urn:oid:2.5.4.3":     full_name                # cn
+    purpose: |
+      Mock of Ethiopian Health Insurance Agency SAML federation.
+      Demonstrates how a partner organisation onboards through admin SSO.
+  keycloak_alias: ehia-saml
+
+- code: who-azure
+  name: WHO Azure AD
+  kind: saml
+  protocol: saml
+  status: available
+  config_json: null
+  keycloak_alias: null
+
+- code: aau-moshe
+  name: AAU MoSHE Federation
+  kind: saml
+  protocol: saml
+  status: available
+  config_json: null
+  keycloak_alias: null

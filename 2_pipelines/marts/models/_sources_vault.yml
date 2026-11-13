@@ -1,0 +1,142 @@
+# Shared sources file for every mart that reads the vault (hmis_coverage,
+# idsr, service_performance, data_quality, supply_chain, facility_distribution).
+# staging/ marts read nhdw_landing via their own staging/_sources.yml.
+#
+# Declarations mirror what the marts actually consume; do not add speculative
+# tables. Satellite attribute reads stay off this file's raw section by design:
+# they go through the business-vault
+# v_*_current views below.
+version: 2
+
+sources:
+  - name: nhdw_vault_raw
+    description: "Raw Data Vault, populated by 2_pipelines/vault/. Marts read hubs (business keys) and links (fact edges) here; satellite attributes come from the current-record views in nhdw_vault_business."
+    schema: nhdw_vault_raw
+    tables:
+      # DHIS2
+      - name: hub_dhis2_org_unit          # BK holder (DHIS2 uid `id`)
+      - name: lnk_dhis2_data_value        # the dataValue fact edge (measure sat read via v_sat_dhis2_data_value_current)
+      # HCMIS
+      - name: hub_hcmis_environment
+      - name: hub_hcmis_item
+      - name: hub_hcmis_purchase_order     # procurement pipeline (open POs)
+      - name: lnk_hcmis_stock_event
+      # EPSS dispatch plan (Supply Control Tower)
+      - name: hub_hcmis_dispatch           # BK holder (movement_id)
+      - name: hub_hcmis_dispatch_hub       # BK holder (hub_id, warehouse)
+      - name: hub_hcmis_dispatch_facility  # BK holder (node_id, the facility dimension)
+      - name: hub_hcmis_dispatch_period    # BK holder (period_id)
+      - name: hub_hcmis_dispatch_run       # BK holder (run_id)
+      - name: lnk_hcmis_dispatch           # movement fact edge (hub by facility by period)
+      # EthioEMR
+      - name: hub_ethioemr_encounter      # BK holder (FHIR Encounter id); DQ encounter pulse
+      # mBrana
+      - name: hub_mbrana_ussd_facility    # registered USSD facility base (completeness denominator)
+      - name: lnk_mbrana_stock_event      # USSD SOH-log fact edge
+      # MFR
+      - name: hub_mfr_organization        # BK holder (FHIR Organization id); DQ registry pulse
+      # Climate (weekly meteorological drivers)
+      - name: hub_climate_week            # BK holder (region_id by iso_week)
+      # eLMIS v2 history
+      - name: hub_elmis_hist_facility     # BK holder (Zambian facility code; governed display)
+      - name: hub_elmis_hist_product      # BK holder (product code); feature mart + MDM candidates
+      - name: hub_elmis_hist_programme    # BK holder (programme code)
+      - name: hub_elmis_hist_period       # BK holder (period source id)
+      - name: hub_elmis_hist_requisition  # BK holder (source requisition id)
+      - name: hub_elmis_hist_zone         # BK holder (geographic zone code)
+      - name: hub_elmis_hist_facility_type  # BK holder (facility type code); PCT stock policy
+      - name: lnk_elmis_hist_requisition  # requisition by facility by programme by period edge
+      - name: lnk_elmis_hist_requisition_line  # requisition by product R&R line edge
+
+  - name: nhdw_vault_business
+    description: "Business Data Vault, the mart-facing surface: spine + dims, resolution views, current-record views."
+    schema: nhdw_vault_business
+    tables:
+      # The spine: one edge per conformed facility by indicator by monthly
+      # period. Marts take coverage/reporting counts from this grain and
+      # decode the legs via the thin dims below instead of re-deriving
+      # them from raw.
+      - name: lnk_facility_indicator_period
+      - name: hub_indicator_conformed
+      - name: dim_facility
+      - name: dim_period
+      # Period decoder (6 DHIS2 formats -> type/start/end), so marts do not
+      # parse period strings inline.
+      - name: sat_dhis2_period_resolved
+      # Resolution views: the single source of truth for cross-source
+      # identity decode (facility-id slug extraction, indicator -> programme).
+      # Marts join these instead of re-deriving the regex/CASE locally.
+      - name: v_facility_resolution
+      - name: v_commodity_resolution   # MDM golden-record coverage
+      - name: v_programme_resolution
+      # Current-record views (business_vault/current/): sats are insert-only,
+      # so marts must read these (latest row per hash key), never the raw sats,
+      # or every SUM/COUNT double-counts once history accumulates.
+      - name: v_sat_dhis2_org_unit_current
+      - name: v_sat_dhis2_data_element_current
+      - name: v_sat_dhis2_data_value_current
+      - name: v_sat_climate_week_current
+      - name: v_sat_hcmis_facility_current
+      - name: v_sat_hcmis_date_current
+      - name: v_sat_hcmis_item_current
+      - name: v_sat_hcmis_stock_event_current
+      - name: v_sat_hcmis_environment_current   # EPSS hub -> region_id (region-grained supply)
+      - name: v_sat_mfr_facility_current
+      - name: v_sat_mfr_organization_current    # MFR registry pulse (share mapped to FAC-id)
+      - name: v_sat_mfr_device_current          # facility equipment inventory (FHIR Device)
+      - name: v_sat_hcmis_purchase_order_current # procurement pipeline (open POs)
+      # EPSS dispatch plan (Supply Control Tower) current-record views
+      - name: v_sat_hcmis_dispatch_current           # movement measures + commodity_key + run id
+      - name: v_sat_hcmis_dispatch_hub_current       # hub coords + fleet
+      - name: v_sat_hcmis_dispatch_facility_current  # facility coords/region/type/capacity
+      - name: v_sat_hcmis_dispatch_period_current    # period label + plan KPI/savings summary
+      - name: v_sat_hcmis_dispatch_run_current       # run stops/path/fill/cost/eta
+      - name: v_sat_ethioemr_encounter_current  # EthioEMR encounter pulse (provider ref + FHIR status)
+      - name: v_sat_mbrana_stock_event_current  # mBrana USSD SOH-log pulse (quantity ≥ 0 validity)
+      - name: v_sat_mbrana_ussd_facility_current # USSD facility identity (canonical FAC-<region>- codes)
+      # eLMIS v2 history current views
+      - name: v_sat_elmis_hist_facility_current   # legacy facility identity + zone code
+      - name: v_sat_elmis_hist_zone_current       # legacy zone names/hierarchy
+      - name: v_sat_elmis_hist_product_current    # legacy product catalogue (tracer flag)
+      - name: v_sat_elmis_hist_programme_current  # legacy programme identity
+      - name: v_sat_elmis_hist_period_current     # monthly reporting periods
+      - name: v_sat_elmis_hist_requisition_current      # historical workflow status
+      - name: v_sat_elmis_hist_requisition_line_current # historical R&R measures
+      - name: v_sat_elmis_hist_facility_type_current  # stock policy: nominal_max_months, nominal_eop (PCT)
+
+  # nhdw_vault_governance: the DQ governance record (read-only seam)
+  # postgres_fdw foreign tables over nhdw_ops ops_governance (DDL:
+  # 40_dq_read.sql, same seam as the steward decisions). Written only by the
+  # gateway detector/ack paths; the marts read, never write.
+  - name: vault_governance
+    schema: nhdw_vault_governance
+    tables:
+      - name: dq_flag
+        description: "Incident flags: one open row per distinct finding (fingerprint-deduped)."
+      - name: dq_flag_event
+        description: "Append-only status-transition history of dq_flag; never deleted."
+      - name: dq_ack
+        description: "Operator acknowledgements of flags."
+      - name: dq_threshold
+        description: "Central SLA/band thresholds (seed-reconciled, runtime-editable)."
+
+  # Model predictions + performance, read through the FDW seam in init
+  # 41_ml_read.sql (same seam as the steward decisions and the DQ record).
+  # Written only by the ML runner (ops_ml in nhdw_ops); read-only here.
+  - name: vault_plan
+    database: nhdw_vault
+    schema: nhdw_vault_plan
+    description: >
+      Read seam over the nhdw_ops plan decision log (init 43_pct_plan_read.sql):
+      planner verdicts on Supply Control Tower plan lines, append-only and bitemporal.
+    tables:
+      - name: plan_decision
+  - name: vault_ml
+    schema: nhdw_vault_ml
+    tables:
+      - name: ml_predictions
+        description: "Batch predictions: the shared flat forecast schema; contract keys in attrs."
+      - name: ml_run
+        description: "Runner executions (train / predict-batch) with version and MLflow run id."
+      - name: model_performance
+        description: "Per-window model metrics: backtest_* rows written at training, live rows by the scorer."

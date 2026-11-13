@@ -1,0 +1,21 @@
+{
+  "_note": "Copy shared by every dashboard: chrome that repeats, and the geography vocabulary the widgets used to hardcode. 'All Ethiopia' lived in biApp.ts; it is a country name inside a UI string, which is exactly the kind of thing a profile has to own.",
+
+  "scope": {
+    "all_geography": "All {country.name}",
+    "all_programmes": "All programmes",
+    "all_periods": "All periods",
+    "national": "National"
+  },
+
+  "workshop": {
+    "footer_owner": "{ministry.name} · {country.official_name}"
+  },
+
+  "empty": {
+    "_note": "Generic fallbacks. Widget-specific empty states stay with their widget (they describe the widget, not the country) but they resolve through the same loader so a profile CAN override one if a country needs different wording.",
+    "no_data": "No data for the selected filters.",
+    "no_scope": "No data within your assigned scope.",
+    "loading_failed": "Could not load this view. Try again, or check the source status in Admin."
+  }
+}

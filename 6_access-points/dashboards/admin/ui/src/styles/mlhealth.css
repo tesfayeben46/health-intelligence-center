@@ -1,0 +1,138 @@
+/*
+   Model Monitoring (admin/ml-health): page-specific styles.
+   Built entirely on the admin design tokens (base.css). Reuses .kpi, .card,
+   .pill, .btn, .page-section, table.dash; adds only what the fleet view
+   needs: the fleet table states, the expandable drilldown, and the
+   performance line chart. Namespace: .mlh-*.
+   */
+
+.mlh-page .page-lede { max-width: 62rem; }
+.mlh-kpis { margin-top: 1rem; }
+.mlh-loading { margin-top: 1rem; }
+
+/* prominent registry deep links, always visible under the lede */
+.mlh-linkbar { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.7rem; }
+
+/* Inline notes / degraded states */
+.mlh-note {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-top: 0.9rem; padding: 0.6rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: 0.84rem;
+}
+.mlh-note .ico { flex-shrink: 0; }
+.mlh-note-alert { color: var(--alert); background: var(--alert-50); }
+
+.mlh-offline {
+  display: flex; align-items: flex-start; gap: 0.8rem;
+  margin-top: 1rem; padding: 1.1rem 1.3rem;
+}
+.mlh-offline > .ico { color: var(--info); flex-shrink: 0; margin-top: 0.15rem; }
+.mlh-offline h4 { font-size: 1rem; }
+.mlh-offline p { font-size: 0.83rem; color: var(--ink-3); margin-top: 0.25rem; max-width: 44rem; }
+
+/* Fleet table */
+.mlh-panel { padding-top: 0.6rem; }
+.mlh-table-scroll { overflow-x: auto; }
+table.dash.mlh-fleet { margin: 0; }
+table.dash th.num, table.dash td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.mlh-fleet th { white-space: nowrap; }
+.mlh-fleet td { vertical-align: middle; }
+.mlh-fleet tr.is-open td { background: var(--navy-50); }
+
+.mlh-model { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.mlh-model-name { font-size: 0.9rem; font-weight: 700; color: var(--ink); }
+.mlh-when { font-size: 0.74rem; white-space: nowrap; }
+
+.mlh-drift { font-size: 0.84rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.mlh-drift.is-alert { color: var(--alert); font-weight: 600; }
+.mlh-psi { font-weight: 500; }
+.mlh-metric { font-size: 0.84rem; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.mlh-th-actions { width: 1%; }
+.mlh-actions { white-space: nowrap; text-align: right; }
+.mlh-actions .btn + .btn { margin-left: 0.35rem; }
+.mlh-workshop-link { color: var(--navy-700); }
+
+/* Drilldown (expanded row) */
+.mlh-det-row td { background: var(--paper-2); padding: 0.9rem 1rem 1.1rem; }
+.mlh-det-row:hover td { background: var(--paper-2); }
+.mlh-det {
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 1.4rem; align-items: start;
+}
+.mlh-det-col { min-width: 0; }
+.mlh-det-h {
+  font-family: var(--font-sans); font-size: 0.72rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-4);
+  margin-bottom: 0.5rem;
+}
+.mlh-det-h code { text-transform: none; letter-spacing: 0; }
+.mlh-det-note { font-size: 0.82rem; margin: 0.4rem 0; }
+.mlh-det-foot { font-size: 0.72rem; margin-top: 0.35rem; }
+
+table.dash.mlh-drift-table { margin: 0; background: var(--paper); }
+.mlh-drift-table tr.is-drifted td { background: var(--alert-50); }
+.mlh-drift-table tr.is-drifted:hover td { background: var(--alert-50); }
+.mlh-drift-note { font-size: 0.7rem; margin-top: 0.15rem; }
+
+/* Performance line chart (single series, one axis) */
+.mlh-chart { display: block; width: 100%; height: auto; overflow: visible; }
+.mlh-chart-empty { font-size: 0.82rem; margin: 0.4rem 0; }
+.mlh-grid { stroke: var(--border); stroke-width: 1; }
+.mlh-axis { font-size: 11px; fill: var(--ink-4); font-variant-numeric: tabular-nums; }
+.mlh-line {
+  fill: none; stroke: var(--navy-700); stroke-width: 2;
+  stroke-linejoin: round; stroke-linecap: round;
+}
+.mlh-dot { fill: var(--navy-800); }
+.mlh-last { font-size: 12px; font-weight: 600; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.mlh-cross { stroke: var(--border-2); stroke-width: 1; stroke-dasharray: 3 3; }
+.mlh-dot-hover { fill: var(--navy-800); stroke: var(--paper); stroke-width: 2; }
+.mlh-tip-bg { fill: var(--paper); stroke: var(--border-2); }
+.mlh-tip-strong { font-size: 12px; font-weight: 700; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.mlh-tip { font-size: 11px; fill: var(--ink-3); font-variant-numeric: tabular-nums; }
+
+.mlh-note-good { color: var(--good); background: var(--good-50); }
+
+/* Operator controls (expanded row, below the drilldown) */
+.mlh-controls { margin-top: 1.1rem; border-top: 1px solid var(--border); padding-top: 0.9rem; }
+.mlh-ctl-grid {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.1rem; align-items: start;
+}
+.mlh-ctl-group { min-width: 0; }
+.mlh-ctl-run { grid-column: span 1; }
+.mlh-ctl-h {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 0.78rem; font-weight: 700; color: var(--ink-2);
+  margin-bottom: 0.4rem;
+}
+.mlh-ctl-h .ico { color: var(--navy-700); }
+.mlh-ctl-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.mlh-ctl-job { margin-top: 0.6rem; font-size: 0.8rem; }
+.mlh-ctl-job code { font-size: 0.74rem; }
+
+.mlh-select, .mlh-input {
+  font: inherit; font-size: 0.82rem; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.3rem 0.5rem; min-width: 0;
+}
+.mlh-select:focus, .mlh-input:focus { outline: none; border-color: var(--navy-700); }
+
+.mlh-run-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 0.6rem;
+}
+.mlh-run-field { display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.mlh-run-lbl {
+  font-size: 0.68rem; font-weight: 600; color: var(--ink-4);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.mlh-run-field .mlh-input { width: 100%; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .mlh-det { grid-template-columns: 1fr; }
+  .mlh-ctl-grid { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,108 @@
+# The admin, workshop and public dashboards (internal-bi has its own file).
+# All use the same Keycloak PKCE and gateway-proxy pattern; only the
+# realm, client and port envs differ.
+
+# admin · privileged-ops realm · port 8086
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: admin, namespace: nhdw, labels: { app: admin, tier: dashboard } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: admin } }
+  template:
+    metadata: { labels: { app: admin, tier: dashboard } }
+    spec:
+      containers:
+        - name: dashboard
+          image: nhdw-registry:5500/nhdw/admin:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [ { containerPort: 80, name: http } ]
+          env:
+            - { name: DEV_AUTH,             value: "false" }
+            - { name: KEYCLOAK_BASE,        value: "http://keycloak.nhdw.svc.cluster.local:8080" }
+            - { name: KEYCLOAK_PUBLIC_BASE, value: "http://127.0.0.1:8090" }
+            - { name: OIDC_REALM,           value: "privileged-ops" }
+            - { name: OIDC_CLIENT_ID,       value: "admin" }
+            - { name: OIDC_REDIRECT_URI,    value: "http://127.0.0.1:8086/" }
+            - { name: APP_BASE,             value: "http://127.0.0.1:8086" }
+            - { name: GATEWAY_URL,          value: "http://nhdw-gateway.nhdw.svc.cluster.local:8000" }
+          readinessProbe: { httpGet: { path: /health, port: 80 }, initialDelaySeconds: 3, periodSeconds: 5 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: admin, namespace: nhdw, labels: { app: admin } }
+spec:
+  selector: { app: admin }
+  ports: [ { port: 80, targetPort: http, name: http } ]
+
+# workshop · moh-staff realm · port 8085
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: workshop, namespace: nhdw, labels: { app: workshop, tier: dashboard } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: workshop } }
+  template:
+    metadata: { labels: { app: workshop, tier: dashboard } }
+    spec:
+      containers:
+        - name: dashboard
+          image: nhdw-registry:5500/nhdw/workshop:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [ { containerPort: 80, name: http } ]
+          env:
+            - { name: DEV_AUTH,             value: "false" }
+            - { name: KEYCLOAK_BASE,        value: "http://keycloak.nhdw.svc.cluster.local:8080" }
+            - { name: KEYCLOAK_PUBLIC_BASE, value: "http://127.0.0.1:8090" }
+            - { name: OIDC_REALM,           value: "moh-staff" }
+            - { name: OIDC_CLIENT_ID,       value: "workshop" }
+            - { name: OIDC_REDIRECT_URI,    value: "http://127.0.0.1:8085/" }
+            - { name: APP_BASE,             value: "http://127.0.0.1:8085" }
+            - { name: GATEWAY_URL,          value: "http://nhdw-gateway.nhdw.svc.cluster.local:8000" }
+          readinessProbe: { httpGet: { path: /health, port: 80 }, initialDelaySeconds: 3, periodSeconds: 5 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: workshop, namespace: nhdw, labels: { app: workshop } }
+spec:
+  selector: { app: workshop }
+  ports: [ { port: 80, targetPort: http, name: http } ]
+
+# public · anonymous · port 8088
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: public-dashboard, namespace: nhdw, labels: { app: public-dashboard, tier: dashboard } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: public-dashboard } }
+  template:
+    metadata: { labels: { app: public-dashboard, tier: dashboard } }
+    spec:
+      containers:
+        - name: dashboard
+          image: nhdw-registry:5500/nhdw/public-dashboard:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [ { containerPort: 80, name: http } ]
+          env:
+            - { name: NHDW_MINIO_INTERNAL, value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # nhdw-static is read from SeaweedFS; the code default is a legacy host
+            # Fayda identity verification is an email-OTP round trip handled
+            # entirely by the external Fayda replica (0_external/fayda, compose on
+            # host port 8096, like the source replicas). This server's
+            # /api/proxy/fayda/* forwards to the replica's /verify/* over the host
+            # route; the replica issues, emails and confirms the code with its own
+            # SMTP, not the NHDW gateway. Production points this at the real Fayda.
+            - { name: FAYDA_INTERNAL_BASE, value: "http://host.k3d.internal:8096" }
+          readinessProbe: { httpGet: { path: /health, port: 80 }, initialDelaySeconds: 3, periodSeconds: 5 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: public-dashboard, namespace: nhdw, labels: { app: public-dashboard } }
+spec:
+  selector: { app: public-dashboard }
+  ports: [ { port: 80, targetPort: http, name: http } ]
+
+# The control-room console is not a cluster workload; it runs on the host from
+# bundle/demo-console/.
+

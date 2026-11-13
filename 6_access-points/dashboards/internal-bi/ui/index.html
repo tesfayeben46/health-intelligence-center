@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Palladium Internal BI</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%2316315c'/><text x='16' y='23' font-family='Georgia,serif' font-size='21' font-weight='600' text-anchor='middle' fill='%23ffffff'>P</text></svg>" />
+<!-- Fonts + echarts are BUNDLED (main.tsx imports @fontsource/*; widgets import
+     npm echarts). No runtime CDN: the cluster is offline and an unreachable
+     stylesheet stalls DOMContentLoaded + document.fonts.ready on every load. -->
+</head>
+<body>
+<div id="icon-sprite"></div>
+<div id="root"></div>
+<script>fetch('/static/assets/icons.html').then(r=>r.text()).then(h=>{document.getElementById('icon-sprite').innerHTML=h;});</script>
+<script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: nhdw
+description: NHDW umbrella chart for the National Health Data Warehouse application tier.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

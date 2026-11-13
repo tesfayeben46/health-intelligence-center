@@ -1,0 +1,78 @@
+# R-CONS-ANA: Internal Data Analyst
+#
+# M&E and policy analysts read de-identified patient data and raw
+# programme and facility marts for ad-hoc analysis.
+role:
+  id: R-CONS-ANA
+  name: "Internal Data Analyst"
+  group: Consumer
+  identity_provider: MoH-Keycloak
+  mfa_required: true
+  mfa_factor: TOTP
+  phase_activated: 1
+  audit_class: enhanced
+  notes: |
+    M&E + policy analysts. Full Internal-BI build access; ad-hoc SQL on
+    pre-authorised marts. Sensitive sub-classes (HIV/mental/GBV) blocked
+    unless explicitly granted at the widget-filter level.
+  # Column-grain reveal: analysts see restricted columns (facility GPS,
+  # contact) unmasked, because their resource and Control Tower maps plot
+  # exact coordinates. privileged (patient-identifying) stays masked.
+  column_access:
+    reveal: [restricted]
+  permissions:
+
+    - subject: PRG
+      data_class: [DC.CAT]
+      members: all
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [public-health]
+    - subject: PT
+      data_class: [DC.ENC, DC.CND, DC.OBS]
+      members: scoped
+      granularity: deidentified
+      sensitivity: []
+      verbs: [read, export, schedule, annotate]
+      purpose_of_use: [public-health]
+
+    - subject: HP
+      data_class: [DC.PRO, DC.PRF]
+      members: scoped
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read, export, schedule]
+      purpose_of_use: [public-health]
+
+    - subject: FAC
+      data_class: [DC.PRO, DC.PRF]
+      members: scoped
+      granularity: raw
+      sensitivity: []
+      verbs: [read, export, schedule, annotate]
+      purpose_of_use: [public-health]
+
+    - subject: PRD
+      data_class: [DC.STK, DC.MED]
+      members: scoped
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read, export, schedule, alert]
+      purpose_of_use: [public-health]
+
+    - subject: PRG
+      data_class: []
+      members: scoped
+      granularity: raw
+      sensitivity: []
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health]
+
+    - subject: PRG
+      data_class: []
+      members: scoped
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read, export, schedule, alert]
+      purpose_of_use: [public-health]

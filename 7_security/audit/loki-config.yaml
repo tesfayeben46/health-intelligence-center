@@ -1,0 +1,53 @@
+# Loki: sink for FHIR AuditEvent logs (standalone single-node config; the
+# Kubernetes deployment defines its own loki-config ConfigMap in
+# 1_infrastructure/k8s/base/observability/loki.yaml).
+#
+# Each access point's PEP emits a JSON log line in the FHIR AuditEvent
+# resource shape every time it serves a data read. Loki indexes the labels
+# (user, role, purpose-of-use, resource_type, realm) and stores the JSON
+# payload.
+#
+# Loki has no API to modify stored log lines. With auth_enabled: false, as
+# here, the API is unauthenticated, so access must be restricted at the
+# network level; multi-tenant auth and a delete-permission token are needed
+# to restrict deletion requests.
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9095
+  log_level: info
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+# Structured metadata is disabled to keep the dev setup simple; enable it in
+# production for a richer FHIR AuditEvent index.
+limits_config:
+  allow_structured_metadata: false
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  retention_period: 8760h        # one year; adjust for production compliance
+
+schema_config:
+  configs:
+    - from: 2024-01-01
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+ruler:
+  alertmanager_url: http://localhost:9093

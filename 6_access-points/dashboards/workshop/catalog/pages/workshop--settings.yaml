@@ -1,0 +1,5 @@
+id: workshop/settings
+title: Settings
+ordering: 60
+sections:
+- workshop/settings/profile

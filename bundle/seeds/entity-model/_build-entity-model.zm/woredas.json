@@ -1,0 +1,758 @@
+[
+  {
+    "woreda_id": "3060",
+    "region_id": "ZM-30",
+    "zone": "Eastern",
+    "name": "Mambwe",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "8070",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Mazabuka",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1020",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Kabwe",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "6020",
+    "region_id": "ZM-91",
+    "zone": "Muchinga",
+    "name": "Chinsali",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1070",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Chisamba",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1010",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Chibombo",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1030",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Kapiri-Mposhi",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1031",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Ngabwe",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1040",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Mkushi",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1090",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Luano",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9180",
+    "region_id": "ZM-91",
+    "zone": "Muchinga",
+    "name": "Mpika",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1050",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Mumbwa",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "5052",
+    "region_id": "ZM-50",
+    "zone": "Lusaka",
+    "name": "Shibuyunji",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1060",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Serenje",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1080",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Chitambo",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "2040",
+    "region_id": "ZM-20",
+    "zone": "Copperbelt",
+    "name": "Kitwe",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "5040",
+    "region_id": "ZM-50",
+    "zone": "Lusaka",
+    "name": "Lusaka District",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "6060",
+    "region_id": "ZM-60",
+    "zone": "Northern",
+    "name": "Luwingu",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "2010",
+    "region_id": "ZM-20",
+    "zone": "Copperbelt",
+    "name": "Chililabombwe",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "2011",
+    "region_id": "ZM-20",
+    "zone": "Copperbelt",
+    "name": "Ndola",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "2020",
+    "region_id": "ZM-20",
+    "zone": "Copperbelt",
+    "name": "Chingola",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "2030",
+    "region_id": "ZM-20",
+    "zone": "Copperbelt",
+    "name": "Kalulushi",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "2050",
+    "region_id": "ZM-20",
+    "zone": "Copperbelt",
+    "name": "Luanshya",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "2060",
+    "region_id": "ZM-20",
+    "zone": "Copperbelt",
+    "name": "Lufwanyama",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "2070",
+    "region_id": "ZM-20",
+    "zone": "Copperbelt",
+    "name": "Masaiti",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "2080",
+    "region_id": "ZM-20",
+    "zone": "Copperbelt",
+    "name": "Mpongwe",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "2090",
+    "region_id": "ZM-20",
+    "zone": "Copperbelt",
+    "name": "Mufulira",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "3010",
+    "region_id": "ZM-30",
+    "zone": "Eastern",
+    "name": "Chadiza",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "3070",
+    "region_id": "ZM-30",
+    "zone": "Eastern",
+    "name": "Nyimba",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "3020",
+    "region_id": "ZM-91",
+    "zone": "Muchinga",
+    "name": "Chama",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "3030",
+    "region_id": "ZM-30",
+    "zone": "Eastern",
+    "name": "Chipata",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "3040",
+    "region_id": "ZM-30",
+    "zone": "Eastern",
+    "name": "Katete",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "3050",
+    "region_id": "ZM-30",
+    "zone": "Eastern",
+    "name": "Lundazi",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "3080",
+    "region_id": "ZM-30",
+    "zone": "Eastern",
+    "name": "Petauke",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "3090",
+    "region_id": "ZM-30",
+    "zone": "Eastern",
+    "name": "Sinda",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "3011",
+    "region_id": "ZM-30",
+    "zone": "Eastern",
+    "name": "Vubwi",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "4051",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Chipili",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "4010",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Chiengi",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "4031",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Chembe",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "4020",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Kawambwa",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "4021",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Mwansabombwe",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "4080",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Lunga",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "4030",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Mansa",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "4040",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Milenge",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "4050",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Mwense",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "4060",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Nchelenge",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "4070",
+    "region_id": "ZM-40",
+    "zone": "Luapula",
+    "name": "Samfya",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "5021",
+    "region_id": "ZM-50",
+    "zone": "Lusaka",
+    "name": "Chilanga",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "5010",
+    "region_id": "ZM-50",
+    "zone": "Lusaka",
+    "name": "Chongwe",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "5051",
+    "region_id": "ZM-50",
+    "zone": "Lusaka",
+    "name": "Rufunsa",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "5030",
+    "region_id": "ZM-50",
+    "zone": "Lusaka",
+    "name": "Luangwa",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "5020",
+    "region_id": "ZM-50",
+    "zone": "Lusaka",
+    "name": "Kafue",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "5060",
+    "region_id": "ZM-50",
+    "zone": "Lusaka",
+    "name": "Chirundu",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9182",
+    "region_id": "ZM-91",
+    "zone": "Muchinga",
+    "name": "Kanchibiya",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9181",
+    "region_id": "ZM-91",
+    "zone": "Muchinga",
+    "name": "Lavushi Manda",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9131",
+    "region_id": "ZM-91",
+    "zone": "Muchinga",
+    "name": "Mafinga",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "6090",
+    "region_id": "ZM-60",
+    "zone": "Northern",
+    "name": "Mporokoso",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "6010",
+    "region_id": "ZM-60",
+    "zone": "Northern",
+    "name": "Chilubi",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9120",
+    "region_id": "ZM-91",
+    "zone": "Muchinga",
+    "name": "Shiwangandu",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "6030",
+    "region_id": "ZM-91",
+    "zone": "Muchinga",
+    "name": "Isoka",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "6040",
+    "region_id": "ZM-60",
+    "zone": "Northern",
+    "name": "Kaputa",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "6041",
+    "region_id": "ZM-60",
+    "zone": "Northern",
+    "name": "Nsama",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "6050",
+    "region_id": "ZM-60",
+    "zone": "Northern",
+    "name": "Kasama",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "6070",
+    "region_id": "ZM-60",
+    "zone": "Northern",
+    "name": "Mbala",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "6071",
+    "region_id": "ZM-60",
+    "zone": "Northern",
+    "name": "Senga",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "6011",
+    "region_id": "ZM-60",
+    "zone": "Northern",
+    "name": "Mpulungu",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "6022",
+    "region_id": "ZM-60",
+    "zone": "Northern",
+    "name": "Mungwi",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9110",
+    "region_id": "ZM-91",
+    "zone": "Muchinga",
+    "name": "Nakonde",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "7010",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Chavuma",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "7020",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Kabompo",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "7061",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Manyinga",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "7025",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Kalumbila",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "7030",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Kasempa",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "7040",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Mufumbwe",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "7050",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Mwinilunga",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "7051",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Ikelenge",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "7060",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Solwezi",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "7081",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Mushindamo",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "7070",
+    "region_id": "ZM-70",
+    "zone": "North Western",
+    "name": "Zambezi",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "8060",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Livingstone",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "8010",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Choma",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "8011",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Pemba",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "8020",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Gwembe",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "1032",
+    "region_id": "ZM-10",
+    "zone": "Central",
+    "name": "Itezhi-tezhi",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "8031",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Chikankata",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "8040",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Kalomo",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "8041",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Zimba",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "8050",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Kazungula",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "8080",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Monze",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "8090",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Namwala",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "8012",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Siavonga",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "8013",
+    "region_id": "ZM-80",
+    "zone": "Southern",
+    "name": "Sinazongwe",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9010",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Kalabo",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9011",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Sikongo",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "9070",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Shan'gombo",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9020",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Kaoma",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9090",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Luampa",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9021",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Nkeyema",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9030",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Lukulu",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9031",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Mitete",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9040",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Mongu",
+    "urban_rural": "urban"
+  },
+  {
+    "woreda_id": "9080",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Limulunga",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9050",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Senanga",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9051",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Nalolo",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9060",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Sesheke",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9062",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Mwandi",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9061",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Mulobezi",
+    "urban_rural": "rural"
+  },
+  {
+    "woreda_id": "9071",
+    "region_id": "ZM-90",
+    "zone": "Western",
+    "name": "Sioma",
+    "urban_rural": "rural"
+  }
+]

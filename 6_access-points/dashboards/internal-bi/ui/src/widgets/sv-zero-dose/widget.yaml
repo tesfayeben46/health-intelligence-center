@@ -1,0 +1,8 @@
+id: sv-zero-dose
+title: Zero-dose Children and Vaccine Last Mile
+kind: table
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

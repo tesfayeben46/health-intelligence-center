@@ -1,0 +1,58 @@
+# OpenSearch: the search backend OpenMetadata requires (its only consumer).
+# Single node, security plugin off (ClusterIP only, in-namespace), 1 GiB heap.
+# This is the heaviest component of the metadata plane.
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opensearch
+  namespace: nhdw
+  labels: { app: opensearch, tier: metadata }
+spec:
+  serviceName: opensearch
+  replicas: 1
+  selector: { matchLabels: { app: opensearch } }
+  template:
+    metadata:
+      labels: { app: opensearch, tier: metadata }
+    spec:
+      containers:
+        - name: opensearch
+          image: opensearchproject/opensearch:2.19.6
+          imagePullPolicy: IfNotPresent
+          ports: [ { containerPort: 9200, name: http } ]
+          env:
+            - { name: discovery.type,              value: "single-node" }
+            - { name: DISABLE_SECURITY_PLUGIN,     value: "true" }
+            - { name: DISABLE_INSTALL_DEMO_CONFIG, value: "true" }
+            - { name: OPENSEARCH_JAVA_OPTS,        value: "-Xms1g -Xmx1g" }
+          resources:
+            requests: { memory: "1536Mi", cpu: "250m" }
+            limits:   { memory: "2560Mi" }
+          readinessProbe:
+            httpGet: { path: /_cluster/health, port: http }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          volumeMounts:
+            - { name: data, mountPath: /usr/share/opensearch/data }
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources: { requests: { storage: 5Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opensearch
+  namespace: nhdw
+  labels: { app: opensearch, tier: metadata }
+spec:
+  type: ClusterIP
+  selector: { app: opensearch }
+  ports:
+    - { port: 9200, targetPort: http, name: http }

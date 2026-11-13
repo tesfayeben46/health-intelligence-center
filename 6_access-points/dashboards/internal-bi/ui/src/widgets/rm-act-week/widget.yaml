@@ -1,0 +1,8 @@
+id: rm-act-week
+title: Resource · Act this week, outbreaks vs response stock
+kind: table
+requires:
+  subject: PRD
+  verb: read
+  granularity: aggregate
+  sensitivity: default

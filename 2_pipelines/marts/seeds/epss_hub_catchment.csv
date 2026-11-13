@@ -1,0 +1,26 @@
+hub_id,hub_name,region_id,weight
+CENT,EPSS Central · Addis Ababa,AA,1.0
+ADDIS,EPSS Addis Hub,AA,1.0
+ADAMA,EPSS Adama Hub,OR,0.8679
+ADAMA,EPSS Adama Hub,CE,0.1321
+BAHR,EPSS Bahir Dar Hub,AM,1.0
+DESS,EPSS Dessie Hub,AM,0.9278
+DESS,EPSS Dessie Hub,AF,0.0722
+DIRE,EPSS Dire Dawa Hub,DD,1.0
+GAMB,EPSS Gambella Hub,GA,1.0
+GOND,EPSS Gondar Hub,AM,1.0
+HAWA,EPSS Hawassa Hub,SI,0.3378
+HAWA,EPSS Hawassa Hub,CE,0.6622
+HARA,EPSS Harar Hub,HA,1.0
+JIJI,EPSS Jijiga Hub,SO,1.0
+JIMM,EPSS Jimma Hub,OR,0.8798
+JIMM,EPSS Jimma Hub,SW,0.1202
+MEKE,EPSS Mekele Hub,TI,1.0
+NEKE,EPSS Nekemte Hub,OR,1.0
+ASSA,EPSS Assosa Hub,BG,1.0
+ASAY,EPSS Semera (Asayita) Hub,AF,1.0
+SHAS,EPSS Shashemene Hub,OR,0.8679
+SHAS,EPSS Shashemene Hub,CE,0.1321
+SODD,EPSS Sodo Hub,SE,0.5963
+SODD,EPSS Sodo Hub,SW,0.4037
+ARBA,EPSS Arba Minch Hub,SE,1.0

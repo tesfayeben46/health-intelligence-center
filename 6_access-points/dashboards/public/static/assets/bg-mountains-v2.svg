@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 520" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+  <!-- Mountain silhouette · 4 receding ridges with atmospheric
+       perspective achieved via opacity and slight Y-offset. Designed to
+       sit at the bottom of a light hero with the upper portion masked
+       away into a cream gradient. -->
+
+  <!-- Far range (palest) -->
+  <path d="M0 320 L60 280 L130 305 L220 245 L300 295 L385 235 L470 275 L560 220 L645 265 L735 215 L820 255 L910 200 L1000 245 L1090 195 L1180 240 L1280 200 L1370 245 L1465 215 L1555 245 L1600 230 L1600 520 L0 520 Z"
+        fill="#9aa6b8" opacity="0.55"/>
+
+  <!-- Mid-back range -->
+  <path d="M0 365 L70 320 L160 345 L250 285 L340 330 L430 270 L530 310 L620 255 L715 305 L805 245 L895 290 L985 235 L1075 280 L1165 230 L1255 280 L1355 240 L1450 285 L1540 250 L1600 275 L1600 520 L0 520 Z"
+        fill="#6f7d92" opacity="0.72"/>
+
+  <!-- Mid-front range -->
+  <path d="M0 410 L90 360 L185 400 L280 340 L380 380 L470 320 L575 365 L670 305 L770 355 L865 295 L960 340 L1055 285 L1155 335 L1255 280 L1355 330 L1450 290 L1545 335 L1600 315 L1600 520 L0 520 Z"
+        fill="#4a5868" opacity="0.88"/>
+
+  <!-- Front range (darkest) -->
+  <path d="M0 460 L80 410 L175 445 L275 385 L380 430 L470 375 L580 415 L685 360 L795 405 L900 355 L1010 395 L1115 350 L1225 395 L1330 350 L1440 390 L1535 360 L1600 380 L1600 520 L0 520 Z"
+        fill="#1f2937" opacity="1"/>
+</svg>

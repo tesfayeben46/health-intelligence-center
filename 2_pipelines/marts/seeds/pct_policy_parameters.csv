@@ -1,0 +1,3 @@
+parameter,value,unit,basis,source,note
+lead_time_days,30,days,ASSUMPTION,Global Fund spot-check calibration (lead times ~30 days normal; 3 days emergency),no lead-time data exists in the eLMIS archive; editable
+review_period_months,1,months,SOURCED,eLMIS reporting schedule (monthly R&R),the order cycle of monthly-schedule facilities

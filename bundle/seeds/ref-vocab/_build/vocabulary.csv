@@ -1,0 +1,17 @@
+vocabulary_id,vocabulary_name,vocabulary_reference,vocabulary_version,is_source_vocabulary
+NHDW-PROGRAMME,NHDW canonical programmes,entity-model.yaml,1,false
+NHDW-INDICATOR,NHDW canonical HMIS indicators,entity-model.yaml,1,false
+NHDW-COMMODITY,NHDW canonical commodities,entity-model.yaml,1,false
+NHDW-REGION,NHDW canonical regions,entity-model.yaml,1,false
+NHDW-TIER,NHDW canonical facility tiers,entity-model.yaml,1,false
+NHDW-OWNERSHIP,NHDW canonical ownership classes,entity-model.yaml,1,false
+NHDW-DISEASE,NHDW canonical IDSR diseases,entity-model.yaml,1,false
+DHIS2.dataElement,DHIS2 data-element codes,source: DHIS2,1,true
+MFR.facilityType,MFR facility-type display names,source: MFR,1,true
+MFR.regionName,MFR region display names,source: MFR,1,true
+MFR.ownership,MFR ownership display values,source: MFR,1,true
+HCMIS.commodityId,HCMIS native commodity ids,source: HCMIS,1,true
+MBRANA.commodityCode,mBrana native commodity codes,source: mBrana,1,true
+NHDW.commodityId,Entity-model commodity ids,entity-model.yaml,1,true
+ICD10,WHO ICD-10 (curated NHDW subset),https://icd.who.int/browse10,curated-subset,false
+ATC,WHO ATC (curated NHDW subset),https://atcddd.fhi.no/atc_ddd_index/,curated-subset,false

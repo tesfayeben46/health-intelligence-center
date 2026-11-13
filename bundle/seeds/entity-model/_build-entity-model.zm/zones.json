@@ -1,0 +1,52 @@
+[
+  {
+    "zone_id": "ZM-30",
+    "region_id": "ZM-30",
+    "name": "Eastern"
+  },
+  {
+    "zone_id": "ZM-80",
+    "region_id": "ZM-80",
+    "name": "Southern"
+  },
+  {
+    "zone_id": "ZM-10",
+    "region_id": "ZM-10",
+    "name": "Central"
+  },
+  {
+    "zone_id": "ZM-91",
+    "region_id": "ZM-91",
+    "name": "Muchinga"
+  },
+  {
+    "zone_id": "ZM-50",
+    "region_id": "ZM-50",
+    "name": "Lusaka"
+  },
+  {
+    "zone_id": "ZM-20",
+    "region_id": "ZM-20",
+    "name": "Copperbelt"
+  },
+  {
+    "zone_id": "ZM-60",
+    "region_id": "ZM-60",
+    "name": "Northern"
+  },
+  {
+    "zone_id": "ZM-40",
+    "region_id": "ZM-40",
+    "name": "Luapula"
+  },
+  {
+    "zone_id": "ZM-70",
+    "region_id": "ZM-70",
+    "name": "North Western"
+  },
+  {
+    "zone_id": "ZM-90",
+    "region_id": "ZM-90",
+    "name": "Western"
+  }
+]

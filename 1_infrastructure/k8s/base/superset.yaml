@@ -1,0 +1,83 @@
+# Superset: self-service SQL/BI over the marts through Trino. Native FAB
+# Keycloak OIDC (moh-staff, the analyst audience), as with Airflow: the tool runs
+# its own role-aware OIDC and is not behind a tool gate. It queries Trino
+# directly, bypassing the gateway and OPA (as Jupyter does), so access is
+# limited to trusted analyst roles; see superset_config.py.
+#
+# Single process: gunicorn only, no celery or redis. Metadata store is
+# nhdw_superset in postgres-vault (31_superset_db.sh).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: superset
+  namespace: nhdw
+  labels: { app: superset, tier: bi }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }   # single writer to the metadata DB
+  selector: { matchLabels: { app: superset } }
+  template:
+    metadata: { labels: { app: superset, tier: bi } }
+    spec:
+      # init: run migrations, seed FAB roles, upsert the Trino connection
+      initContainers:
+        - name: superset-init
+          image: nhdw-registry:5500/nhdw/superset:1.0.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              superset db upgrade
+              superset init
+              python /app/pythonpath/create_trino_db.py
+          env: &supersetenv
+            - { name: SUPERSET_CONFIG_PATH, value: "/app/pythonpath/superset_config.py" }
+            - { name: SUPERSET_DB_HOST,     value: "postgres-vault.nhdw.svc.cluster.local" }
+            - name: SUPERSET_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: superset-secrets, key: DB_PASSWORD } }
+            - name: SUPERSET_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: superset-secrets, key: SECRET_KEY } }
+            # Native Keycloak OIDC (moh-staff) with split URLs (browser on the
+            # public host, pod on internal DNS), as in Airflow's webserver_config.py.
+            - { name: SUPERSET_OIDC_CLIENT_ID,       value: "superset" }
+            - name: SUPERSET_OIDC_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: superset-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - { name: SUPERSET_OIDC_ISSUER_PUBLIC,   value: "https://keycloak.127.0.0.1.nip.io/realms/moh-staff" }
+            - { name: SUPERSET_OIDC_ISSUER_INTERNAL, value: "http://keycloak.nhdw.svc.cluster.local:8080/realms/moh-staff" }
+      containers:
+        - name: superset
+          image: nhdw-registry:5500/nhdw/superset:1.0.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              exec gunicorn --bind 0.0.0.0:8088 --workers 2 --worker-class gthread \
+                --threads 20 --timeout 120 --limit-request-line 0 \
+                --limit-request-field_size 0 "superset.app:create_app()"
+          ports: [ { containerPort: 8088, name: http } ]
+          env: *supersetenv
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+          resources:
+            requests: { cpu: "100m", memory: "512Mi" }
+            limits:   { cpu: "1", memory: "1536Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: superset
+  namespace: nhdw
+  labels: { app: superset, tier: bi }
+spec:
+  type: ClusterIP
+  selector: { app: superset }
+  ports: [ { port: 8088, targetPort: http, name: http } ]

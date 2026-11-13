@@ -1,0 +1,18 @@
+# requirements.txt: pip extras beyond the baked ml-runner image.
+#
+# The runner image already ships (do not list these):
+#   mlflow==2.18.0  statsmodels==0.14.2  scikit-learn==1.5.2
+#   pandas==2.2.3   numpy==1.26.4        scipy==1.14.1
+#   psycopg2-binary boto3 pyyaml
+#
+# Most packages need nothing more: leave this file empty (comments only).
+#
+# If you do add a line, resolution is offline-first and layered:
+#   1. baked image                       (satisfied already? nothing happens)
+#   2. /wheels delta                     pip --no-index --find-links /wheels
+#      -> ship the wheel in bundle/pip-wheels to stay offline-clean
+#   3. loud network fallback             logged as a broken offline guarantee;
+#      the validators label such a package "needs network".
+#
+# Pin exact versions (pkg==x.y.z); unpinned extras make training
+# unreproducible.

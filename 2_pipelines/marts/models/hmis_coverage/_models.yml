@@ -1,0 +1,141 @@
+version: 2
+
+models:
+  - name: mart_malaria_kpi
+    description: |
+      Malaria KPI set (region by month): suspected, tested by
+      microscopy vs RDT, confirmed, test-positivity rate, confirmed per 1,000,
+      inpatient deaths, ITN + IRS coverage, from the seeded MAL-* HMIS
+      elements joined to POP-TOTAL. Backs dz-malaria-kpi.
+    columns:
+      - name: region_id
+        tests: [not_null]
+      - name: month_id
+        tests: [not_null]
+      - name: test_positivity_pct
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0 AND test_positivity_pct <= 100 OR test_positivity_pct IS NULL"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [region_id, month_id]
+
+  - name: mart_epi_zero_dose
+    description: |
+      Immunization reach index and vaccine last-mile stress (region by year),
+      the "zero-dose" question at demonstration data scale:
+      reach_index = annualized PENTA1 doses per 1,000 expected infants
+      (POP-TOTAL * 3.2% CBR, labeled estimate) compares regions fairly;
+      absolute zero-dose counts would mislead (demo-scale service volumes
+      vs population-scale denominators). hotspot = bottom-tercile reach and
+      mBrana zero-stock ≥15%. Backs sv-zero-dose.
+    columns:
+      - name: region_id
+        tests: [not_null]
+      - name: year_id
+        tests: [not_null]
+      - name: expected_infants
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: reach_index
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0 OR reach_index IS NULL"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [region_id, year_id]
+
+  - name: mart_epi_cold_chain_safety
+    description: |
+      Month by national EPI safety surveillance: cold-chain temperature
+      excursions + AEFI (mild/serious), from the DHIS2 monthly dataValues.
+      Backs rm-cold-chain (a 2-KPI safety strip).
+    columns:
+      - name: month_id
+        tests: [not_null, unique]
+  - name: mart_hmis_indicator_coverage
+    description: |
+      HMIS reporting completeness at (region by woreda by programme by indicator
+      by month). Source for the BI dashboard's coverage heatmap + the OPA
+      "stale-source" alert.
+    columns:
+      - name: region_id
+        tests: [not_null]
+      - name: woreda_uid
+        description: "Woreda DHIS2 UID. Nullable for region-level rows."
+      - name: programme_id
+        tests: [not_null]
+      - name: indicator_id
+        tests: [not_null]
+      - name: month_id
+        tests: [not_null]
+      - name: facilities_reporting
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: facilities_expected
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: coverage_pct
+        description: "facilities_reporting / facilities_expected * 100."
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0 AND coverage_pct <= 100 OR coverage_pct IS NULL"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [region_id, woreda_uid, programme_id, indicator_id, month_id]
+
+  - name: mart_public_summary
+    description: |
+      Public-tier HMIS summary aggregated to (region by programme by month).
+      K-anonymity enforced upstream: every group surfaces facilities_reporting >= 5.
+    columns:
+      - name: region_id
+        tests: [not_null]
+      - name: programme_id
+        tests: [not_null]
+      - name: month_id
+        tests: [not_null]
+      - name: facilities_reporting
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 5"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [region_id, programme_id, month_id]
+
+  - name: mart_public_indicator_kpis
+    description: |
+      Public-tier indicator achievement rate at (region by indicator by month):
+      the number the public KPI tiles, "coverage by region" bar and 24-month
+      indicator trend show (Penta3/ANC4/SBA/mCPR coverage, TB success, ART
+      suppression, U5 stunting). K-anonymity enforced in-SQL (every region
+      cell has facilities_reporting >= 5). Which indicators are public, their
+      labels, HSDIP targets and definitions come from public_indicator_reference;
+      region names from public_region_reference; nothing is hardcoded.
+    columns:
+      - name: region_id
+        tests: [not_null]
+      - name: indicator_id
+        tests: [not_null]
+      - name: month_id
+        tests: [not_null]
+      - name: facilities_reporting
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 5"
+      - name: rate_pct
+        description: "Facility-reporting-weighted achievement rate for the indicator (0-100)."
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0 AND rate_pct <= 100 OR rate_pct IS NULL"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [region_id, indicator_id, month_id]

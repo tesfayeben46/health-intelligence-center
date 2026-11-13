@@ -1,0 +1,8 @@
+id: admin/users-access
+title: Users and Access
+ordering: 60
+widgets:
+- id: adm-users-access
+  col_span: 6
+  row_span: 1
+  ordering: 8

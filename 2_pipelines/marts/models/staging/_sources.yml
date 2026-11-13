@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+  - name: nhdw_landing
+    schema: nhdw_landing
+    tables:
+      - name: demo_patient_phi
+      - name: consent_revocations

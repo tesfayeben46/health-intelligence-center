@@ -1,0 +1,20 @@
+[
+  {
+    "id": "PHYS",
+    "name": "Physician",
+    "who_target_per_10k": 1.0,
+    "ratio": 0.07
+  },
+  {
+    "id": "NURSE",
+    "name": "Nurse / midwife",
+    "who_target_per_10k": 3.6,
+    "ratio": 0.46
+  },
+  {
+    "id": "HEW",
+    "name": "Health Extension W.",
+    "who_target_per_10k": 1.0,
+    "ratio": 0.47
+  }
+]

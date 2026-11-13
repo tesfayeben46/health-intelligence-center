@@ -1,0 +1,18 @@
+# dbt profile: postgres-vault. Same engine as the vault project but
+# writes into the bi_* schemas. The bi_reader role gets SELECT via
+# ALTER DEFAULT PRIVILEGES applied in 3_storage/postgres/init/01_schemas.sql.
+
+nhdw_marts:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('PG_HOST', 'postgres-vault') }}"
+      port: "{{ env_var('PG_PORT', '5432') | int }}"
+      user: "{{ env_var('PG_USER', 'vault_writer') }}"
+      password: "{{ env_var('PG_PASSWORD') }}"
+      dbname: "{{ env_var('PG_DATABASE', 'nhdw_vault') }}"
+      schema: "{{ env_var('PG_SCHEMA', 'bi_facility') }}"
+      threads: 4
+      connect_timeout: 10
+      keepalives_idle: 0

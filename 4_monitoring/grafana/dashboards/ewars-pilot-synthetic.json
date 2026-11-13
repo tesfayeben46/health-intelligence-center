@@ -1,0 +1,559 @@
+{
+  "uid": "ewars-pilot-synthetic",
+  "title": "EWARS Pilot (SYNTHETIC)",
+  "tags": [
+    "ewars",
+    "synthetic",
+    "poc",
+    "malaria"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "editable": true,
+  "graphTooltip": 1,
+  "time": {
+    "from": "2024-01-01T00:00:00.000Z",
+    "to": "2024-12-31T23:59:59.000Z"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "woreda",
+        "label": "Woreda",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "bfp40bxmh7i0wa"
+        },
+        "query": "SELECT adm3_name AS __text, district_id AS __value FROM ewars.pilot_woreda_crosswalk ORDER BY adm3_name",
+        "definition": "SELECT adm3_name AS __text, district_id AS __value FROM ewars.pilot_woreda_crosswalk ORDER BY adm3_name",
+        "refresh": 1,
+        "sort": 1,
+        "includeAll": false,
+        "multi": false,
+        "current": {}
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "name": "Annotations & Alerts",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "type": "dashboard",
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        }
+      },
+      {
+        "name": "Injected outbreaks (synthetic ground truth)",
+        "enable": true,
+        "hide": false,
+        "iconColor": "rgba(224, 47, 68, 0.6)",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "bfp40bxmh7i0wa"
+        },
+        "target": {
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT TO_DATE(start_year||'-'||LPAD((start_week)::text,2,'0')||'-1','IYYY-IW-ID') AS time, TO_DATE(end_year||'-'||LPAD((end_week)::text,2,'0')||'-1','IYYY-IW-ID') + 6 AS \"timeEnd\", 'Injected outbreak (x'||peak_multiplier||')' AS text FROM ewars.synthetic_outbreaks WHERE start_year=2024 AND district_id = $woreda"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "gridPos": {
+        "h": 4,
+        "w": 16,
+        "x": 0,
+        "y": 0
+      },
+      "transparent": false,
+      "options": {
+        "mode": "markdown",
+        "content": "# SYNTHETIC PoC DATA: NOT REAL SURVEILLANCE\n**EWARS-CSD malaria early-warning pilot, 20 Ethiopian woredas, validation year 2024.** All figures are *generated synthetic test data* (`data_provenance='synthetic'`). Alarm detection is still being calibrated; alarms are **not yet reliable** (low sensitivity, false positives). Do **not** use for operational decisions."
+      }
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "bfp40bxmh7i0wa"
+      },
+      "options": {
+        "showHeader": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left"
+          }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfp40bxmh7i0wa"
+          },
+          "rawSql": "SELECT max(run_id) AS \"Run shown\", max(extracted_at) AS \"Extracted at\", count(*) AS \"Pred rows\", sum(alarm_flag) AS \"Alarm weeks\" FROM ewars.ewars_predictions WHERE data_provenance='synthetic' AND run_id=(SELECT max(run_id) FROM ewars.ewars_predictions WHERE data_provenance='synthetic')",
+          "format": "table",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "title": "Run shown (latest synthetic)"
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "gridPos": {
+        "h": 9,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "bfp40bxmh7i0wa"
+      },
+      "title": "SYNTHETIC: Alarm signal: observed vs expected cases, $woreda (2024)",
+      "description": "EWARS-CSD style alarm-signal chart. Synthetic PoC data, not real surveillance.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfp40bxmh7i0wa"
+          },
+          "rawSql": "SELECT\n  TO_DATE(p.year||'-'||LPAD((p.week)::text,2,'0')||'-1','IYYY-IW-ID') AS time,\n  m.weekly_hospitalised_cases AS \"Observed cases\",\n  p.pred_cases_mean              AS \"Expected (predicted mean)\",\n  p.pred_cases_lwr95            AS \"Lower 95%\",\n  p.pred_cases_upr95            AS \"Upper 95%\",\n  p.alarm_threshold             AS \"Alarm threshold\",\n  CASE WHEN p.alarm_flag=1 THEN p.pred_cases_mean END AS \"Alarm fired\"\nFROM ewars.ewars_predictions p\nLEFT JOIN ewars.mart_ewars_input m\n  ON m.district=p.district AND m.year=p.year AND m.week=p.week\nWHERE p.data_provenance='synthetic' AND p.run_id=(SELECT max(run_id) FROM ewars.ewars_predictions WHERE data_provenance='synthetic')\n  AND p.district = $woreda\nORDER BY 1",
+          "format": "time_series",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "showPoints": "never",
+            "spanNulls": true,
+            "axisLabel": "Weekly cases"
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Observed cases"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#000000"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 5
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Expected (predicted mean)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3274D9"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Upper 95%"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "rgba(50,116,217,0.25)"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 0
+              },
+              {
+                "id": "custom.fillBelowTo",
+                "value": "Lower 95%"
+              },
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Lower 95%"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "rgba(50,116,217,0.25)"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Alarm threshold"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#E02F44"
+                }
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 2
+              },
+              {
+                "id": "custom.lineStyle",
+                "value": {
+                  "fill": "dash",
+                  "dash": [
+                    10,
+                    8
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Alarm fired"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#E02F44"
+                }
+              },
+              {
+                "id": "custom.drawStyle",
+                "value": "points"
+              },
+              {
+                "id": "custom.lineWidth",
+                "value": 0
+              },
+              {
+                "id": "custom.showPoints",
+                "value": "always"
+              },
+              {
+                "id": "custom.pointSize",
+                "value": 11
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "bfp40bxmh7i0wa"
+      },
+      "title": "SYNTHETIC: Alarm probability, $woreda (2024)",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfp40bxmh7i0wa"
+          },
+          "rawSql": "SELECT\n  TO_DATE(year||'-'||LPAD((week)::text,2,'0')||'-1','IYYY-IW-ID') AS time,\n  alarm_prob AS \"Alarm probability\"\nFROM ewars.ewars_predictions\nWHERE data_provenance='synthetic' AND run_id=(SELECT max(run_id) FROM ewars.ewars_predictions WHERE data_provenance='synthetic')\n  AND district = $woreda\nORDER BY 1",
+          "format": "time_series",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "unit": "percentunit",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 12,
+            "showPoints": "auto",
+            "spanNulls": true,
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "#FF780A"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#E02F44",
+                "value": 0.5
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "bfp40bxmh7i0wa"
+      },
+      "title": "SYNTHETIC: Current high-risk woredas (latest week, alarm_flag=1)",
+      "description": "Woredas flagged in the most recent week of the latest synthetic run, sorted by alarm probability.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfp40bxmh7i0wa"
+          },
+          "rawSql": "SELECT c.adm3_name AS \"Woreda\", c.adm1_name AS \"Region\", p.week AS \"Week\",\n  round(p.alarm_prob,3) AS \"Alarm prob\",\n  round(p.pred_cases_mean,1) AS \"Pred mean\",\n  round(p.alarm_threshold,1) AS \"Threshold\"\nFROM ewars.ewars_predictions p\nJOIN ewars.pilot_woreda_crosswalk c ON c.district_id=p.district\nWHERE p.data_provenance='synthetic' AND p.run_id=(SELECT max(run_id) FROM ewars.ewars_predictions WHERE data_provenance='synthetic') AND p.alarm_flag=1\n  AND p.week=(SELECT max(week) FROM ewars.ewars_predictions\n              WHERE data_provenance='synthetic' AND run_id=(SELECT max(run_id) FROM ewars.ewars_predictions WHERE data_provenance='synthetic'))\nORDER BY p.alarm_prob DESC",
+          "format": "table",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "left",
+            "filterable": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Alarm prob"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "orange",
+                      "value": 0.5
+                    },
+                    {
+                      "color": "red",
+                      "value": 0.75
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          {
+            "displayName": "Alarm prob",
+            "desc": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 6,
+      "type": "state-timeline",
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "bfp40bxmh7i0wa"
+      },
+      "title": "SYNTHETIC: Alarm-probability heatmap (woreda by week, 2024)",
+      "description": "Each row = a woreda, each cell = that week's alarm probability. Synthetic PoC data.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "bfp40bxmh7i0wa"
+          },
+          "rawSql": "SELECT\n  TO_DATE(year||'-'||LPAD((week)::text,2,'0')||'-1','IYYY-IW-ID') AS time,\n  max(CASE WHEN district=18 THEN alarm_prob END) AS \"Aw-Bare\",\n  max(CASE WHEN district=13 THEN alarm_prob END) AS \"Bedeno\",\n  max(CASE WHEN district=11 THEN alarm_prob END) AS \"Deder\",\n  max(CASE WHEN district=1 THEN alarm_prob END) AS \"Dera (AM)\",\n  max(CASE WHEN district=16 THEN alarm_prob END) AS \"Gedeb Asasa\",\n  max(CASE WHEN district=9 THEN alarm_prob END) AS \"Gemechis\",\n  max(CASE WHEN district=14 THEN alarm_prob END) AS \"Girawa\",\n  max(CASE WHEN district=3 THEN alarm_prob END) AS \"Goma\",\n  max(CASE WHEN district=15 THEN alarm_prob END) AS \"Hambela Wamena\",\n  max(CASE WHEN district=20 THEN alarm_prob END) AS \"Hawassa town\",\n  max(CASE WHEN district=2 THEN alarm_prob END) AS \"Kersa (Jimma)\",\n  max(CASE WHEN district=17 THEN alarm_prob END) AS \"Kokosa\",\n  max(CASE WHEN district=8 THEN alarm_prob END) AS \"Kuni /Oda Bultum\",\n  max(CASE WHEN district=12 THEN alarm_prob END) AS \"Melka Balo\",\n  max(CASE WHEN district=7 THEN alarm_prob END) AS \"Mesela /Shen Duggoo\",\n  max(CASE WHEN district=10 THEN alarm_prob END) AS \"Meta\",\n  max(CASE WHEN district=5 THEN alarm_prob END) AS \"Omo Nada\",\n  max(CASE WHEN district=4 THEN alarm_prob END) AS \"Seka Chekorsa\",\n  max(CASE WHEN district=6 THEN alarm_prob END) AS \"Shirka\",\n  max(CASE WHEN district=19 THEN alarm_prob END) AS \"Sodo Zuria\"\nFROM ewars.ewars_predictions\nWHERE data_provenance='synthetic' AND run_id=(SELECT max(run_id) FROM ewars.ewars_predictions WHERE data_provenance='synthetic')\nGROUP BY year, week\nORDER BY 1",
+          "format": "time_series",
+          "editorMode": "code",
+          "rawQuery": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 1,
+          "unit": "percentunit",
+          "custom": {
+            "fillOpacity": 90,
+            "lineWidth": 0
+          },
+          "color": {
+            "mode": "continuous-GrYlRd"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "mergeValues": false,
+        "showValue": "never",
+        "rowHeight": 0.9,
+        "colWidth": 0.9,
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      }
+    }
+  ]
+}

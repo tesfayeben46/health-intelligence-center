@@ -1,0 +1,30 @@
+# Feature query (docs/pct-forecast-contract.md, section 1): facility x tracer product x month demand from the PCT demand base.
+# Target = adjusted_demand (eLMIS normalised consumption; dispensed where NULL); programmes summed per series.
+# demand_censored marks months with any stockout (kept as floors in training, never scored).
+input:
+  query: |
+    SELECT month_id, facility_code, product_code,
+           max(product_name)        AS product_name,
+           sum(adjusted_demand)     AS adjusted_demand,
+           bool_or(demand_censored) AS demand_censored,
+           sum(stock_in_hand)       AS stock_in_hand,
+           sum(amc)                 AS amc,
+           max(region_id)           AS region_id,
+           max(facility_type_code)  AS facility_type_code,
+           min(programme_name)      AS programme_name
+    FROM bi_supply.mart_pct_demand_month
+    WHERE tracer
+    GROUP BY month_id, facility_code, product_code
+    ORDER BY facility_code, product_code, month_id
+  signature:
+    - { name: month_id,           dtype: string }
+    - { name: facility_code,      dtype: string }
+    - { name: product_code,       dtype: string }
+    - { name: product_name,       dtype: string }
+    - { name: adjusted_demand,    dtype: float }
+    - { name: demand_censored,    dtype: boolean }
+    - { name: stock_in_hand,      dtype: float }
+    - { name: amc,                dtype: float }
+    - { name: region_id,          dtype: string }
+    - { name: facility_type_code, dtype: string }
+    - { name: programme_name,     dtype: string }

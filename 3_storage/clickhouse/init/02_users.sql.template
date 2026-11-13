@@ -1,0 +1,53 @@
+-- Per-workload service users. Passwords come from env via the entrypoint
+-- envsubst step in 02_users.sh (see the wrapper). Profiles (staging/marts/
+-- reader) and quotas are defined in config/users.d/profiles.xml.
+--
+-- Idempotent (DROP IF EXISTS + CREATE so password rotation works on rerun).
+
+-- staging_writer
+-- Used by dbt-clickhouse for the staging project. Full DDL/DML on
+-- nhdw_staging; read-only s3() access via the nhdw_minio named collection.
+DROP USER IF EXISTS staging_writer;
+CREATE USER staging_writer
+    IDENTIFIED WITH sha256_password BY '${CLICKHOUSE_STAGING_PASSWORD}'
+    DEFAULT DATABASE nhdw_staging
+    SETTINGS PROFILE 'staging';
+
+GRANT CREATE, DROP, ALTER, SELECT, INSERT, TRUNCATE, OPTIMIZE
+    ON nhdw_staging.* TO staging_writer;
+
+GRANT SELECT ON system.* TO staging_writer;
+
+GRANT s3 ON *.* TO staging_writer;       -- needed to call s3() / named collections
+GRANT NAMED COLLECTION ON nhdw_minio TO staging_writer;
+
+-- mart_writer
+-- Used by dbt-clickhouse for the marts project (added later). Full DDL/DML
+-- on nhdw_marts; read access to staging (so marts can join against stg_ views
+-- during dev) and to the postgresql() table function (to pull from the PG
+-- vault).
+DROP USER IF EXISTS mart_writer;
+CREATE USER mart_writer
+    IDENTIFIED WITH sha256_password BY '${CLICKHOUSE_MARTS_PASSWORD}'
+    DEFAULT DATABASE nhdw_marts
+    SETTINGS PROFILE 'marts';
+
+GRANT CREATE, DROP, ALTER, SELECT, INSERT, TRUNCATE, OPTIMIZE
+    ON nhdw_marts.* TO mart_writer;
+
+GRANT SELECT ON nhdw_staging.* TO mart_writer;
+GRANT SELECT ON system.* TO mart_writer;
+GRANT POSTGRES ON *.* TO mart_writer;     -- pull from the Postgres vault via postgresql() table fn
+
+-- bi_reader
+-- Used by CloudBeaver, the base dashboard, and (later) Superset. Read-only
+-- on marts; staging is hidden (its views are not stable
+-- contracts and would expose raw PHI shape).
+DROP USER IF EXISTS bi_reader;
+CREATE USER bi_reader
+    IDENTIFIED WITH sha256_password BY '${CLICKHOUSE_READER_PASSWORD}'
+    DEFAULT DATABASE nhdw_marts
+    SETTINGS PROFILE 'reader';
+
+GRANT SELECT ON nhdw_marts.* TO bi_reader;
+GRANT SELECT ON system.* TO bi_reader;

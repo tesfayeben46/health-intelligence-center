@@ -1,0 +1,8 @@
+id: ov-service-cascade
+title: Operational quality
+kind: chart
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

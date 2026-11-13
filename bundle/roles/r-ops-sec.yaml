@@ -1,0 +1,65 @@
+# R-OPS-SEC: Security / Compliance Officer
+role:
+  id: R-OPS-SEC
+  name: "Security / Compliance Officer"
+  group: Operator
+  identity_provider: Privileged-Keycloak
+  mfa_required: true
+  mfa_factor: WebAuthn   # hardware mandatory
+  phase_activated: 1
+  audit_class: privileged
+  notes: |
+    Security team, compliance officer, internal auditor.
+    Reads audit trail (append-only), reviews RBAC config, approves break-
+    glass requests, builds SIEM alert rules.
+
+    CANNOT read data content. CANNOT modify or delete audit records.
+    Separation of duties enforced architecturally: audit store is
+    write-once / append-only.
+
+    All subjects below grant METADATA only (the audit trail about subject
+    access: not the subject data itself).
+  # Column-grain reveal: the security officer investigates incidents across
+  # every sensitivity tier, so restricted and privileged columns are unmasked.
+  column_access:
+    reveal: [restricted, privileged]
+  permissions:
+    - subject: PT
+      data_class: []
+      members: all
+      granularity: metadata
+      sensitivity: []
+      verbs: [read, annotate, approve]   # approve = break-glass approval
+      purpose_of_use: [audit]
+
+    - subject: HP
+      data_class: []
+      members: all
+      granularity: metadata
+      sensitivity: []
+      verbs: [read, annotate, approve]
+      purpose_of_use: [audit]
+
+    - subject: FAC
+      data_class: []
+      members: all
+      granularity: metadata
+      sensitivity: []
+      verbs: [read, annotate, approve]
+      purpose_of_use: [audit]
+
+    - subject: PRD
+      data_class: []
+      members: all
+      granularity: metadata
+      sensitivity: []
+      verbs: [read, annotate, approve]
+      purpose_of_use: [audit]
+
+    - subject: PRG
+      data_class: []
+      members: all
+      granularity: metadata
+      sensitivity: []
+      verbs: [read, annotate, approve]
+      purpose_of_use: [audit]

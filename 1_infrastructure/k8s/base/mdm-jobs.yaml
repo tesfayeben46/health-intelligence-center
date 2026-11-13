@@ -1,0 +1,34 @@
+# MDM matcher · steward candidate generation
+# Parallel lane, run to completion: reads the business-vault resolution view and
+# upserts scored same-entity candidates into ops_governance.mdm_match_candidate.
+# It never merges; conformed keys change only through steward decisions
+# (ops_governance.mdm_match_decision), which the resolution views read.
+# Idempotent: pending candidates refresh, decided ones are never touched.
+# Runs after dbt-vault whenever the vault content changes (seed-realistic and CI
+# both rerun it); safe to rerun at any time.
+apiVersion: batch/v1
+kind: Job
+metadata: { name: mdm-matcher, namespace: nhdw, labels: { app: mdm-matcher, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  template:
+    metadata: { labels: { app: mdm-matcher, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: matcher
+          image: nhdw-registry:5500/nhdw/mdm-matcher:1.0.0
+          imagePullPolicy: Always
+          env:
+            # reads the vault (resolution view + coordinate sats)
+            - name: VAULT_PASSWORD
+              valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: VAULT_WRITER_PASSWORD } }
+            # writes the candidate queue in nhdw_ops (matcher grant = ops_writer)
+            - name: OPS_PASSWORD
+              valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: OPS_WRITER_PASSWORD } }
+            - name: VAULT_DSN
+              value: "postgresql://vault_writer:$(VAULT_PASSWORD)@postgres-vault.nhdw.svc.cluster.local:5432/nhdw_vault"
+            - name: OPS_DSN
+              value: "postgresql://ops_writer:$(OPS_PASSWORD)@postgres-vault.nhdw.svc.cluster.local:5432/nhdw_ops"
+            - { name: MDM_CONTEXT,        value: "ET" }
+            - { name: MDM_TRGM_THRESHOLD, value: "0.85" }

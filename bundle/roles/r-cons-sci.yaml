@@ -1,0 +1,29 @@
+# R-CONS-SCI: Data Scientist / ML Engineer
+#
+# Deny-all on production marts by design. Data scientists access data
+# through the workshop sandbox (a project-scoped copy mart), not the
+# production marts. Workshop access is gated by Postgres ACLs
+# on ops_artifact.* and the workshop group filter, not OPA.
+role:
+  id: R-CONS-SCI
+  name: "Data Scientist / ML Engineer"
+  group: Consumer
+  identity_provider: MoH-Keycloak
+  mfa_required: true
+  mfa_factor: TOTP
+  phase_activated: 1
+  audit_class: enhanced
+  notes: |
+    DC.CAT exception: model catalogue metadata (registry cards, versions, signatures, own-CSV predict), the workshop persona's core surface. Stored predictions stay DC.PRO (denied).
+    Workshop-first analytics: data access happens against the workshop
+    sandbox. Production mart reads are denied; to read
+    a mart directly, the user needs R-CONS-ANA as a second role.
+  intentional_deny: true
+  permissions:
+    - subject: PRG
+      data_class: [DC.CAT]
+      members: all
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [public-health]

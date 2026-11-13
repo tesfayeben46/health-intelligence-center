@@ -1,0 +1,511 @@
+{
+  "regions": [
+    {
+      "code": "AH",
+      "name": "Ashanti Region",
+      "id": "GH-AH",
+      "capital": "Kumasi",
+      "population_mn": 5.44,
+      "geo_name": "Ashanti"
+    },
+    {
+      "code": "AA",
+      "name": "Greater Accra Region",
+      "id": "GH-AA",
+      "capital": "Accra",
+      "population_mn": 5.46,
+      "geo_name": "Greater Accra"
+    },
+    {
+      "code": "EP",
+      "name": "Eastern Region",
+      "id": "GH-EP",
+      "capital": "Koforidua",
+      "population_mn": 2.93,
+      "geo_name": "Eastern"
+    },
+    {
+      "code": "CP",
+      "name": "Central Region",
+      "id": "GH-CP",
+      "capital": "Cape Coast",
+      "population_mn": 2.86,
+      "geo_name": "Central"
+    },
+    {
+      "code": "NP",
+      "name": "Northern Region",
+      "id": "GH-NP",
+      "capital": "Tamale",
+      "population_mn": 2.31,
+      "geo_name": "Northern"
+    },
+    {
+      "code": "WP",
+      "name": "Western Region",
+      "id": "GH-WP",
+      "capital": "Sekondi-Takoradi",
+      "population_mn": 2.06,
+      "geo_name": "Western"
+    },
+    {
+      "code": "TV",
+      "name": "Volta Region",
+      "id": "GH-TV",
+      "capital": "Ho",
+      "population_mn": 1.66,
+      "geo_name": "Volta"
+    },
+    {
+      "code": "UE",
+      "name": "Upper East Region",
+      "id": "GH-UE",
+      "capital": "Bolgatanga",
+      "population_mn": 1.3,
+      "geo_name": "Upper East"
+    },
+    {
+      "code": "BO",
+      "name": "Bono Region",
+      "id": "GH-BO",
+      "capital": "Sunyani",
+      "population_mn": 1.21,
+      "geo_name": "Bono"
+    },
+    {
+      "code": "BE",
+      "name": "Bono East Region",
+      "id": "GH-BE",
+      "capital": "Techiman",
+      "population_mn": 1.2,
+      "geo_name": "Bono East"
+    },
+    {
+      "code": "UW",
+      "name": "Upper West Region",
+      "id": "GH-UW",
+      "capital": "Wa",
+      "population_mn": 0.9,
+      "geo_name": "Upper West"
+    },
+    {
+      "code": "WN",
+      "name": "Western North Region",
+      "id": "GH-WN",
+      "capital": "Sefwi Wiawso",
+      "population_mn": 0.88,
+      "geo_name": "Western North"
+    },
+    {
+      "code": "OT",
+      "name": "Oti Region",
+      "id": "GH-OT",
+      "capital": "Dambai",
+      "population_mn": 0.75,
+      "geo_name": "Oti"
+    },
+    {
+      "code": "NE",
+      "name": "North East Region",
+      "id": "GH-NE",
+      "capital": "Nalerigu",
+      "population_mn": 0.66,
+      "geo_name": "North East"
+    },
+    {
+      "code": "SV",
+      "name": "Savannah Region",
+      "id": "GH-SV",
+      "capital": "Damongo",
+      "population_mn": 0.65,
+      "geo_name": "Savannah"
+    },
+    {
+      "code": "AF",
+      "name": "Ahafo Region",
+      "id": "GH-AF",
+      "capital": "Goaso",
+      "population_mn": 0.56,
+      "geo_name": "Ahafo"
+    }
+  ],
+  "programmes": [
+    {
+      "code": "HIV",
+      "name": "HIV",
+      "icon": "i-virus"
+    },
+    {
+      "code": "TB",
+      "name": "TB",
+      "icon": "i-shield"
+    },
+    {
+      "code": "EPI",
+      "name": "EPI · Immunisation",
+      "icon": "i-syringe"
+    },
+    {
+      "code": "MNCH",
+      "name": "MNCH",
+      "icon": "i-heart"
+    },
+    {
+      "code": "NCD",
+      "name": "NCD",
+      "icon": "i-pill"
+    },
+    {
+      "code": "MALARIA",
+      "name": "Malaria",
+      "icon": "i-thermo"
+    },
+    {
+      "code": "FP",
+      "name": "Family Planning",
+      "icon": "i-handshake"
+    },
+    {
+      "code": "NUTRITION",
+      "name": "Nutrition",
+      "icon": "i-leaf"
+    }
+  ],
+  "commodities": [
+    {
+      "code": "VAC-BCG",
+      "name": "BCG vaccine",
+      "programme": "EPI",
+      "ven": "V"
+    },
+    {
+      "code": "VAC-OPV",
+      "name": "OPV trivalent",
+      "programme": "EPI",
+      "ven": "V"
+    },
+    {
+      "code": "VAC-IPV",
+      "name": "IPV (inactivated polio)",
+      "programme": "EPI",
+      "ven": "V"
+    },
+    {
+      "code": "VAC-PENTA",
+      "name": "Pentavalent DTwP-HepB-Hib",
+      "programme": "EPI",
+      "ven": "V"
+    },
+    {
+      "code": "VAC-PCV13",
+      "name": "PCV-13",
+      "programme": "EPI",
+      "ven": "V"
+    },
+    {
+      "code": "VAC-ROTA",
+      "name": "Rotavirus vaccine",
+      "programme": "EPI",
+      "ven": "V"
+    },
+    {
+      "code": "VAC-MR",
+      "name": "Measles-Rubella",
+      "programme": "EPI",
+      "ven": "V"
+    },
+    {
+      "code": "VAC-HPV",
+      "name": "HPV vaccine",
+      "programme": "EPI",
+      "ven": "V"
+    },
+    {
+      "code": "VAC-COVID",
+      "name": "COVID-19 vaccine",
+      "programme": "EPI",
+      "ven": "V"
+    },
+    {
+      "code": "VAC-TT",
+      "name": "Tetanus toxoid",
+      "programme": "EPI",
+      "ven": "V"
+    },
+    {
+      "code": "MN-OXYTOCIN",
+      "name": "Oxytocin 10 IU/ml",
+      "programme": "MNCH",
+      "ven": "V"
+    },
+    {
+      "code": "MN-MGSO4",
+      "name": "Magnesium sulphate 50%",
+      "programme": "MNCH",
+      "ven": "V"
+    },
+    {
+      "code": "MN-IRON-FOL",
+      "name": "Iron-folate",
+      "programme": "MNCH",
+      "ven": "E"
+    },
+    {
+      "code": "HIV-TLD",
+      "name": "TLD · adult ART",
+      "programme": "HIV",
+      "ven": "V"
+    },
+    {
+      "code": "HIV-PAED",
+      "name": "Pediatric ART",
+      "programme": "HIV",
+      "ven": "V"
+    },
+    {
+      "code": "HIV-RDT",
+      "name": "HIV RDT kit",
+      "programme": "HIV",
+      "ven": "V"
+    },
+    {
+      "code": "TB-RHZE",
+      "name": "RHZE fixed-dose combo",
+      "programme": "TB",
+      "ven": "V"
+    },
+    {
+      "code": "TB-GENEXPERT",
+      "name": "GeneXpert cartridge",
+      "programme": "TB",
+      "ven": "V"
+    },
+    {
+      "code": "TB-ISO",
+      "name": "Isoniazid 300mg",
+      "programme": "TB",
+      "ven": "E"
+    },
+    {
+      "code": "MAL-AL",
+      "name": "Artemether-Lumefantrine",
+      "programme": "MALARIA",
+      "ven": "V"
+    },
+    {
+      "code": "MAL-RDT",
+      "name": "Malaria RDT pf/pv",
+      "programme": "MALARIA",
+      "ven": "V"
+    },
+    {
+      "code": "MAL-LLIN",
+      "name": "LLIN bed net",
+      "programme": "MALARIA",
+      "ven": "E"
+    },
+    {
+      "code": "FP-IMPLANON",
+      "name": "Implanon NXT",
+      "programme": "FP",
+      "ven": "E"
+    },
+    {
+      "code": "FP-DEPO",
+      "name": "Depo-Provera",
+      "programme": "FP",
+      "ven": "E"
+    },
+    {
+      "code": "FP-COC",
+      "name": "Combined oral contracept.",
+      "programme": "FP",
+      "ven": "E"
+    },
+    {
+      "code": "NCD-AMLOD",
+      "name": "Amlodipine 5mg",
+      "programme": "NCD",
+      "ven": "E"
+    },
+    {
+      "code": "NCD-INSULIN",
+      "name": "Insulin · regular 100 IU",
+      "programme": "NCD",
+      "ven": "V"
+    },
+    {
+      "code": "NCD-METFORMIN",
+      "name": "Metformin 500mg",
+      "programme": "NCD",
+      "ven": "E"
+    },
+    {
+      "code": "NCD-LOSARTAN",
+      "name": "Losartan 50mg",
+      "programme": "NCD",
+      "ven": "E"
+    },
+    {
+      "code": "NT-RUTF",
+      "name": "RUTF (ready-to-use)",
+      "programme": "NUTRITION",
+      "ven": "V"
+    },
+    {
+      "code": "NT-FBF",
+      "name": "Fortified blended food",
+      "programme": "NUTRITION",
+      "ven": "E"
+    },
+    {
+      "code": "NT-ORS",
+      "name": "ORS sachet",
+      "programme": "NUTRITION",
+      "ven": "V"
+    },
+    {
+      "code": "GEN-AMOX",
+      "name": "Amoxicillin 250 DT",
+      "programme": "GENERAL",
+      "ven": "V"
+    },
+    {
+      "code": "GEN-PARA",
+      "name": "Paracetamol 500mg",
+      "programme": "GENERAL",
+      "ven": "E"
+    }
+  ],
+  "facility_tiers": [
+    {
+      "code": "TH",
+      "name": "Teaching Hospital"
+    },
+    {
+      "code": "RH",
+      "name": "Regional Hospital"
+    },
+    {
+      "code": "DH",
+      "name": "District Hospital"
+    },
+    {
+      "code": "PHC",
+      "name": "Polyclinic"
+    },
+    {
+      "code": "HC",
+      "name": "Health Centre"
+    },
+    {
+      "code": "CHPS",
+      "name": "CHPS Compound"
+    },
+    {
+      "code": "MAT",
+      "name": "Maternity Home"
+    },
+    {
+      "code": "CLI",
+      "name": "Clinic"
+    }
+  ],
+  "cadres": [
+    {
+      "code": "PHYS",
+      "name": "Physician",
+      "who_target_per_10k": 1.0
+    },
+    {
+      "code": "NURSE",
+      "name": "Nurse / midwife",
+      "who_target_per_10k": 3.6
+    },
+    {
+      "code": "HEW",
+      "name": "Health Extension W.",
+      "who_target_per_10k": 1.0
+    }
+  ],
+  "diseases": [
+    {
+      "key": "mal",
+      "code": "MAL",
+      "name": "Malaria (confirmed)",
+      "programme": "MALARIA",
+      "climate": true
+    },
+    {
+      "key": "men",
+      "code": "MEN",
+      "name": "Meningitis (meningococcal)",
+      "programme": "EPI",
+      "climate": true
+    },
+    {
+      "key": "mea",
+      "code": "MEA",
+      "name": "Measles",
+      "programme": "EPI",
+      "climate": false
+    },
+    {
+      "key": "chol",
+      "code": "CHOL",
+      "name": "Cholera (AWD)",
+      "programme": "WASH",
+      "climate": true
+    },
+    {
+      "key": "deng",
+      "code": "DENG",
+      "name": "Dengue fever",
+      "programme": "VBD",
+      "climate": true
+    },
+    {
+      "key": "yf",
+      "code": "YF",
+      "name": "Yellow fever",
+      "programme": "EPI",
+      "climate": true
+    },
+    {
+      "key": "tb",
+      "code": "TB",
+      "name": "Tuberculosis (new)",
+      "programme": "TB",
+      "climate": false
+    },
+    {
+      "key": "typh",
+      "code": "TYPH",
+      "name": "Typhoid fever",
+      "programme": "WASH",
+      "climate": false
+    },
+    {
+      "key": "relf",
+      "code": "RELF",
+      "name": "Relapsing fever",
+      "programme": "VBD",
+      "climate": true
+    },
+    {
+      "key": "nnt",
+      "code": "NNT",
+      "name": "Neonatal tetanus",
+      "programme": "EPI",
+      "climate": true
+    }
+  ],
+  "counts": {
+    "admin1": 16,
+    "programmes": 8,
+    "commodities": 34,
+    "diseases": 10
+  },
+  "_source": "hand-authored for gh-v1 (GSS 2021 census regions; global health reference reused)",
+  "_note": "Ghana reorganised into 16 regions in 2019. Populations are 2021 PHC rounded to the million. Programmes/diseases/commodities are the shared global health-domain reference, not Ethiopia-specific. Ghana reports Region -> District (261 MMDAs); facility tiers follow the Ghana Health Service network (Teaching/Regional/District hospitals, Polyclinics, Health Centres, CHPS compounds)."
+}

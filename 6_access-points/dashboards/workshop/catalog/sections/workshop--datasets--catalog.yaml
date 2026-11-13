@@ -1,0 +1,15 @@
+id: workshop/datasets/catalog
+page_id: workshop/datasets
+title: Generated datasets
+eyebrow: My · group · public
+ordering: 20
+columns: 12
+dense: true
+widgets:
+- id: ws-datasets-table
+  col_span: 12
+  row_span: 1
+  ordering: 0
+  filters:
+  - artifact_tier
+  - project

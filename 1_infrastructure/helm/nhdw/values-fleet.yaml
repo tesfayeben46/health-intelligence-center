@@ -1,0 +1,10 @@
+# Fleet profile: more replicas, a real StorageClass and resource requests.
+# Pairs with ansible/inventory/fleet.example.yml (nhdw_topology: fleet). Replace
+# storageClass with the cluster's class; pod anti-affinity is not set.
+storageClass: nhdw-ssd
+components:
+  internal-bi:      { replicas: 2, resources: { requests: { cpu: 100m, memory: 128Mi } } }
+  public-dashboard: { replicas: 2, resources: { requests: { cpu: 100m, memory: 128Mi } } }
+  admin:            { replicas: 2, resources: { requests: { cpu: 100m, memory: 128Mi } } }
+  workshop:         { replicas: 2, resources: { requests: { cpu: 100m, memory: 128Mi } } }
+  gateway:          { replicas: 3, resources: { requests: { cpu: 250m, memory: 256Mi } } }

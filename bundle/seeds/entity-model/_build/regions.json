@@ -1,0 +1,128 @@
+[
+  {
+    "id": "ET-OR",
+    "name": "Oromia Region",
+    "code": "OR",
+    "weight": 34.9,
+    "epss_hub": "ADAMA",
+    "capital": "Adama",
+    "population_mn": 38.0
+  },
+  {
+    "id": "ET-AM",
+    "name": "Amhara Region",
+    "code": "AM",
+    "weight": 19.7,
+    "epss_hub": "BAHR",
+    "capital": "Bahir Dar",
+    "population_mn": 22.5
+  },
+  {
+    "id": "ET-AA",
+    "name": "Addis Ababa City Administration",
+    "code": "AA",
+    "weight": 8.3,
+    "epss_hub": "ADDIS",
+    "capital": "Addis Ababa",
+    "population_mn": 3.9
+  },
+  {
+    "id": "ET-SO",
+    "name": "Somali Region",
+    "code": "SO",
+    "weight": 7.1,
+    "epss_hub": "JIJI",
+    "capital": "Jijiga",
+    "population_mn": 6.4
+  },
+  {
+    "id": "ET-SE",
+    "name": "South Ethiopia Region",
+    "code": "SE",
+    "weight": 6.7,
+    "epss_hub": "HAWA",
+    "capital": "Wolaita Sodo",
+    "population_mn": 4.8
+  },
+  {
+    "id": "ET-CE",
+    "name": "Central Ethiopia Region",
+    "code": "CE",
+    "weight": 5.2,
+    "epss_hub": "HAWA",
+    "capital": "Hossana",
+    "population_mn": 4.2
+  },
+  {
+    "id": "ET-SW",
+    "name": "South West Ethiopia Region",
+    "code": "SW",
+    "weight": 4.6,
+    "epss_hub": "JIMM",
+    "capital": "Mizan Aman",
+    "population_mn": 3.0
+  },
+  {
+    "id": "ET-TI",
+    "name": "Tigray Region",
+    "code": "TI",
+    "weight": 4.6,
+    "epss_hub": "MEKE",
+    "capital": "Mekele",
+    "population_mn": 5.7
+  },
+  {
+    "id": "ET-SI",
+    "name": "Sidama Region",
+    "code": "SI",
+    "weight": 2.6,
+    "epss_hub": "HAWA",
+    "capital": "Hawassa",
+    "population_mn": 4.6
+  },
+  {
+    "id": "ET-BG",
+    "name": "Benishangul-Gumuz Region",
+    "code": "BG",
+    "weight": 2.5,
+    "epss_hub": "ASSA",
+    "capital": "Assosa",
+    "population_mn": 1.2
+  },
+  {
+    "id": "ET-AF",
+    "name": "Afar Region",
+    "code": "AF",
+    "weight": 1.5,
+    "epss_hub": "ASAY",
+    "capital": "Semera",
+    "population_mn": 2.1
+  },
+  {
+    "id": "ET-GA",
+    "name": "Gambella Region",
+    "code": "GA",
+    "weight": 1.2,
+    "epss_hub": "GAMB",
+    "capital": "Gambella",
+    "population_mn": 0.5
+  },
+  {
+    "id": "ET-DD",
+    "name": "Dire Dawa City Administration",
+    "code": "DD",
+    "weight": 0.6,
+    "epss_hub": "DIRE",
+    "capital": "Dire Dawa",
+    "population_mn": 0.5
+  },
+  {
+    "id": "ET-HA",
+    "name": "Harari Region",
+    "code": "HA",
+    "weight": 0.5,
+    "epss_hub": "HARA",
+    "capital": "Harar",
+    "population_mn": 0.3
+  }
+]

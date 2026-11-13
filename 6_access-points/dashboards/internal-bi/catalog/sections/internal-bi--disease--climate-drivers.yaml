@@ -1,0 +1,15 @@
+id: internal-bi/disease/climate-drivers
+page_id: internal-bi/disease
+title: Climate Drivers
+ordering: 50
+columns: 12
+dense: true
+widgets:
+- id: dz-climate-ts
+  col_span: 7
+  row_span: 2
+  ordering: 0
+- id: dz-climate-corr
+  col_span: 5
+  row_span: 2
+  ordering: 1

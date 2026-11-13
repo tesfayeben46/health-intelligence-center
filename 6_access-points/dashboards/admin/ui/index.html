@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Infrastructure &amp; Access Management · NHDW</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/png" href="/static/assets/logo-fmoh.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- UI sans (Nunito Sans) is self-hosted via @fontsource in src/main.tsx.
+     The CDN link below only carries the serif/mono faces, which fall back to system fonts offline. -->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+</head>
+<body>
+<div id="icon-sprite"></div>
+<div id="root"></div>
+<script>fetch('/static/assets/icons.html').then(r=>r.text()).then(h=>{document.getElementById('icon-sprite').innerHTML=h;});</script>
+<script type="module" src="/src/main.tsx"></script>
+</body>
+</html>

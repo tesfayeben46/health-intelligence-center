@@ -1,0 +1,415 @@
+# Catalog the gateway uses to enrich OPA input on every mart read.
+# Loaded into ops_perm.mart_attrs.
+#
+# OPA's role policies branch on data_class / granularity / sensitivity
+# in addition to subject; the on-the-wire table name carries none of
+# those, so the gateway joins on this catalog before calling OPA. A
+# mart absent from this file is denied under OPA_ENFORCE=true, and the
+# ad-hoc SQL editor (routes/sql_lab.py) rejects it as "not cataloged".
+#
+# schema_name / table_name must match the deployed relation the
+# SQL parser sees (e.g. FROM bi_facility.mart_health_workforce -> schema
+# bi_facility, table mart_health_workforce). subject/data_class mirror
+# the widget fetchers (app/fetchers.py) so an ad-hoc SELECT and a widget
+# read of the same mart get the identical OPA decision.
+#
+# data_class values, constrained to this set by the mart_attrs CHECK
+# constraint (ops_perm.mart_attrs_data_class_check):
+#   DC.PRO   programme / process       (coverage, cascade, EPI safety)
+#   DC.PRF   performance / facility    (facility scorecards, workforce, data quality)
+#   DC.STK   stock / commodity         (stock-on-hand, dispensing, procurement)
+#   DC.ENC   patient encounter · DC.CND condition · DC.OBS observation
+#   DC.MED   medication  · DC.AEFI adverse event
+# (Widget fetchers may declare finer classes like DC.CAT/DC.QLT directly to OPA;
+#  those bypass this catalog. Here, map to the nearest allowed class above.)
+#
+# granularity: raw | aggregate | deidentified
+# default_sensitivity: default | restricted | privileged
+#
+# When a new mart lands, add a row here before granting widget access to it.
+
+# Facility & workforce (bi_facility)
+- schema_name: bi_facility
+  table_name: mart_facility_capacity
+  subject: PRG
+  data_class: DC.PRF
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Per-facility tier, region, GPS + HCMIS reporting heartbeat (online/silent)."
+- schema_name: bi_facility
+  table_name: mart_health_workforce
+  subject: PRG
+  data_class: DC.PRF
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Region x cadre health-worker counts + WHO density per 10k (MFR staffing)."
+- schema_name: bi_facility
+  table_name: mart_equipment_availability
+  subject: PRG
+  data_class: DC.PRF
+  granularity: aggregate
+  default_sensitivity: default
+  description: "National equipment inventory by type: working/broken/missing (MFR FHIR Device)."
+- schema_name: bi_facility
+  table_name: mart_consent_activity_kpi
+  subject: PRG
+  data_class: DC.PRF
+  granularity: aggregate
+  default_sensitivity: restricted
+  description: "Consent-activity KPIs (governance): restricted."
+
+# Governance (bi_governance)
+- schema_name: bi_governance
+  table_name: mart_consent_activity_kpi
+  subject: PRG
+  data_class: DC.PRF
+  granularity: aggregate
+  default_sensitivity: restricted
+  description: "Consent-activity KPIs (governance mirror): restricted."
+
+- schema_name: bi_governance
+  table_name: mart_dq_incidents
+  subject: PRG
+  data_class: DC.PRF
+  granularity: aggregate
+  default_sensitivity: restricted
+  description: "DQ incident record (governance): flags with lifecycle latencies; restricted."
+
+- schema_name: bi_governance
+  table_name: mart_dq_governance_kpi
+  subject: PRG
+  data_class: DC.PRF
+  granularity: aggregate
+  default_sensitivity: restricted
+  description: "DQ governance KPIs (long format, mirrors /api/dq/kpi): restricted."
+
+# HMIS coverage + EPI safety (bi_hmis)
+- schema_name: bi_hmis
+  table_name: mart_hmis_indicator_coverage
+  subject: PRG
+  data_class: DC.PRO
+  granularity: aggregate
+  default_sensitivity: default
+  description: "HMIS indicator coverage vs target by region x period."
+- schema_name: bi_hmis
+  table_name: mart_epi_cold_chain_safety
+  subject: PRG
+  data_class: DC.PRO
+  granularity: aggregate
+  default_sensitivity: default
+  description: "EPI cold-chain excursions + AEFI (mild/serious) per month, national."
+
+# Disease surveillance (bi_idsr)
+- schema_name: bi_idsr
+  table_name: mart_idsr_disease_weekly
+  subject: PRG
+  data_class: DC.PRO
+  granularity: aggregate
+  default_sensitivity: default
+  description: "IDSR weekly disease signal per region x disease x iso-week."
+- schema_name: bi_idsr
+  table_name: mart_idsr_outbreaks
+  subject: PRG
+  data_class: DC.PRO
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Active outbreak roster: aggregate per woreda x disease."
+- schema_name: bi_idsr
+  table_name: mart_idsr_climate_drivers
+  subject: PRG
+  data_class: DC.PRO
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Weekly climate drivers (rainfall/temp) aligned to disease signal."
+- schema_name: bi_idsr
+  table_name: mart_ml_disease_input
+  subject: PRG
+  data_class: DC.PRO
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Feature frame for disease forecasting models (region x week)."
+
+# Service performance (bi_service)
+- schema_name: bi_service
+  table_name: mart_programme_cascade
+  subject: PRG
+  data_class: DC.PRO
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Programme cascades (HIV/TB/MNCH/NCD): stepwise attainment by region."
+
+# Data quality (bi_quality)
+- schema_name: bi_quality
+  table_name: mart_data_quality
+  subject: PRG
+  data_class: DC.PRF
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Per-source completeness/validity + reporting-timeliness metrics."
+
+# Supply chain (bi_supply)
+- schema_name: bi_supply
+  table_name: mart_resource_allocation
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "National commodity stock/allocation summary."
+- schema_name: bi_supply
+  table_name: mart_supply_region_stock
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Month x commodity x region months-on-hand (EPSS hub region)."
+- schema_name: bi_supply
+  table_name: mart_supply_stockout_events
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Stockout episodes (gaps-and-islands) per commodity x region."
+- schema_name: bi_supply
+  table_name: mart_supply_stockout_forecast
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Days-to-stockout projection per facility-env x commodity (AMC-12)."
+- schema_name: bi_supply
+  table_name: mart_supply_pipeline
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Open vaccine purchase orders with live ETA (HCMIS procurement)."
+# Supply Control Tower (EPSS dispatch plan), served via /api/ct/plan.
+- schema_name: bi_supply
+  table_name: mart_ct_nodes
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Supply Control Tower: EPSS hubs + delivery facilities (coords/region/type/capacity)."
+- schema_name: bi_supply
+  table_name: mart_ct_movements
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Supply Control Tower: hub->facility movement lines per period x commodity."
+- schema_name: bi_supply
+  table_name: mart_ct_vehicle_runs
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Supply Control Tower: dispatch vehicle runs (stops, fill rate, ETA)."
+- schema_name: bi_supply
+  table_name: mart_ct_plan_stats
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Supply Control Tower: per-period plan KPI + savings summary (vs naive baseline)."
+
+# Public / k-anonymised (bi_public)
+- schema_name: bi_public
+  table_name: mart_public_summary
+  subject: PRG
+  data_class: DC.PRF
+  granularity: deidentified
+  default_sensitivity: default
+  description: "Public national summary (k-anonymised, aggregate)."
+- schema_name: bi_public
+  table_name: mart_supply_stockout_public
+  subject: PRD
+  data_class: DC.STK
+  granularity: deidentified
+  default_sensitivity: default
+  description: "Public commodity-availability rate per region (k≥5)."
+- schema_name: bi_public
+  table_name: bi_facility_distribution_public
+  subject: PRG
+  data_class: DC.PRF
+  granularity: deidentified
+  default_sensitivity: default
+  description: "Public facility counts per region (k-anonymised, tiers collapsed)."
+
+# OPA self-test fixtures (mart_attrs.py SELF_TESTS)
+# These logical (schema, table) pairs are not queryable relations; they are
+# the startup security-invariant fixtures the gateway asserts OPA decisions
+# against (a catalog-to-rego drift guard). Their attributes are fixed so the
+# invariants stay stable; they are needed while the self-test matrix targets
+# these fixtures rather than deployed marts.
+- schema_name: marts
+  table_name: bi_programme_hiv_cascade_total
+  subject: PRG
+  data_class: DC.PRO
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Self-test fixture: PRG programme aggregate (DEC/ANA/SUPER read)."
+- schema_name: marts
+  table_name: bi_service_flagship_attainment
+  subject: PRG
+  data_class: DC.PRO
+  granularity: aggregate
+  default_sensitivity: default
+  description: "Self-test fixture: public programme indicators (PUB-ANON reads)."
+- schema_name: marts
+  table_name: bi_safety_aefi_lineage
+  subject: PT
+  data_class: DC.AEFI
+  granularity: aggregate
+  default_sensitivity: restricted
+  description: "Self-test fixture: restricted AEFI lineage (PUB-ANON denied)."
+- schema_name: vault_business
+  table_name: enc_patient_visit
+  subject: PT
+  data_class: DC.ENC
+  granularity: raw
+  default_sensitivity: restricted
+  description: "Self-test fixture: raw PT encounters (only R-SUPER reads)."
+# eLMIS v2 history (OpenLMIS family, standalone lane)
+- schema_name: bi_supply
+  table_name: mart_elmis_hist_monthly_activity
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "eLMIS v2 history: month x programme supply activity (2017-18, Zambia archive)."
+- schema_name: bi_supply
+  table_name: mart_elmis_hist_availability
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "eLMIS v2 history: period availability (OSA proxy) per month x product set x product."
+- schema_name: bi_supply
+  table_name: mart_elmis_hist_timeliness
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "eLMIS v2 history: requisition timeliness (created <= period end + 15d) per month x programme."
+- schema_name: bi_supply
+  table_name: mart_elmis_hist_satp
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "eLMIS v2 history: Stock According To Plan bands per month x programme (facility-grain adaptation)."
+- schema_name: bi_supply
+  table_name: mart_elmis_hist_product_stockout
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "eLMIS v2 history: month x tracer product stockout pressure."
+- schema_name: bi_supply
+  table_name: mart_elmis_hist_facility_activity
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default   # governed by role/subject rules (R-DEC, R-CONS-ANA only); facility identities are institutional, not personal
+  description: "eLMIS v2 history: facility x programme x month; carries archive facility identities (governed)."
+- schema_name: bi_supply
+  table_name: mart_elmis_hist_facility_product_month
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default   # governed by role/subject rules (R-DEC, R-CONS-ANA only); facility identities are institutional, not personal
+  description: "eLMIS v2 history: facility x product x month feature mart (governed facility identities)."
+- schema_name: bi_supply
+  table_name: mart_elmis_hist_resupply_plan
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default   # governed by role/subject rules (R-DEC, R-CONS-ANA only); facility identities are institutional, not personal
+  description: "eLMIS v2 history, planning-module mock: latest stock position + suggested resupply per facility x tracer product (governed)."
+- schema_name: bi_supply
+  table_name: mart_pct_kpi
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default   # province x month aggregates; no facility identities
+  description: "PCT KPI layer (Zambia eLMIS): Global Fund S8 on-shelf availability, stockout exposure, months-of-stock bands, order fill; numerator + denominator per row."
+- schema_name: bi_supply
+  table_name: pct_kpi_definitions
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "PCT KPI contracts (seed): numerator, denominator, formula, grain, source, target, exclusions, reference, limitation per KPI."
+- schema_name: bi_supply
+  table_name: mart_pct_facility_geo
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default   # governed like the other facility-grain eLMIS marts; lat/lng masked by column_classification
+  description: "PCT facility geography (Zambia eLMIS): every facility located, with coord_basis saying how (source / repaired / inferred)."
+- schema_name: bi_supply
+  table_name: mart_pct_demand_month
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default   # governed by role/subject rules (R-DEC, R-CONS-ANA only); facility identities are institutional
+  description: "PCT demand base (Zambia eLMIS), facility x product x month: adjusted demand, stock state, orders, labelled pipeline assumption."
+- schema_name: bi_supply
+  table_name: mart_pct_position
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default   # governed by role/subject rules (R-DEC, R-CONS-ANA only); facility identities are institutional
+  description: "PCT projected position (Zambia eLMIS, AMC basis): risk band, replenishment excl./incl. assumed pipeline, district redistribution, input flags."
+- schema_name: bi_supply
+  table_name: pct_policy_parameters
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "PCT planning parameters (seed): each marked SOURCED or ASSUMPTION with its source; shown beside every recommendation."
+- schema_name: bi_supply
+  table_name: mart_pct_forecast
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default   # governed by role/subject rules (R-DEC, R-CONS-ANA only); facility identities are institutional
+  description: "PCT demand forecast (Zambia eLMIS, H1): P10/P50/P90 per facility x tracer product with model version and MLflow run provenance."
+- schema_name: bi_supply
+  table_name: mart_pct_forecast_accuracy
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "PCT forecast backtest accuracy (historical, not live): fold ledger by split, comparator and demand class."
+# MDM augmentation (PCT dataflow design): golden records + discovered relationships
+- schema_name: bi_supply
+  table_name: mart_pct_plan_decisions
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: Planner verdicts on Supply Control Tower plan lines with their snapshots (decision log, init 42)
+# MDM augmentation (PCT dataflow design): golden records + discovered relationships
+- schema_name: bi_mdm
+  table_name: mdm_commodity_match_candidates
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "MDM discovered-relationship table: eLMIS products <-> entity-model commodities (candidates, steward review)."
+- schema_name: bi_mdm
+  table_name: mart_mdm_commodity_golden
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "MDM golden commodity record with per-source coverage."
+- schema_name: bi_mdm
+  table_name: mart_mdm_commodity_match_review
+  subject: PRD
+  data_class: DC.STK
+  granularity: aggregate
+  default_sensitivity: default
+  description: "MDM steward review queue."

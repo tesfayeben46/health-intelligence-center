@@ -1,0 +1,8 @@
+id: dz-region-map
+title: Burden & Readiness Map
+kind: map
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

@@ -1,0 +1,87 @@
+{
+  "realm": "ehia-saml-mock",
+  "displayName": "EHIA (mock SAML IdP)",
+  "displayNameHtml": "<div class=\"kc-logo-text\"><span>EHIA</span></div>",
+  "enabled": true,
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "sslRequired": "none",
+  "accessTokenLifespan": 1800,
+  "ssoSessionMaxLifespan": 28800,
+  "passwordPolicy": "",
+  "roles": {
+    "realm": [
+      { "name": "ehia-user", "description": "Default role for EHIA-federated accounts" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "http://127.0.0.1:8090/realms/moh-staff",
+      "name": "moh-staff broker (SAML SP entityID)",
+      "enabled": true,
+      "protocol": "saml",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "frontchannelLogout": true,
+      "redirectUris": [
+        "http://127.0.0.1:8090/realms/moh-staff/broker/ehia-saml/endpoint",
+        "http://keycloak:8080/realms/moh-staff/broker/ehia-saml/endpoint"
+      ],
+      "attributes": {
+        "saml.assertion.signature": "false",
+        "saml.server.signature":    "false",
+        "saml.client.signature":    "false",
+        "saml_assertion_consumer_url_post":     "http://127.0.0.1:8090/realms/moh-staff/broker/ehia-saml/endpoint",
+        "saml_assertion_consumer_url_redirect": "http://127.0.0.1:8090/realms/moh-staff/broker/ehia-saml/endpoint",
+        "saml_force_name_id_format": "true",
+        "saml_name_id_format":       "email"
+      }
+    },
+    {
+      "clientId": "http://127.0.0.1:8090/realms/privileged-ops",
+      "name": "privileged-ops broker (SAML SP entityID)",
+      "enabled": true,
+      "protocol": "saml",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "frontchannelLogout": true,
+      "redirectUris": [
+        "http://127.0.0.1:8090/realms/privileged-ops/broker/ehia-saml/endpoint",
+        "http://keycloak:8080/realms/privileged-ops/broker/ehia-saml/endpoint"
+      ],
+      "attributes": {
+        "saml.assertion.signature": "false",
+        "saml.server.signature":    "false",
+        "saml.client.signature":    "false",
+        "saml_assertion_consumer_url_post":     "http://127.0.0.1:8090/realms/privileged-ops/broker/ehia-saml/endpoint",
+        "saml_assertion_consumer_url_redirect": "http://127.0.0.1:8090/realms/privileged-ops/broker/ehia-saml/endpoint",
+        "saml_force_name_id_format": "true",
+        "saml_name_id_format":       "email"
+      }
+    }
+  ],
+  "users": [
+    {
+      "id": "33333333-cccc-dddd-eeee-000000000001",
+      "username": "abebe.bekele@ehia.gov.et",
+      "email": "abebe.bekele@ehia.gov.et",
+      "firstName": "Abebe",
+      "lastName": "Bekele",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "change-me-ehia-mock", "temporary": false }],
+      "realmRoles": ["ehia-user"]
+    },
+    {
+      "id": "44444444-cccc-dddd-eeee-000000000002",
+      "username": "tigist.bekele@ehia.gov.et",
+      "email": "tigist.bekele@ehia.gov.et",
+      "firstName": "Tigist",
+      "lastName": "Bekele",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "change-me-ehia-mock", "temporary": false }],
+      "realmRoles": ["ehia-user"]
+    }
+  ]
+}

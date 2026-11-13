@@ -1,0 +1,54 @@
+---
+# Health gate: the boot counts as complete only when the system serves its pages. Wraps
+# verify-system.sh (the regression gate bootstrap.sh runs at step 7.9) and adds a wait for
+# workloads to become Ready, an HTTPS probe of every ingress host, and an assertion that the
+# gateway enforces OPA (fail-closed, not fail-open).
+
+- name: Wait for every app-tier Deployment to become Available
+  ansible.builtin.command: "kubectl -n {{ nhdw_namespace }} wait --for=condition=Available deploy --all --timeout=600s"
+  changed_when: false
+
+- name: Probe each ingress host over HTTPS (expects a live response, not a dead port)
+  ansible.builtin.uri:
+    url: "https://{{ item.host }}.{{ nhdw_host_base }}{{ item.path }}"
+    validate_certs: false
+    status_code: [200, 301, 302, 303, 401, 403]
+  # The gateway is a FastAPI service with no "/" route ("/" returns 404), so probe /health.
+  # The SPAs and Keycloak serve "/" (200 or an OIDC 302).
+  loop:
+    - { host: internal-bi, path: "/" }
+    - { host: admin, path: "/" }
+    - { host: workshop, path: "/" }
+    - { host: public, path: "/" }
+    - { host: keycloak, path: "/" }
+    - { host: gateway, path: "/health" }
+  register: verify_probe
+  retries: 10
+  delay: 15
+  until: verify_probe is succeeded
+
+# argv (a list) avoids the command module's shlex tokenization, which would strip the double
+# quotes the kubectl jsonpath filter needs around "OPA_ENFORCE".
+- name: Assert the gateway ENFORCES OPA (fail-closed, not fail-open)
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - "-n"
+      - "{{ nhdw_namespace }}"
+      - get
+      - deploy
+      - nhdw-gateway
+      - "-o"
+      - 'jsonpath={.spec.template.spec.containers[0].env[?(@.name=="OPA_ENFORCE")].value}'
+  register: verify_opa
+  changed_when: false
+  failed_when: verify_opa.stdout != "true"
+
+- name: Run the canonical regression gate (verify-system.sh, same as bootstrap step 7.9)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/verify-system.sh"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  environment:
+    # The script probes https://gateway.$NHDW_HOSTBASE and defaults to the dev base
+    # (127.0.0.1.nip.io); pass the deployment's host base so it probes the right host.
+    NHDW_HOSTBASE: "{{ nhdw_host_base }}"
+  changed_when: false

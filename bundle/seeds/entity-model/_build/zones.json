@@ -1,0 +1,687 @@
+[
+  {
+    "zone_id": "ZON-OR-a31ff0",
+    "region_id": "ET-OR",
+    "name": "Jimma Zone"
+  },
+  {
+    "zone_id": "ZON-OR-b10f4e",
+    "region_id": "ET-OR",
+    "name": "Horo Gudru Wellega Zone"
+  },
+  {
+    "zone_id": "ZON-OR-b4130a",
+    "region_id": "ET-OR",
+    "name": "West Wollega Zone"
+  },
+  {
+    "zone_id": "ZON-OR-447e2c",
+    "region_id": "ET-OR",
+    "name": "East Hararge Zone"
+  },
+  {
+    "zone_id": "ZON-OR-177079",
+    "region_id": "ET-OR",
+    "name": "North Shewa Zone"
+  },
+  {
+    "zone_id": "ZON-OR-164082",
+    "region_id": "ET-OR",
+    "name": "Guji Zone"
+  },
+  {
+    "zone_id": "ZON-OR-bc3ca5",
+    "region_id": "ET-OR",
+    "name": "East Wollega Zone"
+  },
+  {
+    "zone_id": "ZON-OR-074662",
+    "region_id": "ET-OR",
+    "name": "West Guji Zone"
+  },
+  {
+    "zone_id": "ZON-OR-85f37d",
+    "region_id": "ET-OR",
+    "name": "West Hararge Zone"
+  },
+  {
+    "zone_id": "ZON-OR-3b7ce0",
+    "region_id": "ET-OR",
+    "name": "West Shewa Zone"
+  },
+  {
+    "zone_id": "ZON-OR-b46095",
+    "region_id": "ET-OR",
+    "name": "South West Shewa"
+  },
+  {
+    "zone_id": "ZON-OR-995655",
+    "region_id": "ET-OR",
+    "name": "Kelem Wollega Zone"
+  },
+  {
+    "zone_id": "ZON-OR-aea8a4",
+    "region_id": "ET-OR",
+    "name": "Arsi zone"
+  },
+  {
+    "zone_id": "ZON-OR-0f0b5b",
+    "region_id": "ET-OR",
+    "name": "Bale Zone"
+  },
+  {
+    "zone_id": "ZON-OR-237878",
+    "region_id": "ET-OR",
+    "name": "East Bale Zone"
+  },
+  {
+    "zone_id": "ZON-OR-f5ed07",
+    "region_id": "ET-OR",
+    "name": "East Shewa Zone"
+  },
+  {
+    "zone_id": "ZON-OR-9ebbdb",
+    "region_id": "ET-OR",
+    "name": "West Arsi Zone"
+  },
+  {
+    "zone_id": "ZON-OR-8a8cc8",
+    "region_id": "ET-OR",
+    "name": "Ilu Aba Bora Zone"
+  },
+  {
+    "zone_id": "ZON-OR-01b6cd",
+    "region_id": "ET-OR",
+    "name": "East Borena Zone"
+  },
+  {
+    "zone_id": "ZON-OR-d5cac7",
+    "region_id": "ET-OR",
+    "name": "Sheger City"
+  },
+  {
+    "zone_id": "ZON-OR-784781",
+    "region_id": "ET-OR",
+    "name": "Buno Bedele Zone"
+  },
+  {
+    "zone_id": "ZON-AM-a115e0",
+    "region_id": "ET-AM",
+    "name": "Awi Zone"
+  },
+  {
+    "zone_id": "ZON-AM-51322a",
+    "region_id": "ET-AM",
+    "name": "Waghimera Zone"
+  },
+  {
+    "zone_id": "ZON-AM-0099d4",
+    "region_id": "ET-AM",
+    "name": "Central Gondar Zone"
+  },
+  {
+    "zone_id": "ZON-AM-5eee52",
+    "region_id": "ET-AM",
+    "name": "East Gojjam Zone"
+  },
+  {
+    "zone_id": "ZON-AM-88ed0f",
+    "region_id": "ET-AM",
+    "name": "North Wollo Zone"
+  },
+  {
+    "zone_id": "ZON-AM-ed4427",
+    "region_id": "ET-AM",
+    "name": "South Gondar Zone"
+  },
+  {
+    "zone_id": "ZON-AM-fb6877",
+    "region_id": "ET-AM",
+    "name": "North Shoa Zone"
+  },
+  {
+    "zone_id": "ZON-AM-821dfc",
+    "region_id": "ET-AM",
+    "name": "Oromia Special Zone"
+  },
+  {
+    "zone_id": "ZON-AM-93285e",
+    "region_id": "ET-AM",
+    "name": "West Gondar Zone"
+  },
+  {
+    "zone_id": "ZON-AM-9fd3b5",
+    "region_id": "ET-AM",
+    "name": "South Wollo Zone"
+  },
+  {
+    "zone_id": "ZON-AM-ca9177",
+    "region_id": "ET-AM",
+    "name": "West Gojam Zone"
+  },
+  {
+    "zone_id": "ZON-AM-37be6e",
+    "region_id": "ET-AM",
+    "name": "North Gojjam Zone"
+  },
+  {
+    "zone_id": "ZON-AM-d0f4f6",
+    "region_id": "ET-AM",
+    "name": "Debreberhan Town Administration"
+  },
+  {
+    "zone_id": "ZON-AM-53b92a",
+    "region_id": "ET-AM",
+    "name": "North Gondar Zone"
+  },
+  {
+    "zone_id": "ZON-AM-a29b8f",
+    "region_id": "ET-AM",
+    "name": "Wolkait Tegedi Setiti Humera"
+  },
+  {
+    "zone_id": "ZON-AA-fbd3aa",
+    "region_id": "ET-AA",
+    "name": "Nifas Silk Lafto Sub City"
+  },
+  {
+    "zone_id": "ZON-AA-820884",
+    "region_id": "ET-AA",
+    "name": "Bole Sub City"
+  },
+  {
+    "zone_id": "ZON-AA-01a9f2",
+    "region_id": "ET-AA",
+    "name": "Kolfe Sub city"
+  },
+  {
+    "zone_id": "ZON-AA-b9bf26",
+    "region_id": "ET-AA",
+    "name": "Akaki Kality Sub City"
+  },
+  {
+    "zone_id": "ZON-AA-9ae8ef",
+    "region_id": "ET-AA",
+    "name": "Arada Sub City"
+  },
+  {
+    "zone_id": "ZON-AA-05518f",
+    "region_id": "ET-AA",
+    "name": "Addis Ketema Sub City"
+  },
+  {
+    "zone_id": "ZON-AA-fea3c0",
+    "region_id": "ET-AA",
+    "name": "Gulele Sub City"
+  },
+  {
+    "zone_id": "ZON-AA-0b661c",
+    "region_id": "ET-AA",
+    "name": "Lemi kura Sub city"
+  },
+  {
+    "zone_id": "ZON-AA-575bdd",
+    "region_id": "ET-AA",
+    "name": "Lideta Sub City"
+  },
+  {
+    "zone_id": "ZON-AA-01b590",
+    "region_id": "ET-AA",
+    "name": "Kirkos Sub City"
+  },
+  {
+    "zone_id": "ZON-SO-3f6d50",
+    "region_id": "ET-SO",
+    "name": "Erar"
+  },
+  {
+    "zone_id": "ZON-SO-d04e53",
+    "region_id": "ET-SO",
+    "name": "Liben"
+  },
+  {
+    "zone_id": "ZON-SO-568e7c",
+    "region_id": "ET-SO",
+    "name": "Dollo"
+  },
+  {
+    "zone_id": "ZON-SO-350705",
+    "region_id": "ET-SO",
+    "name": "Jarar"
+  },
+  {
+    "zone_id": "ZON-SO-a5280d",
+    "region_id": "ET-SO",
+    "name": "Sitti"
+  },
+  {
+    "zone_id": "ZON-SO-3d3af1",
+    "region_id": "ET-SO",
+    "name": "Shebelle"
+  },
+  {
+    "zone_id": "ZON-SO-51b6fb",
+    "region_id": "ET-SO",
+    "name": "Nogob"
+  },
+  {
+    "zone_id": "ZON-SO-226389",
+    "region_id": "ET-SO",
+    "name": "Korahay"
+  },
+  {
+    "zone_id": "ZON-SO-377181",
+    "region_id": "ET-SO",
+    "name": "Fafan"
+  },
+  {
+    "zone_id": "ZON-SO-080f8d",
+    "region_id": "ET-SO",
+    "name": "Afder"
+  },
+  {
+    "zone_id": "ZON-SE-311ed2",
+    "region_id": "ET-SE",
+    "name": "Ale zone"
+  },
+  {
+    "zone_id": "ZON-SE-217f59",
+    "region_id": "ET-SE",
+    "name": "Koore zone"
+  },
+  {
+    "zone_id": "ZON-SE-9d7764",
+    "region_id": "ET-SE",
+    "name": "South omo zone"
+  },
+  {
+    "zone_id": "ZON-SE-c4ec95",
+    "region_id": "ET-SE",
+    "name": "Wolaita zone"
+  },
+  {
+    "zone_id": "ZON-SE-69f02c",
+    "region_id": "ET-SE",
+    "name": "gedeo zone"
+  },
+  {
+    "zone_id": "ZON-SE-00558d",
+    "region_id": "ET-SE",
+    "name": "gamo zone"
+  },
+  {
+    "zone_id": "ZON-SE-164e11",
+    "region_id": "ET-SE",
+    "name": "gofa zone"
+  },
+  {
+    "zone_id": "ZON-SE-1d3f8a",
+    "region_id": "ET-SE",
+    "name": "Ari zone"
+  },
+  {
+    "zone_id": "ZON-SE-f58364",
+    "region_id": "ET-SE",
+    "name": "Gardula zone"
+  },
+  {
+    "zone_id": "ZON-CE-d11090",
+    "region_id": "ET-CE",
+    "name": "Hadiya Zone"
+  },
+  {
+    "zone_id": "ZON-CE-69c8de",
+    "region_id": "ET-CE",
+    "name": "Halaba Zone"
+  },
+  {
+    "zone_id": "ZON-CE-318ef0",
+    "region_id": "ET-CE",
+    "name": "Gurage Zone"
+  },
+  {
+    "zone_id": "ZON-CE-eca935",
+    "region_id": "ET-CE",
+    "name": "Mareko Special"
+  },
+  {
+    "zone_id": "ZON-CE-f32419",
+    "region_id": "ET-CE",
+    "name": "Silte Zone"
+  },
+  {
+    "zone_id": "ZON-CE-3de3aa",
+    "region_id": "ET-CE",
+    "name": "Yem Zone"
+  },
+  {
+    "zone_id": "ZON-CE-76fc6f",
+    "region_id": "ET-CE",
+    "name": "East Gurage Zone"
+  },
+  {
+    "zone_id": "ZON-SW-87b883",
+    "region_id": "ET-SW",
+    "name": "Bench Sheko Zone"
+  },
+  {
+    "zone_id": "ZON-SW-5679c2",
+    "region_id": "ET-SW",
+    "name": "Kaffa Zone"
+  },
+  {
+    "zone_id": "ZON-SW-f9db6e",
+    "region_id": "ET-SW",
+    "name": "Sheka Zone"
+  },
+  {
+    "zone_id": "ZON-SW-3490a1",
+    "region_id": "ET-SW",
+    "name": "West Omo zone"
+  },
+  {
+    "zone_id": "ZON-SW-876565",
+    "region_id": "ET-SW",
+    "name": "Dawro Zone"
+  },
+  {
+    "zone_id": "ZON-SW-ffd088",
+    "region_id": "ET-SW",
+    "name": "Konta Zone"
+  },
+  {
+    "zone_id": "ZON-TI-b7ae14",
+    "region_id": "ET-TI",
+    "name": "Central Zone"
+  },
+  {
+    "zone_id": "ZON-TI-e39d14",
+    "region_id": "ET-TI",
+    "name": "North West Zone"
+  },
+  {
+    "zone_id": "ZON-TI-7f7796",
+    "region_id": "ET-TI",
+    "name": "South East Zone"
+  },
+  {
+    "zone_id": "ZON-TI-f6a63c",
+    "region_id": "ET-TI",
+    "name": "Southern Zone"
+  },
+  {
+    "zone_id": "ZON-TI-623ad2",
+    "region_id": "ET-TI",
+    "name": "Eastern Zone"
+  },
+  {
+    "zone_id": "ZON-SI-f26328",
+    "region_id": "ET-SI",
+    "name": "Central Sidama Zone"
+  },
+  {
+    "zone_id": "ZON-SI-56eff8",
+    "region_id": "ET-SI",
+    "name": "Northern Zone"
+  },
+  {
+    "zone_id": "ZON-SI-f6a63c",
+    "region_id": "ET-SI",
+    "name": "Southern Zone"
+  },
+  {
+    "zone_id": "ZON-BG-2ef4a9",
+    "region_id": "ET-BG",
+    "name": "Metekel Zone"
+  },
+  {
+    "zone_id": "ZON-BG-1959c5",
+    "region_id": "ET-BG",
+    "name": "Mao Komo Special Woreda"
+  },
+  {
+    "zone_id": "ZON-BG-82e764",
+    "region_id": "ET-BG",
+    "name": "Assosa Zone"
+  },
+  {
+    "zone_id": "ZON-AF-11af36",
+    "region_id": "ET-AF",
+    "name": "Zone 4"
+  },
+  {
+    "zone_id": "ZON-AF-bf2b9f",
+    "region_id": "ET-AF",
+    "name": "Zone 2"
+  },
+  {
+    "zone_id": "ZON-AF-007cee",
+    "region_id": "ET-AF",
+    "name": "Zone 5"
+  },
+  {
+    "zone_id": "ZON-AF-9f718f",
+    "region_id": "ET-AF",
+    "name": "Zone 1"
+  },
+  {
+    "zone_id": "ZON-GA-204af2",
+    "region_id": "ET-GA",
+    "name": "Majang Zone"
+  },
+  {
+    "zone_id": "ZON-GA-f40dc2",
+    "region_id": "ET-GA",
+    "name": "Nuer Zone"
+  },
+  {
+    "zone_id": "ZON-OR-e47c8b",
+    "region_id": "ET-OR",
+    "name": "Moyale Town"
+  },
+  {
+    "zone_id": "ZON-OR-35040f",
+    "region_id": "ET-OR",
+    "name": "Bule Hora Town"
+  },
+  {
+    "zone_id": "ZON-OR-b26d01",
+    "region_id": "ET-OR",
+    "name": "Shashemene Town"
+  },
+  {
+    "zone_id": "ZON-OR-6efa4f",
+    "region_id": "ET-OR",
+    "name": "Adama Town"
+  },
+  {
+    "zone_id": "ZON-OR-08a2e3",
+    "region_id": "ET-OR",
+    "name": "Borena Zone"
+  },
+  {
+    "zone_id": "ZON-OR-2ec30e",
+    "region_id": "ET-OR",
+    "name": "Jimma Town"
+  },
+  {
+    "zone_id": "ZON-AM-78cd05",
+    "region_id": "ET-AM",
+    "name": "Bahirdar Town Administration"
+  },
+  {
+    "zone_id": "ZON-AA-a41c59",
+    "region_id": "ET-AA",
+    "name": "Yeka Sub City"
+  },
+  {
+    "zone_id": "ZON-SO-462bfb",
+    "region_id": "ET-SO",
+    "name": "Dawa"
+  },
+  {
+    "zone_id": "ZON-SE-d24a81",
+    "region_id": "ET-SE",
+    "name": "Basketo zone"
+  },
+  {
+    "zone_id": "ZON-SE-b9ece9",
+    "region_id": "ET-SE",
+    "name": "Dila Town"
+  },
+  {
+    "zone_id": "ZON-SE-e7c623",
+    "region_id": "ET-SE",
+    "name": "Konso zone"
+  },
+  {
+    "zone_id": "ZON-CE-3bca2f",
+    "region_id": "ET-CE",
+    "name": "Kembata Zone"
+  },
+  {
+    "zone_id": "ZON-TI-23fce7",
+    "region_id": "ET-TI",
+    "name": "Mekelle Zone"
+  },
+  {
+    "zone_id": "ZON-SI-215c48",
+    "region_id": "ET-SI",
+    "name": "Hawassa City Administration"
+  },
+  {
+    "zone_id": "ZON-BG-b59c5c",
+    "region_id": "ET-BG",
+    "name": "Kamashi Zone"
+  },
+  {
+    "zone_id": "ZON-AF-80ba6a",
+    "region_id": "ET-AF",
+    "name": "Zone 3"
+  },
+  {
+    "zone_id": "ZON-AF-701811",
+    "region_id": "ET-AF",
+    "name": "Zone 6"
+  },
+  {
+    "zone_id": "ZON-GA-a62f9a",
+    "region_id": "ET-GA",
+    "name": "Agniwa zone"
+  },
+  {
+    "zone_id": "ZON-OR-38d153",
+    "region_id": "ET-OR",
+    "name": "Maya Town"
+  },
+  {
+    "zone_id": "ZON-OR-da4368",
+    "region_id": "ET-OR",
+    "name": "Bishoftu Town"
+  },
+  {
+    "zone_id": "ZON-OR-87c870",
+    "region_id": "ET-OR",
+    "name": "Nekemte Town"
+  },
+  {
+    "zone_id": "ZON-AM-82650c",
+    "region_id": "ET-AM",
+    "name": "Debre Tabor town Administration"
+  },
+  {
+    "zone_id": "ZON-SI-623ad2",
+    "region_id": "ET-SI",
+    "name": "Eastern Zone"
+  },
+  {
+    "zone_id": "ZON-GA-5dfd7c",
+    "region_id": "ET-GA",
+    "name": "Itang Special"
+  },
+  {
+    "zone_id": "ZON-OR-1dcb64",
+    "region_id": "ET-OR",
+    "name": "Batu Town"
+  },
+  {
+    "zone_id": "ZON-OR-5cbfe8",
+    "region_id": "ET-OR",
+    "name": "Modjo Town"
+  },
+  {
+    "zone_id": "ZON-OR-462e49",
+    "region_id": "ET-OR",
+    "name": "Sendafa Beke Town"
+  },
+  {
+    "zone_id": "ZON-OR-dd3b7c",
+    "region_id": "ET-OR",
+    "name": "Dodola Town"
+  },
+  {
+    "zone_id": "ZON-AM-7a2e3e",
+    "region_id": "ET-AM",
+    "name": "Kombolcha Town Administration"
+  },
+  {
+    "zone_id": "ZON-AM-f97a8a",
+    "region_id": "ET-AM",
+    "name": "Woldia Town Administration"
+  },
+  {
+    "zone_id": "ZON-SE-d8f9dc",
+    "region_id": "ET-SE",
+    "name": "Sodo Twon"
+  },
+  {
+    "zone_id": "ZON-OR-053f6e",
+    "region_id": "ET-OR",
+    "name": "Holeta Town"
+  },
+  {
+    "zone_id": "ZON-OR-2cec04",
+    "region_id": "ET-OR",
+    "name": "Metu Town"
+  },
+  {
+    "zone_id": "ZON-OR-0a9390",
+    "region_id": "ET-OR",
+    "name": "Robe Town"
+  },
+  {
+    "zone_id": "ZON-BG-f34375",
+    "region_id": "ET-BG",
+    "name": "Assosa Town Administration"
+  },
+  {
+    "zone_id": "ZON-DD-76ca9d",
+    "region_id": "ET-DD",
+    "name": "Goro Operational"
+  },
+  {
+    "zone_id": "ZON-OR-624f44",
+    "region_id": "ET-OR",
+    "name": "Agaro Towm"
+  },
+  {
+    "zone_id": "ZON-OR-541ba6",
+    "region_id": "ET-OR",
+    "name": "Asela Town"
+  },
+  {
+    "zone_id": "ZON-AM-86901b",
+    "region_id": "ET-AM",
+    "name": "Gondar Town Administration"
+  },
+  {
+    "zone_id": "ZON-SE-59ce04",
+    "region_id": "ET-SE",
+    "name": "Arba Minch Town"
+  },
+  {
+    "zone_id": "ZON-OR-0233c5",
+    "region_id": "ET-OR",
+    "name": "Ambo Town"
+  }
+]

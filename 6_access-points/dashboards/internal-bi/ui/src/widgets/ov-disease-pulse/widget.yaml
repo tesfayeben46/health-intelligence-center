@@ -1,0 +1,8 @@
+id: ov-disease-pulse
+title: Weekly surveillance pulse
+kind: kpi
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

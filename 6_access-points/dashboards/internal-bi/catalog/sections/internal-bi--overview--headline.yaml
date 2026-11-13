@@ -1,0 +1,15 @@
+id: internal-bi/overview/headline
+page_id: internal-bi/overview
+title: Headline
+ordering: 5
+columns: 12
+dense: true
+widgets:
+- id: ov-brief
+  col_span: 12
+  row_span: 1
+  ordering: 0
+- id: ov-benchmarks
+  col_span: 12
+  row_span: 1
+  ordering: 1

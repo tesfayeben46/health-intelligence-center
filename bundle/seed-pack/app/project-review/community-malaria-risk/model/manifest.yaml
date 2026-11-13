@@ -1,0 +1,19 @@
+name: community_malaria_risk
+version: v1
+kind: detector
+deployment_kind: batch
+engine: python-farrington
+provenance: outbreak
+description: >-
+  Farrington-style outbreak detector. Baseline = same ISO-week +/-2 in prior
+  years (falls back to a rolling preceding-8-week window when < 2 years of
+  history). Over-dispersion spread = max(sd, sqrt(mean)); threshold =
+  mean + z*spread (z=2). Emits the flat forecast schema with alarm probability.
+actuals:
+  mart: bi_idsr.mart_ml_disease_input
+  value_col: cases
+  join_keys:
+    district: woreda_uid
+    disease: disease_code
+    year: year
+    week: week

@@ -1,0 +1,33 @@
+# R-STEW: Data Steward
+#
+# Deny-all on data subjects by design: stewards work on metadata, lineage
+# and data-sharing-agreement workflows, not on the data plane. Cataloguing,
+# tagging, glossary and agreement approvals happen in admin UIs that do not
+# go through OPA. Mart reads stay denied to enforce that separation.
+role:
+  id: R-STEW
+  name: "Data Steward"
+  group: Steward
+  identity_provider: MoH-Keycloak
+  mfa_required: true
+  mfa_factor: TOTP
+  phase_activated: 1
+  audit_class: enhanced
+  notes: |
+    Metadata + lineage + DSA workflow. Data-plane permissions are
+    empty: stewards work on catalog/governance surfaces
+    only. Any data read needs an explicit separate role (e.g. R-CONS-ANA
+    if dual-hatted).
+
+    One exception, same as R-OPS-ADM: DC.QLT,
+    data-quality metrics (bi_quality marts). Quality and lineage are the
+    steward's remit; these are pipeline metadata, not health data.
+  intentional_deny: true
+  permissions:
+    - subject: PRG
+      data_class: [DC.QLT]
+      members: all
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [public-health]

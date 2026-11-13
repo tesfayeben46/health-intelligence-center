@@ -1,0 +1,8 @@
+id: ov-disease-outbreaks
+title: Active outbreaks
+kind: table
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

@@ -1,0 +1,204 @@
+# Ingress for the dev overlay: consistent HTTPS hostnames through nip.io
+# (*.127.0.0.1.nip.io resolves to 127.0.0.1, so no hosts-file edits are needed).
+# TLS terminates at Traefik with the nhdw-wildcard-tls Secret
+# (bundle/scripts/gen-tls.sh). HTTPS is required so Keycloak's cross-origin
+# session cookies (SameSite=None;Secure) survive the dashboard-to-Keycloak OIDC
+# handshake.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-keycloak, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ keycloak.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: keycloak.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: keycloak, port: { number: 8080 } } } } ] }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-internal-bi, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ internal-bi.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: internal-bi.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: internal-bi, port: { number: 80 } } } } ] }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-dbt-docs, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ dbt-docs.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: dbt-docs.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: dbt-docs, port: { number: 80 } } } } ] }
+---
+# Superset: self-service SQL/BI (native FAB Keycloak OIDC, moh-staff). Plain
+# ingress like dbt-docs and Airflow; the app runs its own role-aware login.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-superset, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ superset.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: superset.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: superset, port: { number: 8088 } } } } ] }
+---
+# Every operator tool is fronted by a tool gate or its own native OIDC.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ing-mlflow
+  namespace: nhdw
+  # No forward-auth middleware: the mlflow-gate (nhdw/tool-gate) does OIDC and
+  # per-role enforcement itself.
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ mlflow.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: mlflow.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: mlflow-gate, port: { number: 80 } } } } ] }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-admin, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ admin.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: admin.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: admin, port: { number: 80 } } } } ] }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-workshop, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ workshop.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: workshop.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: workshop, port: { number: 80 } } } } ] }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-public, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ public.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: public.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: public-dashboard, port: { number: 80 } } } } ] }
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-gateway, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ gateway.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: gateway.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: nhdw-gateway, port: { number: 8000 } } } } ] }
+---
+# Airflow UI (operator-facing), native Keycloak OIDC.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-airflow, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ airflow.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: airflow.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: airflow, port: { number: 8080 } } } } ] }
+---
+# Object-store S3 API (SeaweedFS), needed only for gateway-presigned browser downloads
+# (ML result CSVs, exports, artifacts). The gateway signs against
+# MINIO_PUBLIC_ENDPOINT (this host); data-plane access stays gateway-mediated.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-s3, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ s3.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: s3.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: seaweedfs-s3, port: { number: 8333 } } } } ] }
+---
+# Observability UIs (operator-facing): the Prometheus expression browser and
+# Alertmanager, each behind its tool gate (nhdw/tool-gate) with per-role OIDC
+# (R-OPS-* / R-SUPER, either staff realm) and shared-session auto-login. Neither
+# tool has its own authentication, so these routes never point at them directly.
+# Loki has no UI (API only); it is reached in-cluster through the gateway's LOKI_URL.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-prometheus, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ prometheus.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: prometheus.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: prometheus-gate, port: { number: 80 } } } } ] }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-alertmanager, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ alertmanager.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: alertmanager.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: alertmanager-gate, port: { number: 80 } } } } ] }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-jupyter, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ jupyter.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: jupyter.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: jupyterhub, port: { number: 8000 } } } } ] }
+---
+# Headlamp (cluster console): /k8s on the admin host over TLS, so the dashboard's
+# relative link works. Fronted by headlamp-gate (nhdw/tool-gate), which does both
+# the per-role OIDC enforcement (R-OPS-* / R-SUPER) and the SA-bearer injection.
+# The gate owns /oauth2gate/* (its OIDC legs) and /k8s (the proxied console) on
+# this host.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-headlamp, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ admin.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: admin.127.0.0.1.nip.io
+      http:
+        paths:
+          - path: /k8s
+            pathType: Prefix
+            backend: { service: { name: headlamp-gate, port: { number: 80 } } }
+          - path: /oauth2gate
+            pathType: Prefix
+            backend: { service: { name: headlamp-gate, port: { number: 80 } } }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-openmetadata, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ openmetadata.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: openmetadata.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: openmetadata, port: { number: 8585 } } } } ] }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-seaweedfs, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ seaweedfs.127.0.0.1.nip.io ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: seaweedfs.127.0.0.1.nip.io
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: seaweedfs-gate, port: { number: 80 } } } } ] }

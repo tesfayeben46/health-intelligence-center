@@ -1,0 +1,165 @@
+/**
+ * Widget-runtime styles for the catalog-driven shell: sections, widget grid,
+ * cards, empty states, app-shell modal host. A copy of internal-bi's
+ * runtime.css (duplication preferred over a shared package). Layout only;
+ * colours and fonts come from the design tokens in base.css.
+ */
+
+/* Token aliases: workshop base.css names its hairline token --border and has
+   no amber scale; alias or define them here so the copied runtime and theme
+   resolver read the same custom-property names as internal-bi. */
+:root {
+  --line: var(--border, #e5e7eb);
+  --amber-lo: #f6d9a6;
+  --amber-hi: #8a4b12;
+}
+
+.catalog-page { display: block; }
+.chrome-widget { display: block; }
+
+/* A filter chip pinned and locked to the role's scope (single allowed value). */
+.filter-chip.locked { cursor: default; }
+.filter-chip.locked .ico { color: var(--navy-500); opacity: 0.8; }
+
+/* Section band header: eyebrow above the title, matching .ps-hdr. */
+.page-section + .page-section { margin-top: 1.6rem; }
+/* Overview digest: link to the full page. */
+.ps-fullpage {
+  flex: none;
+  align-self: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--navy-500);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+}
+.ps-fullpage:hover { background: var(--navy-50); color: var(--navy-700); }
+
+.ps-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--navy-500);
+  margin-bottom: 0.2rem;
+}
+
+/* The reflowing widget grid. grid-auto-flow: dense is set inline by the
+   renderer from the section's `dense` flag, so visible widgets fill the gaps
+   left by widgets the role cannot see. */
+.ps-grid { width: 100%; }
+
+/* Widget card chrome. */
+.widget-card { position: relative; overflow: hidden; }
+.widget-hd {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+.widget-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.2;
+}
+.widget-badge {
+  flex: none;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: var(--navy-50);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.1rem 0.45rem;
+}
+.widget-body { display: block; }
+
+/* Empty state: the only thing a widget shows when it has no real data.
+   Compact, with a soft dashed frame so it reads as an intentional placeholder. */
+.widget-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 84px;
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--ink-4);
+  font-size: 0.85rem;
+  background: var(--paper-2, #f7f6f3);
+  border: 1px dashed var(--border, #e5e7eb);
+  border-radius: var(--radius, 8px);
+}
+.widget-empty .ico { width: 20px; height: 20px; opacity: 0.5; }
+.widget-empty code {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  background: var(--navy-50);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+}
+
+/* focusWidget() highlight, used when the assistant navigates to a widget. */
+@keyframes widget-focus-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(90, 100, 120, 0.0); }
+  30%  { box-shadow: 0 0 0 3px rgba(90, 100, 120, 0.45); }
+  100% { box-shadow: 0 0 0 0 rgba(90, 100, 120, 0.0); }
+}
+.widget-card.widget-focus { animation: widget-focus-pulse 2s ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .widget-card.widget-focus { animation: none; outline: 2px solid var(--navy-500); }
+}
+
+/* App-shell (master-detail + modal host), used by renderAppShell.
+   Inert on a plain grid page, where CatalogPage's renderPage draws no shell chrome. */
+.shell-content { display: block; }
+.shell-detail { display: block; }
+
+/* Single modal slot the shell fills from the modal registry. */
+.shell-modal-slot { display: block; }
+.shell-modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(10, 30, 63, 0.55);
+  backdrop-filter: blur(4px);
+  z-index: 120;
+  display: grid; place-items: center;
+  padding: 2rem;
+  animation: shell-modal-fade 0.16s ease;
+}
+@keyframes shell-modal-fade { from { opacity: 0; } to { opacity: 1; } }
+.shell-modal-frame {
+  background: var(--paper, #fff);
+  border-radius: var(--radius-lg, 14px);
+  max-width: 640px; width: 100%;
+  max-height: 85vh; overflow: auto;
+  padding: 0;
+  animation: shell-modal-rise 0.2s ease;
+}
+@keyframes shell-modal-rise { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.shell-modal-hd {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--line, #e5e7eb);
+}
+.shell-modal-title {
+  margin: 0; font-size: 1.05rem; font-weight: 600;
+  color: var(--ink, #111827);
+}
+.shell-modal-x {
+  flex: none; border: 0; background: transparent; cursor: pointer;
+  font-size: 1rem; line-height: 1; color: var(--ink-3, #667085);
+  padding: 0.25rem 0.4rem; border-radius: 6px;
+}
+.shell-modal-x:hover { background: var(--navy-50, #f3f1ee); color: var(--ink, #111827); }
+.shell-modal-body { padding: 1.1rem 1.25rem; }

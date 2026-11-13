@@ -1,0 +1,108 @@
+# Profile · et-v3 · Ethiopia
+#
+# A profile is everything that makes this deployment about one country.
+# It has three layers, kept separate because they differ greatly in the cost
+# of a swap:
+#
+#   presentation  copy decks + geography + branding   -> seconds, no restart
+#   appsec        people, roles, scopes, policy       -> about a minute (seed step 7)
+#   data          source replica payloads             -> a full pipeline run
+#
+# This file is the presentation layer's manifest plus the identity every layer
+# reads. It is served to the browser by the gateway at /api/profile, so nothing
+# here may contain a secret.
+#
+# et-v3 is the reference profile: its values match the strings the dashboards
+# render by default, so the profile mechanism adds no visual change for it.
+key: et-v3
+label: Ethiopia
+revision: 1
+
+country:
+  name: Ethiopia
+  official_name: Federal Democratic Republic of Ethiopia
+  adjective: Ethiopian
+  iso2: ET
+  iso3: ETH
+  native:
+    lang: am                      # BCP-47; drives the `lang` attribute
+    country_name: ኢትዮጵያ
+
+ministry:
+  abbr: Palladium
+  name: Palladium
+  # The native-language name, rendered beside the Latin one in the public
+  # masthead. Ethiopia's official language is Amharic (Ge'ez script); a country
+  # whose official language is English (e.g. Zambia) omits this and the SPA drops
+  # the native line rather than printing an empty element or a raw {token}.
+  native_name: የጤና ሚኒስቴር
+  # logo omitted: the SPA falls back to the bundled Palladium wordmark.
+
+platform:
+  name: Data Intelligence Platform
+  abbr: Palladium
+  native_name: የብሔራዊ የጤና መረጃ ማከማቻ
+
+# Administrative hierarchy
+# What each level is called here. Ethiopia: region -> zone -> woreda -> kebele.
+# A country with a different depth sets `levels` shorter; the dashboards read
+# the labels rather than saying "woreda" in their own markup.
+geography:
+  levels:
+    - {code: admin1, singular: Region,  plural: Regions}
+    - {code: admin2, singular: Zone,    plural: Zones}
+    - {code: admin3, singular: Woreda,  plural: Woredas}
+    - {code: admin4, singular: Kebele,  plural: Kebeles}
+  # Boundary files, resolved against the profile directory. admin0 is optional:
+  # when absent the globe unions admin1 to get the national silhouette.
+  admin1: geo/admin1.geojson
+  world: _shared/world-land-110m.geojson
+  # Centroid, bounding box and the globe's opening rotation are derived from
+  # admin1 at load time, so they cannot drift from the geometry they describe.
+
+brand:
+  accent: "#0374b8"
+
+locale:
+  default: en
+  fiscal_calendar: EFY            # Ethiopian Fiscal Year; 'gregorian' elsewhere
+  currency: {code: ETB, symbol: "ETB"}   # the dashboards print this on money figures
+
+# The national health-sector plan whose name the dashboards print beside flagship
+# and attainment metrics. Read from the profile so a switch renames it (Zambia:
+# NHSP) instead of the SPA hard-coding "HSTP-II".
+health_plan:
+  abbr: HSTP-II
+  name: Health Sector Transformation Plan II
+
+# Identity verification for the public access-request modal. Present only where
+# the deployment has a national-ID verifier wired behind the gateway (for
+# Ethiopia, Fayda with an email-OTP round-trip; see pub-access-modal; the
+# reference deployment runs the fayda-replica IdP). A country without one omits
+# this block and the modal drops the verification card rather than offering a
+# form that posts nowhere. The pattern is a RegExp source the SPA compiles;
+# everything else is a label.
+identity:
+  system: Fayda
+  card_title: Verify your identity with Fayda (optional)
+  help_text: >-
+    Enter your Fayda number and the email registered to it; we send a one-time
+    code to that address to confirm it is you. Helps reviewers approve faster.
+    Not required for organisation accounts.
+  id_label: Fayda number (FAN)
+  id_hint: Enter a valid Fayda number (12 to 16 digits).
+  id_pattern: '^\d{12,16}$'
+  id_placeholder: e.g. 1000000000000001
+  email_label: Email on your Fayda record
+
+# The other two layers
+# Named here so one profile key resolves all three, but applied by the seed
+# steps rather than read by the browser.
+layers:
+  appsec:
+    users: seed-pack/app/security/users.yaml
+    note: the demo cast and their scopes travel with the country
+  data:
+    sources: bundle/seeds/sources
+    entity_model: bundle/seeds/entity-model/entity-model.yaml
+    note: swapping these requires the pipeline to re-run end to end

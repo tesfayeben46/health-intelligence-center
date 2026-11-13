@@ -1,0 +1,76 @@
+# NHDW Helm values: the per-environment settings. The topology profiles
+# (values-single.yaml, values-fleet.yaml) override these; moving from one node to
+# a fleet is a `-f values-fleet.yaml` swap with no template changes. See README.md.
+namespace: nhdw
+
+image:
+  # dev (locally loaded images): "nhdw" gives nhdw/<component>:<tag>.
+  # prod: a real registry, e.g. "registry.example.com/nhdw".
+  repository: nhdw
+  tag: "1.0.0"                 # immutable release version; bump per release, matches VERSION
+  pullPolicy: IfNotPresent
+
+# Hostname base for OIDC redirects and ingress hosts, so browser and server see the same hosts.
+hostBase: 127.0.0.1.nip.io
+keycloak:
+  # publicBase derives from hostBase (https://keycloak.<hostBase>) through the
+  # nhdw.kcPublicBase helper. Leave it empty so hostBase alone moves the OIDC issuer;
+  # set it only to override.
+  publicBase: ""
+  internalBase: http://keycloak.nhdw.svc.cluster.local:8080
+fayda:
+  internalBase: http://host.k3d.internal:8096   # external Fayda replica (email OTP); the real Fayda service in production
+
+# Alertmanager email is opt-in. With the default false, a fresh deploy renders a null
+# receiver and sends no email, even when smtp-secrets carries working credentials.
+# Set true only to send live alert emails.
+alertmanager:
+  email: false
+
+# OpenMetadata (catalog, glossary, column lineage). 6_access-points reads it; OPA
+# never does. On by default; set false on constrained machines. OpenSearch exists
+# only as OM's search backend.
+openmetadata:
+  enabled: true
+  tag: "2.0.2"
+  opensearchTag: "2.19.6"
+
+storageClass: local-path
+
+# SeaweedFS (object storage; see 3_storage/seaweedfs/).
+# Tag pinned to the validated image (digest fc9f76fa…). Bump only after re-running
+# 3_storage/seaweedfs/poc/compat_test.py against the new tag.
+seaweedfs:
+  tag: "4.45"
+  replication: "000"          # single volume server, so no replica; raise only with more than one volume pod
+  volumeSizeLimitMB: 1024     # size of one volume file; many small volumes = finer placement
+  master: { storage: 1Gi,  resources: {} }
+  volume:
+    storage: 20Gi
+    # SeaweedFS pre-allocates 7 volumes per bucket the moment the bucket is first
+    # written, regardless of data size (5 buckets holding 49 MB occupied 47 volumes).
+    # When the cap is hit, puts do not fail cleanly: the gateway retries with backoff
+    # (about 5 s per object) and eventually hangs.
+    #   minimum = 7 x (buckets + 1 default collection) = 7 x 11 = 77 for 10 buckets
+    #   200 leaves room for growth; a volume consumes only the disk it holds, so this
+    #   is not a 200 GB reservation. Watch `Free` on the master's /dir/status.
+    maxVolumes: 200
+    resources: {}
+  filer:
+    database: seaweedfs_filer  # in postgres-vault (3_storage/postgres/init/23_seaweedfs_filer_db.sh)
+    dbUser: seaweedfs_filer
+    resources: {}
+  s3: { resources: {} }
+
+# Per-component replicas + resources. Fleet profile raises these.
+components:
+  internal-bi:      { replicas: 1, resources: {} }
+  public-dashboard: { replicas: 1, resources: {} }
+  admin:            { replicas: 1, resources: {} }
+  workshop:         { replicas: 1, resources: {} }
+  gateway:          { replicas: 1, resources: {} }
+
+# Active country profile (directory name under /opt/nhdw-profiles on the host).
+# This is only the fallback: the active pointer file in that directory takes
+# precedence, so a profile swap is a file write rather than a helm upgrade.
+profile: et-v3

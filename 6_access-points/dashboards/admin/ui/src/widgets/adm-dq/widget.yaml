@@ -1,0 +1,4 @@
+id: adm-dq
+title: Admin · Quality & lineage (KPIs, source health, dbt tests, reconciliation,
+  lineage)
+kind: custom

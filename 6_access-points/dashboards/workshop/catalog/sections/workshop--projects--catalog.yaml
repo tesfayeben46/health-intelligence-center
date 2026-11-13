@@ -1,0 +1,21 @@
+id: workshop/projects/catalog
+page_id: workshop/projects
+# No section title: the topbar already renders the "Projects" masthead and
+# subtitle. The band is the two-card master-detail grid.
+title: ""
+ordering: 10
+columns: 12
+dense: false
+widgets:
+# Left: catalogue list (4 of 12 columns). Right: project detail (8 of 12), which
+# mounts the Visibility control and the ws-project-files tree side by side inside
+# itself, because the grid cannot nest a detail column. ws-project-artifacts is
+# not placed on this page.
+- id: ws-projects-table
+  col_span: 4
+  row_span: 1
+  ordering: 0
+- id: ws-project-detail
+  col_span: 8
+  row_span: 1
+  ordering: 10

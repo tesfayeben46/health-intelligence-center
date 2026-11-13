@@ -1,0 +1,121 @@
+[
+  {
+    "id": "CENT",
+    "name": "EPSS Central · Addis Ababa",
+    "region_id": "ET-AA"
+  },
+  {
+    "id": "ADDIS",
+    "name": "EPSS Addis Hub",
+    "region_id": "ET-AA"
+  },
+  {
+    "id": "ADAMA",
+    "name": "EPSS Adama Hub",
+    "region_id": "ET-OR",
+    "serves": [
+      "ET-OR",
+      "ET-CE"
+    ]
+  },
+  {
+    "id": "BAHR",
+    "name": "EPSS Bahir Dar Hub",
+    "region_id": "ET-AM"
+  },
+  {
+    "id": "DESS",
+    "name": "EPSS Dessie Hub",
+    "region_id": "ET-AM",
+    "serves": [
+      "ET-AM",
+      "ET-AF"
+    ]
+  },
+  {
+    "id": "DIRE",
+    "name": "EPSS Dire Dawa Hub",
+    "region_id": "ET-DD"
+  },
+  {
+    "id": "GAMB",
+    "name": "EPSS Gambella Hub",
+    "region_id": "ET-GA"
+  },
+  {
+    "id": "GOND",
+    "name": "EPSS Gondar Hub",
+    "region_id": "ET-AM"
+  },
+  {
+    "id": "HAWA",
+    "name": "EPSS Hawassa Hub",
+    "region_id": "ET-SI",
+    "serves": [
+      "ET-SI",
+      "ET-CE"
+    ]
+  },
+  {
+    "id": "HARA",
+    "name": "EPSS Harar Hub",
+    "region_id": "ET-HA"
+  },
+  {
+    "id": "JIJI",
+    "name": "EPSS Jijiga Hub",
+    "region_id": "ET-SO"
+  },
+  {
+    "id": "JIMM",
+    "name": "EPSS Jimma Hub",
+    "region_id": "ET-OR",
+    "serves": [
+      "ET-OR",
+      "ET-SW"
+    ]
+  },
+  {
+    "id": "MEKE",
+    "name": "EPSS Mekele Hub",
+    "region_id": "ET-TI"
+  },
+  {
+    "id": "NEKE",
+    "name": "EPSS Nekemte Hub",
+    "region_id": "ET-OR"
+  },
+  {
+    "id": "ASSA",
+    "name": "EPSS Assosa Hub",
+    "region_id": "ET-BG"
+  },
+  {
+    "id": "ASAY",
+    "name": "EPSS Semera (Asayita) Hub",
+    "region_id": "ET-AF"
+  },
+  {
+    "id": "SHAS",
+    "name": "EPSS Shashemene Hub",
+    "region_id": "ET-OR",
+    "serves": [
+      "ET-OR",
+      "ET-CE"
+    ]
+  },
+  {
+    "id": "SODD",
+    "name": "EPSS Sodo Hub",
+    "region_id": "ET-SE",
+    "serves": [
+      "ET-SE",
+      "ET-SW"
+    ]
+  },
+  {
+    "id": "ARBA",
+    "name": "EPSS Arba Minch Hub",
+    "region_id": "ET-SE"
+  }
+]

@@ -1,0 +1,17 @@
+# elmis_consumption_forecast: sibling of stockout_forecast on the eLMIS v2 historical lane
+# (OpenLMIS source family, standalone package).
+name: elmis_consumption_forecast
+version: v2
+kind: forecaster
+deployment_kind: batch
+engine: classwise-portfolio
+provenance: holt_damped_numpy
+description: >-
+  Forecast-contract v2 (docs/pct-forecast-contract.md): one-month-ahead demand per facility x
+  tracer product from bi_supply.mart_pct_demand_month (adjusted_demand; gaps kept as gaps;
+  censored months never scored). Six comparators on an expanding-window fold ledger, method
+  selected per demand class, empirical P10/P50/P90. Emits the flat forecast schema with the
+  contract keys in attrs; training exposes metrics + evaluation tables that the runner logs
+  inside the registered MLflow run. Governed: facility codes are archive identities.
+# No actuals block: consumption truth aligns by calendar month, not by the projection
+# year/week the flat schema stores (same limitation stockout_forecast records).

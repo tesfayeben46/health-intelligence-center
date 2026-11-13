@@ -1,0 +1,8 @@
+id: admin/alerts
+title: Alert Routing
+ordering: 30
+widgets:
+- id: adm-alerts-routing
+  col_span: 6
+  row_span: 1
+  ordering: 13

@@ -1,0 +1,88 @@
+name: Provision + full deploy (from bare, ansible)
+
+# From-bare bring-up: hydrates the artifacts that are not in git (secrets and source dumps)
+# into the checkout, installs k3s (and optionally the GPU stack) on the inventory's hosts,
+# deploys the Helm chart and runs the full seed. Manual dispatch only, because it is
+# destructive: it installs system packages and k3s and re-seeds. The everyday push path is
+# `deploy.yml`. For single-node the runner is the target (local connection, no SSH); the
+# fleet path reaches the agents over SSH with secrets.NHDW_SSH_KEY.
+
+on:
+  workflow_dispatch:
+    inputs:
+      inventory:
+        description: 'Inventory to use'
+        type: choice
+        options: [single-node, fleet]
+        default: single-node
+      run_seed:
+        description: 'Run the full data + app/security seed after deploy'
+        type: boolean
+        default: true
+      fresh_volumes:
+        description: 'Cold boot: delete the namespace PVCs first so postgres re-runs its init SQL. Destroys all data. Requires run_seed.'
+        type: boolean
+        default: false
+
+concurrency:
+  # One group for every workflow that mutates the cluster. Provisioning and a
+  # redeploy both drive the same release; running them at once races two
+  # upgrades and can leave the release stuck mid-transaction. Queue rather than
+  # cancel: an interrupted deploy is worse than a slow one.
+  group: nhdw-cluster
+  cancel-in-progress: false
+
+permissions:
+  contents: read          # GITHUB_TOKEN reads the data-release assets in hydrate-data.sh
+
+jobs:
+  provision:
+    runs-on: [self-hosted, nhdw-control]
+    steps:
+      - uses: actions/checkout@v4
+
+      # What a fresh clone lacks: secrets.yaml (from an encrypted Actions secret) and the
+      # source .bak dumps (from the private data release). Fails closed if secrets are missing.
+      - name: Hydrate not-in-git artifacts (secrets + source dumps)
+        env:
+          NHDW_SECRETS_YAML_B64: ${{ secrets.NHDW_SECRETS_YAML }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash bundle/scripts/hydrate-data.sh
+
+      - name: Install ansible-core + the collections the roles use
+        run: |
+          pip install --user --break-system-packages 'ansible-core>=2.16'
+          # ansible-core ships only ansible.builtin; the provisioning roles use
+          # community.general (modprobe) and ansible.posix (sysctl). Without
+          # these the playbook dies on its first real task.
+          # explicit path: pip --user installs into ~/.local/bin, which is not
+          # on the runner's PATH (the playbook step below calls it the same way)
+          ~/.local/bin/ansible-galaxy collection install -r 1_infrastructure/ansible/requirements.yml
+
+      # Only the fleet path needs SSH to the agents; single-node runs on the runner host itself.
+      - name: Load SSH key (fleet only)
+        if: ${{ github.event.inputs.inventory == 'fleet' }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.NHDW_SSH_KEY }}" > ~/.ssh/nhdw_deploy
+          chmod 600 ~/.ssh/nhdw_deploy
+
+      - name: ansible-playbook site.yml
+        working-directory: 1_infrastructure/ansible
+        env:
+          ANSIBLE_HOST_KEY_CHECKING: 'False'
+          RUN_SEED: ${{ github.event.inputs.run_seed }}
+          FRESH_VOLUMES: ${{ github.event.inputs.fresh_volumes }}
+          INV_CHOICE: ${{ github.event.inputs.inventory }}
+        run: |
+          # Map the friendly choice to the actual inventory file (dir is inventory/, and the
+          # fleet inventory ships as an .example so it must be filled in per site).
+          case "$INV_CHOICE" in
+            fleet)      INV=inventory/fleet.example.yml; KEY=(--private-key ~/.ssh/nhdw_deploy) ;;
+            *)          INV=inventory/single-node.yml;   KEY=() ;;
+          esac
+          ~/.local/bin/ansible-playbook \
+            -i "$INV" "${KEY[@]}" \
+            --extra-vars "nhdw_run_seed=${RUN_SEED:-true}" \
+            --extra-vars "nhdw_fresh_volumes=${FRESH_VOLUMES:-false}" \
+            site.yml

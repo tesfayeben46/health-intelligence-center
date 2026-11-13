@@ -1,0 +1,324 @@
+[
+  {
+    "id": "VAC-BCG",
+    "programme": "EPI",
+    "name": "BCG vaccine",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 20,
+    "supplier": "GAVI",
+    "enables": "BCG"
+  },
+  {
+    "id": "VAC-OPV",
+    "programme": "EPI",
+    "name": "OPV trivalent",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 20,
+    "supplier": "GAVI"
+  },
+  {
+    "id": "VAC-IPV",
+    "programme": "EPI",
+    "name": "IPV (inactivated polio)",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 10,
+    "supplier": "GAVI"
+  },
+  {
+    "id": "VAC-PENTA",
+    "programme": "EPI",
+    "name": "Pentavalent DTwP-HepB-Hib",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 10,
+    "supplier": "GAVI",
+    "enables": "PENTA1"
+  },
+  {
+    "id": "VAC-PCV13",
+    "programme": "EPI",
+    "name": "PCV-13",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 1,
+    "supplier": "GAVI"
+  },
+  {
+    "id": "VAC-ROTA",
+    "programme": "EPI",
+    "name": "Rotavirus vaccine",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 1,
+    "supplier": "GAVI"
+  },
+  {
+    "id": "VAC-MR",
+    "programme": "EPI",
+    "name": "Measles-Rubella",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 10,
+    "supplier": "GAVI",
+    "enables": "MR1"
+  },
+  {
+    "id": "VAC-HPV",
+    "programme": "EPI",
+    "name": "HPV vaccine",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 1,
+    "supplier": "GAVI"
+  },
+  {
+    "id": "VAC-COVID",
+    "programme": "EPI",
+    "name": "COVID-19 vaccine",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 10,
+    "supplier": "COVAX"
+  },
+  {
+    "id": "VAC-TT",
+    "programme": "EPI",
+    "name": "Tetanus toxoid",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 10,
+    "supplier": "GAVI"
+  },
+  {
+    "id": "MN-OXYTOCIN",
+    "programme": "MNCH",
+    "name": "Oxytocin 10 IU/ml",
+    "ven": "V",
+    "form": "ampoule",
+    "pack_size": 10,
+    "supplier": "UNFPA",
+    "enables": "SBA"
+  },
+  {
+    "id": "MN-MGSO4",
+    "programme": "MNCH",
+    "name": "Magnesium sulphate 50%",
+    "ven": "V",
+    "form": "ampoule",
+    "pack_size": 10,
+    "supplier": "UNFPA"
+  },
+  {
+    "id": "MN-IRON-FOL",
+    "programme": "MNCH",
+    "name": "Iron-folate",
+    "ven": "E",
+    "form": "tablet",
+    "pack_size": 100,
+    "supplier": "UNICEF",
+    "enables": "ANC1"
+  },
+  {
+    "id": "HIV-TLD",
+    "programme": "HIV",
+    "name": "TLD · adult ART",
+    "ven": "V",
+    "form": "tablet",
+    "pack_size": 30,
+    "supplier": "PEPFAR",
+    "enables": "HIV-ART-CURR"
+  },
+  {
+    "id": "HIV-PAED",
+    "programme": "HIV",
+    "name": "Pediatric ART",
+    "ven": "V",
+    "form": "tablet",
+    "pack_size": 60,
+    "supplier": "PEPFAR"
+  },
+  {
+    "id": "HIV-RDT",
+    "programme": "HIV",
+    "name": "HIV RDT kit",
+    "ven": "V",
+    "form": "kit",
+    "pack_size": 100,
+    "supplier": "PEPFAR",
+    "enables": "HIV-TEST"
+  },
+  {
+    "id": "TB-RHZE",
+    "programme": "TB",
+    "name": "RHZE fixed-dose combo",
+    "ven": "V",
+    "form": "tablet",
+    "pack_size": 28,
+    "supplier": "GFATM",
+    "enables": "TB-TX-NEW"
+  },
+  {
+    "id": "TB-GENEXPERT",
+    "programme": "TB",
+    "name": "GeneXpert cartridge",
+    "ven": "V",
+    "form": "cart",
+    "pack_size": 1,
+    "supplier": "GFATM",
+    "enables": "TB-BACT"
+  },
+  {
+    "id": "TB-ISO",
+    "programme": "TB",
+    "name": "Isoniazid 300mg",
+    "ven": "E",
+    "form": "tablet",
+    "pack_size": 100,
+    "supplier": "GFATM"
+  },
+  {
+    "id": "MAL-AL",
+    "programme": "MALARIA",
+    "name": "Artemether-Lumefantrine",
+    "ven": "V",
+    "form": "tablet",
+    "pack_size": 24,
+    "supplier": "GFATM",
+    "enables": "MAL-TX-AL"
+  },
+  {
+    "id": "MAL-RDT",
+    "programme": "MALARIA",
+    "name": "Malaria RDT pf/pv",
+    "ven": "V",
+    "form": "kit",
+    "pack_size": 25,
+    "supplier": "GFATM",
+    "enables": "MAL-RDT"
+  },
+  {
+    "id": "MAL-LLIN",
+    "programme": "MALARIA",
+    "name": "LLIN bed net",
+    "ven": "E",
+    "form": "net",
+    "pack_size": 1,
+    "supplier": "GFATM"
+  },
+  {
+    "id": "FP-IMPLANON",
+    "programme": "FP",
+    "name": "Implanon NXT",
+    "ven": "E",
+    "form": "implant",
+    "pack_size": 1,
+    "supplier": "UNFPA",
+    "enables": "FP-IMPL"
+  },
+  {
+    "id": "FP-DEPO",
+    "programme": "FP",
+    "name": "Depo-Provera",
+    "ven": "E",
+    "form": "vial",
+    "pack_size": 1,
+    "supplier": "UNFPA",
+    "enables": "FP-DEPO"
+  },
+  {
+    "id": "FP-COC",
+    "programme": "FP",
+    "name": "Combined oral contracept.",
+    "ven": "E",
+    "form": "cycle",
+    "pack_size": 21,
+    "supplier": "UNFPA"
+  },
+  {
+    "id": "NCD-AMLOD",
+    "programme": "NCD",
+    "name": "Amlodipine 5mg",
+    "ven": "E",
+    "form": "tablet",
+    "pack_size": 30,
+    "supplier": "EPSS",
+    "enables": "HTN-TX"
+  },
+  {
+    "id": "NCD-INSULIN",
+    "programme": "NCD",
+    "name": "Insulin · regular 100 IU",
+    "ven": "V",
+    "form": "vial",
+    "pack_size": 1,
+    "supplier": "EPSS"
+  },
+  {
+    "id": "NCD-METFORMIN",
+    "programme": "NCD",
+    "name": "Metformin 500mg",
+    "ven": "E",
+    "form": "tablet",
+    "pack_size": 100,
+    "supplier": "EPSS"
+  },
+  {
+    "id": "NCD-LOSARTAN",
+    "programme": "NCD",
+    "name": "Losartan 50mg",
+    "ven": "E",
+    "form": "tablet",
+    "pack_size": 30,
+    "supplier": "EPSS",
+    "enables": "HTN-TX"
+  },
+  {
+    "id": "NT-RUTF",
+    "programme": "NUTRITION",
+    "name": "RUTF (ready-to-use)",
+    "ven": "V",
+    "form": "sachet",
+    "pack_size": 1,
+    "supplier": "UNICEF",
+    "enables": "NUT-RUTF"
+  },
+  {
+    "id": "NT-FBF",
+    "programme": "NUTRITION",
+    "name": "Fortified blended food",
+    "ven": "E",
+    "form": "bag",
+    "pack_size": 1,
+    "supplier": "WFP"
+  },
+  {
+    "id": "NT-ORS",
+    "programme": "NUTRITION",
+    "name": "ORS sachet",
+    "ven": "V",
+    "form": "sachet",
+    "pack_size": 1,
+    "supplier": "UNICEF"
+  },
+  {
+    "id": "GEN-AMOX",
+    "programme": "GENERAL",
+    "name": "Amoxicillin 250 DT",
+    "ven": "V",
+    "form": "tablet",
+    "pack_size": 100,
+    "supplier": "EPSS"
+  },
+  {
+    "id": "GEN-PARA",
+    "programme": "GENERAL",
+    "name": "Paracetamol 500mg",
+    "ven": "E",
+    "form": "tablet",
+    "pack_size": 100,
+    "supplier": "EPSS"
+  }
+]

@@ -1,0 +1,16 @@
+# elmis_consumption_forecast v2: forecast contract parameters (docs/pct-forecast-contract.md).
+# Comparator settings (fixed; the fold ledger, not per-series fitting, decides which method serves each class)
+alpha: 0.5            # damped Holt level smoothing
+beta: 0.2             # damped Holt trend smoothing
+phi: 0.85             # damped Holt damping
+croston_alpha: 0.1    # Croston / SBA smoothing
+tsb_alpha: 0.1        # TSB demand-size smoothing
+tsb_beta: 0.1         # TSB demand-probability smoothing
+# Evaluation contract
+min_train_months: 6   # eligibility: observed months up to the origin
+n_tuning_folds: 5     # expanding-window tuning origins before the holdout
+min_class_points: 30  # below this a class borrows the pooled error quantiles
+# Predeclared champion rule
+max_abs_bias_pct: 10.0
+coverage_min: 70.0    # holdout P10-P90 coverage band, percent
+coverage_max: 90.0

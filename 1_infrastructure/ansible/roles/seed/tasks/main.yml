@@ -1,0 +1,143 @@
+---
+# Seed the running cluster. Calls the bundle seed scripts unchanged, in bootstrap.sh's step-7
+# order; no seeding logic is reimplemented here. Only the external source replicas are seeded;
+# the pipeline populates everything downstream; app and security state (not derivable from the
+# pipeline) comes from the seed-pack. The seed-pack compatibility gate runs inside
+# seed-app-security.sh and aborts on a system/pack mismatch.
+#
+# Keep in step with bundle/scripts/bootstrap.sh steps 6-7.x: a seed step added there must be
+# added here too.
+
+# The in-cluster ingestors reach the host-published source ports through host.k3d.internal.
+# This task only verifies (orchestration does not mutate system config): if the name does not
+# resolve, the cluster is malformed and the boot stops.
+- name: Verify host.k3d.internal RESOLVES from inside the cluster (ingestors need it)
+  # k3d injects this alias into CoreDNS NodeHosts; on k3s the provision role supplies it
+  # through a coredns-custom server block. Test the outcome rather than one mechanism:
+  # resolve the name from a pod.
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      kubectl -n {{ nhdw_namespace }} run dns-probe-$$ --rm -i --restart=Never \
+        --image=python:3.12-alpine --timeout=90s -- \
+        python3 -c "import socket; print(socket.gethostbyname('host.k3d.internal'))" \
+        | grep -E '^[0-9]+\.'
+    executable: /bin/bash
+  changed_when: false
+
+# The country profile reaches the seed scripts only through this environment block:
+# sources-up.sh consults the profile to decide whether packed dumps may be trusted, and
+# the synthesizers stamp it into their markers. Without it the seed falls back to the
+# default country.
+- name: Bring up the external source replicas (dhis2/openmrs/hcmis/mbrana/mfr/fayda)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/sources-up.sh up"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  environment:
+    NHDW_PROFILE: "{{ nhdw_profile | default('et-v3') }}"
+    NHDW_PROFILE_DIR: "{{ nhdw_profile_dir | default('/opt/nhdw-profiles') }}"
+  changed_when: true
+
+- name: DATA seed, source replicas + the real pipeline (sources -> lake -> CH -> vault -> marts)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/seed-realistic.sh"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  environment:
+    NHDW_PROFILE: "{{ nhdw_profile | default('et-v3') }}"
+    NHDW_PROFILE_DIR: "{{ nhdw_profile_dir | default('/opt/nhdw-profiles') }}"
+  changed_when: true
+
+- name: APP/SECURITY seed, ops DB, Keycloak, roles, OPA, program-demo (seed-pack, compat-gated)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/seed-app-security.sh"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  environment:
+    NHDW_PROFILE: "{{ nhdw_profile | default('et-v3') }}"
+    NHDW_PROFILE_DIR: "{{ nhdw_profile_dir | default('/opt/nhdw-profiles') }}"
+  changed_when: true
+
+# Host side of the console's country-profile switch: the gateway drops a request into
+# /opt/nhdw-state/swap-requests and this service runs the same scripts as the tasks above,
+# reporting stages back, so a provisioned host can switch countries from the console.
+# It runs from /opt/nhdw-runtime, a copy of this tree, not from nhdw_repo_root: on the CI
+# runner that root is the runner work dir, which every checkout cleans (deploy.yml keeps
+# the copy in step).
+- name: Sync the host runtime copy the worker runs from  # noqa: command-instead-of-module
+  ansible.builtin.command: >-
+    rsync -a --delete --exclude .git --exclude 0_external/llm/models
+    {{ nhdw_repo_root }}/ /opt/nhdw-runtime/
+  changed_when: true
+  become: true
+
+- name: Own the runtime copy as the worker's user
+  ansible.builtin.file:
+    path: /opt/nhdw-runtime
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    recurse: true
+  become: true
+
+- name: Install the profile-swap worker unit
+  ansible.builtin.copy:
+    src: "{{ nhdw_repo_root }}/bundle/systemd/nhdw-profile-swap.service"
+    dest: /etc/systemd/system/nhdw-profile-swap.service
+    remote_src: true
+    mode: "0644"
+  become: true
+
+- name: Run the profile-swap worker as the provisioning user (owner of /opt/nhdw-runtime)
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/system/nhdw-profile-swap.service
+    regexp: '^User='
+    line: "User={{ ansible_user_id }}"
+  become: true
+
+- name: Enable + start the profile-swap worker
+  ansible.builtin.systemd:
+    name: nhdw-profile-swap
+    enabled: true
+    state: restarted
+    daemon_reload: true
+  become: true
+
+- name: Regenerate + load the OPA policy from the permission store (opa test gated, fail-closed)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/regen-opa-policy.sh"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  changed_when: true
+
+# The gateway's OPA self-test needs the catalog the app seed just wrote. Restart it and gate
+# the gateway-driven seeds below on it being Ready, otherwise they race the restart.
+- name: Restart the gateway so its OPA self-test picks up the seeded catalog
+  ansible.builtin.command: "kubectl -n {{ nhdw_namespace }} rollout restart deploy/nhdw-gateway"
+  changed_when: true
+
+- name: Wait for the gateway to be Ready after the restart
+  ansible.builtin.command: "kubectl -n {{ nhdw_namespace }} rollout status deploy/nhdw-gateway --timeout=180s"
+  changed_when: false
+
+- name: Docs seed (docs/*.md -> object store nhdw-docs, served via /gw/docs)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/seed-docs.sh"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  changed_when: true
+
+- name: ML seed (seed-pack/app/ml -> MLflow registry -> ops_ml.ml_predictions)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/seed-ml.sh"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  changed_when: true
+
+- name: Projects + datasets seed (real /api/projects + /api/datasets)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/seed-projects.sh"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  changed_when: true
+
+- name: Resource-request seed (real /api/workspace/resource-request + decide)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/seed-resource-requests.sh"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  changed_when: true
+
+- name: Model-projects seed (platform models -> real adopt-model API)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/seed-model-projects.sh"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  changed_when: true
+
+- name: Graduation seed (seed-pack/app/project-review -> real submit/approve/reject API)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/seed-graduation.sh"
+  args: { chdir: "{{ nhdw_repo_root }}" }
+  changed_when: true

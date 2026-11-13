@@ -1,0 +1,10 @@
+<!--
+  Bind the HTTP + TCP interfaces to all IPv4 + IPv6 addresses inside the
+  container. Required for peers on nhdw_net (dbt, CloudBeaver, Airflow) to
+  connect via the container hostname. The compose port mapping still pins
+  the host-side bind to 127.0.0.1, so this doesn't expose CH publicly.
+-->
+<clickhouse>
+    <listen_host>0.0.0.0</listen_host>
+    <listen_try>1</listen_try>
+</clickhouse>

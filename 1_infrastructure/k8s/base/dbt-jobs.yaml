@@ -1,0 +1,292 @@
+# Pipeline Jobs, applied one at a time by bundle/scripts/seed-realistic.sh
+# through k8s/jobs/. Sequence: seaweedfs-init (base/seaweedfs.yaml) -> ingestors ->
+# ch-raw-views -> processed-zone -> dbt-staging -> bridge-sync -> dbt-vault ->
+# dbt-marts -> mdm-matcher -> publish-datasets.
+# (dbt-staging builds the ClickHouse views; the bridge mirrors them to PG landing.)
+#
+# Each Job is independent and observable in `kubectl get jobs`.
+
+apiVersion: batch/v1
+kind: Job
+metadata: { name: ch-raw-views, namespace: nhdw, labels: { app: ch-raw-views, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 1800
+  template:
+    metadata: { labels: { app: ch-raw-views, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: apply-raw-views
+          image: nhdw-registry:5500/nhdw/staging-dbt:1.0.0
+          imagePullPolicy: Always
+          command: ["python", "/dbt/scripts/apply_raw_views.py"]
+          env:
+            - { name: CH_HOST, value: "clickhouse.nhdw.svc.cluster.local" }
+            - { name: CH_PORT, value: "8123" }
+            - { name: CH_USER, value: "nhdw" }
+            - name: CH_PASSWORD
+              valueFrom: { secretKeyRef: { name: clickhouse-secrets, key: PASSWORD } }
+
+# processed-zone · PII-stripped copy of the landing zone
+# build_processed_zone.py (staging image): enumerates populated nhdw-raw
+# tables through ClickHouse, drops the columns named in pii_policy.yaml
+# (+ _dlt bookkeeping) and rewrites each table server-side into
+# nhdw-processed, the ML raw-access surface. Unclassified tables are
+# skipped with a warning (fail-safe). The initContainer wipes the bucket first:
+# the zone is regenerable, so tables that no longer exist do not linger.
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: processed-zone, namespace: nhdw, labels: { app: processed-zone, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 1800
+  template:
+    metadata: { labels: { app: processed-zone, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      initContainers:
+        - name: wipe-zone
+          image: minio/mc:RELEASE.2025-04-08T15-39-49Z
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              set -eu
+              mc alias set local "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" \
+                  "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null
+              mc rm -r --force local/nhdw-processed >/dev/null 2>&1 || true
+              mc mb --ignore-existing local/nhdw-processed >/dev/null
+              echo "nhdw-processed wiped (regenerable zone: clean slate)"
+          env:
+            - { name: MINIO_ROOT_USER,     valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER     } } }
+            - { name: MINIO_ROOT_PASSWORD, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+      containers:
+        - name: build-processed-zone
+          image: nhdw-registry:5500/nhdw/staging-dbt:1.0.0
+          imagePullPolicy: Always
+          command: ["python", "/dbt/scripts/build_processed_zone.py"]
+          env:
+            - { name: LAKE_BASE, value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # required: the code default in build_processed_zone.py is a legacy host
+            - { name: CH_HOST, value: "clickhouse.nhdw.svc.cluster.local" }
+            - { name: CH_PORT, value: "8123" }
+            - { name: CH_USER, value: "nhdw" }
+            - name: CH_PASSWORD
+              valueFrom: { secretKeyRef: { name: clickhouse-secrets, key: PASSWORD } }
+
+# bridge · CH staging -> PG nhdw_landing
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: bridge-sync, namespace: nhdw, labels: { app: bridge-sync, tier: pipeline } }
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata: { labels: { app: bridge-sync, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: bridge
+          image: nhdw-registry:5500/nhdw/vault-bridge:1.0.0
+          imagePullPolicy: Always
+          env:
+            - { name: CH_HOST,     value: "clickhouse.nhdw.svc.cluster.local" }
+            - { name: CH_PORT,     value: "9000" }
+            - { name: CH_USER,     value: "nhdw" }
+            - { name: CH_PASSWORD, valueFrom: { secretKeyRef: { name: clickhouse-secrets,      key: PASSWORD } } }
+            - { name: CH_DATABASE, value: "nhdw_staging" }
+            - { name: PG_HOST,     value: "postgres-vault.nhdw.svc.cluster.local" }
+            - { name: PG_PORT,     value: "5432" }
+            - { name: PG_USER,     value: "landing_writer" }
+            - { name: PG_PASSWORD, valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: LANDING_WRITER_PASSWORD } } }
+            - { name: PG_DATABASE, value: "nhdw_vault" }
+            - { name: PG_SCHEMA,   value: "nhdw_landing" }
+            # best-effort catalog lineage (bridge/lineage.py): both optional; without
+            # them the emitter is a no-op
+            - { name: OM_LINEAGE_API, value: "http://openmetadata.nhdw.svc.cluster.local:8585/api" }
+            - { name: OM_LINEAGE_JWT, valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: INGESTION_BOT_TOKEN, optional: true } } }
+
+# dbt-staging · ClickHouse views
+# The staging image's entrypoint.py wraps dbt: after `dbt build` it uploads
+# target/{manifest,run_results,catalog}.json to the object store under
+# nhdw-artifacts/dbt/staging/ and runs `dbt docs generate` into the shared
+# dbt-docs-content PVC (DBT_DOCS_OUT), so the dbt-docs surface serves staging
+# lineage. Same wrapper, prefixes and PVC as dbt-marts.
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: dbt-staging, namespace: nhdw, labels: { app: dbt-staging, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata: { labels: { app: dbt-staging, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: dbt
+          image: nhdw-registry:5500/nhdw/staging-dbt:1.0.0
+          imagePullPolicy: Always
+          # ENTRYPOINT is entrypoint.py; these args forward to `dbt build`, then
+          # the wrapper uploads artifacts and generates docs (see section note).
+          args: [ "build", "--target", "dev" ]
+          env:
+            - { name: CH_HOST,     value: "clickhouse.nhdw.svc.cluster.local" }
+            - { name: CH_PORT,     value: "8123" }
+            - { name: CH_USER,     value: "nhdw" }
+            - { name: CH_PASSWORD, valueFrom: { secretKeyRef: { name: clickhouse-secrets, key: PASSWORD } } }
+            - { name: CH_SCHEMA,   value: "nhdw_staging" }
+            - { name: DBT_PROJECT,            value: "staging" }
+            - { name: MINIO_ENDPOINT,         value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            - { name: MINIO_ACCESS_KEY,       valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER     } } }
+            - { name: MINIO_SECRET_KEY,       valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_ARTIFACTS_BUCKET, value: "nhdw-artifacts" }
+            # dbt docs generate into the shared dbt-docs-content PVC.
+            - { name: DBT_DOCS_OUT,           value: "/dbt-docs-out" }
+          volumeMounts:
+            - { name: dbt-docs-out, mountPath: /dbt-docs-out }
+      volumes:
+        - name: dbt-docs-out
+          persistentVolumeClaim: { claimName: dbt-docs-content }
+
+# dbt-vault · postgres incrementals (full-refresh on cold boot)
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: dbt-vault, namespace: nhdw, labels: { app: dbt-vault, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  template:
+    metadata: { labels: { app: dbt-vault, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: dbt
+          image: nhdw-registry:5500/nhdw/vault-dbt:1.0.0
+          imagePullPolicy: Always
+          # History-preserving conditional refresh: the vault is insert-only
+          # (append strategy), so a cold schema needs one --full-refresh pass to
+          # lay the hub/link/sat boundaries, but every warm re-run must be plain
+          # incremental. A --full-refresh would rebuild from the current source
+          # snapshot and destroy the accumulated satellite history (reducing the
+          # vault to SCD-1). The Job decides from live schema state.
+          command: [ "sh", "-c" ]
+          args:
+            - |
+              N=$(python3 -c "import os,psycopg2;c=psycopg2.connect(host=os.environ['PG_HOST'],port=os.environ['PG_PORT'],dbname=os.environ['PG_DATABASE'],user=os.environ['PG_USER'],password=os.environ['PG_PASSWORD']);k=c.cursor();k.execute(\"select count(*) from information_schema.tables where table_schema='nhdw_vault_raw'\");print(k.fetchone()[0])")
+              if [ "$N" = "0" ]; then echo "[refresh] cold vault (0 raw tables) -> --full-refresh"; FLAG=--full-refresh; else echo "[refresh] warm vault ($N raw tables) -> incremental (history preserved)"; FLAG=; fi
+              # ANALYZE first: the bridge DROP+CREATEs the landing tables every
+              # sync, so they arrive without statistics and the planner then picks
+              # nested-loop plans that turn the spine builds into hour-long
+              # queries (seen at about 650k dataValues). Cheap (<1min).
+              python3 -c "import os,psycopg2;c=psycopg2.connect(host=os.environ['PG_HOST'],port=os.environ['PG_PORT'],dbname=os.environ['PG_DATABASE'],user=os.environ['PG_USER'],password=os.environ['PG_PASSWORD']);c.autocommit=True;c.cursor().execute('ANALYZE');print('[analyze] landing/staging statistics refreshed')"
+              exec python3 /dbt/entrypoint.py build $FLAG --target dev
+          env:
+            - { name: PG_HOST,     value: "postgres-vault.nhdw.svc.cluster.local" }
+            - { name: PG_PORT,     value: "5432" }
+            - { name: PG_USER,     value: "vault_writer" }
+            - { name: PG_PASSWORD, valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: VAULT_WRITER_PASSWORD } } }
+            - { name: PG_DATABASE, value: "nhdw_vault" }
+            # entrypoint.py uploads target/ artifacts to nhdw-artifacts/dbt/vault/
+            # and runs `dbt docs generate` into the shared dbt-docs-content PVC.
+            - { name: DBT_PROJECT,            value: "vault" }
+            - { name: MINIO_ENDPOINT,         value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            - { name: MINIO_ACCESS_KEY,       valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER     } } }
+            - { name: MINIO_SECRET_KEY,       valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_ARTIFACTS_BUCKET, value: "nhdw-artifacts" }
+            - { name: DBT_DOCS_OUT,           value: "/dbt-docs-out" }
+          volumeMounts:
+            - { name: dbt-docs-out, mountPath: /dbt-docs-out }
+      volumes:
+        - name: dbt-docs-out
+          persistentVolumeClaim: { claimName: dbt-docs-content }
+
+# dbt-marts · bi_* schemas
+# Also uploads target/{manifest,run_results,catalog}.json to the object store
+# under nhdw-artifacts/dbt/marts/ on each run (entrypoint.py wraps dbt), so the
+# gateway's /api/dq/* endpoints serve current lineage data.
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: dbt-marts, namespace: nhdw, labels: { app: dbt-marts, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata: { labels: { app: dbt-marts, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: dbt
+          image: nhdw-registry:5500/nhdw/marts-dbt:1.0.0
+          imagePullPolicy: Always
+          # Same conditional refresh as dbt-vault. Marts are table-materialized
+          # (they rebuild from the current vault, reading v_*_current for the
+          # latest sat version), so here it mainly keeps the two stages
+          # symmetric and safe if a mart becomes incremental. entrypoint.py
+          # (target/ upload to the object store) still runs, through exec.
+          command: [ "sh", "-c" ]
+          args:
+            - |
+              N=$(python3 -c "import os,psycopg2;c=psycopg2.connect(host=os.environ['PG_HOST'],port=os.environ['PG_PORT'],dbname=os.environ['PG_DATABASE'],user=os.environ['PG_USER'],password=os.environ['PG_PASSWORD']);k=c.cursor();k.execute(\"select count(*) from information_schema.tables where table_schema='bi_hmis'\");print(k.fetchone()[0])")
+              if [ "$N" = "0" ]; then echo "[refresh] cold marts -> --full-refresh"; FLAG=--full-refresh; else echo "[refresh] warm marts -> incremental"; FLAG=; fi
+              # ANALYZE first: a vault full-refresh recreates every hub/link/sat
+              # without statistics; the planner then nested-loops the BV-spine
+              # joins and mart_hmis_indicator_coverage runs for hours instead of
+              # minutes (seen at about 650k dataValues). Cheap (<1min).
+              python3 -c "import os,psycopg2;c=psycopg2.connect(host=os.environ['PG_HOST'],port=os.environ['PG_PORT'],dbname=os.environ['PG_DATABASE'],user=os.environ['PG_USER'],password=os.environ['PG_PASSWORD']);c.autocommit=True;c.cursor().execute('ANALYZE');print('[analyze] vault statistics refreshed')"
+              exec python3 /dbt/entrypoint.py build $FLAG --target dev
+          env:
+            - { name: PG_HOST,     value: "postgres-vault.nhdw.svc.cluster.local" }
+            - { name: PG_PORT,     value: "5432" }
+            - { name: PG_USER,     value: "vault_writer" }
+            - { name: PG_PASSWORD, valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: VAULT_WRITER_PASSWORD } } }
+            - { name: PG_DATABASE, value: "nhdw_vault" }
+            - { name: DBT_PROJECT,            value: "marts" }
+            - { name: MINIO_ENDPOINT,         value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            - { name: MINIO_ACCESS_KEY,       valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER     } } }
+            - { name: MINIO_SECRET_KEY,       valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_ARTIFACTS_BUCKET, value: "nhdw-artifacts" }
+            # dbt docs generate into the shared dbt-docs-content PVC.
+            - { name: DBT_DOCS_OUT,           value: "/dbt-docs-out" }
+          volumeMounts:
+            - { name: dbt-docs-out, mountPath: /dbt-docs-out }
+      volumes:
+        - name: dbt-docs-out
+          persistentVolumeClaim: { claimName: dbt-docs-content }
+
+# publish-datasets · Open-Data catalogue -> nhdw-static
+# Cuts each bi_public.* dataset into a CSV + catalogue.json manifest in the
+# anonymous nhdw-static bucket (publish_public_datasets.py, baked in the marts
+# image). Runs after dbt-marts so the marts exist. Re-derivable, so never packed.
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: publish-datasets, namespace: nhdw, labels: { app: publish-datasets, tier: pipeline } }
+spec:
+  backoffLimit: 2
+  ttlSecondsAfterFinished: 600
+  template:
+    metadata: { labels: { app: publish-datasets, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: publish
+          image: nhdw-registry:5500/nhdw/marts-dbt:1.0.0
+          imagePullPolicy: IfNotPresent
+          command: [ "python3", "/dbt/publish_public_datasets.py" ]
+          env:
+            - { name: PG_HOST,     value: "postgres-vault.nhdw.svc.cluster.local" }
+            - { name: PG_PORT,     value: "5432" }
+            - { name: PG_USER,     value: "vault_writer" }
+            - { name: PG_PASSWORD, valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: VAULT_WRITER_PASSWORD } } }
+            - { name: PG_DATABASE, value: "nhdw_vault" }
+            - { name: MINIO_ENDPOINT,        value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # nhdw-static is written to SeaweedFS
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }                   # botocore#3755
+            - { name: MINIO_ACCESS_KEY,      valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER     } } }
+            - { name: MINIO_SECRET_KEY,      valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_PUBLIC_ENDPOINT, value: "https://minio.127.0.0.1.nip.io" }

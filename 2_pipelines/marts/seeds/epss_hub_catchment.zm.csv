@@ -1,0 +1,11 @@
+hub_id,hub_name,region_id,weight
+LSK,Lusaka Regional Hub,10,0.2206
+LSK,Lusaka Regional Hub,80,0.2118
+LSK,Lusaka Regional Hub,90,0.2019
+LSK,Lusaka Regional Hub,30,0.1882
+LSK,Lusaka Regional Hub,50,0.1776
+NDL,Ndola Regional Hub,20,0.317
+NDL,Ndola Regional Hub,70,0.2055
+NDL,Ndola Regional Hub,40,0.1938
+NDL,Ndola Regional Hub,60,0.1722
+NDL,Ndola Regional Hub,91,0.1115

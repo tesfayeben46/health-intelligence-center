@@ -1,0 +1,157 @@
+/*
+   NHDW login: full custom theme (parent=base, no PatternFly). Styles the theme's
+   template.ftl / login.ftl markup. Deep-navy backdrop over the mountain ridge,
+   a white FMoH emblem, and an elevated white sign-in card. Georgia serif
+   display + system sans body (the faces the dashboards fall back to).
+   Offline-first: the background + logo are theme resources.
+   */
+
+:root {
+  --ground-0:#03081a; --ground-1:#0a1428;
+  --ink:#101725; --ink-2:#3a4353; --ink-3:#697184; --ink-4:#9aa1ad;
+  --line:#e6e9ef; --line-2:#d5dae3;
+  --navy:#16315c; --navy-2:#274d84; --navy-deep:#0e2244; --navy-soft:#37568f;
+  --accent:#4a86e0;
+  --card:#ffffff; --paper:#f6f8fc;
+  --good:#1f7a4f; --alert:#b6293a; --alert-50:#fdecee;
+  --serif:Georgia,'Times New Roman',serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+}
+* { box-sizing:border-box; }
+html, body { margin:0; padding:0; height:100%; }
+
+body.nhdw-login {
+  min-height:100vh;
+  font-family:var(--sans); color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(115% 85% at 50% 0%, rgba(15,32,68,.45) 0%, rgba(3,7,17,0) 55%),
+    linear-gradient(180deg, rgba(4,10,24,.93) 0%, rgba(6,14,32,.86) 34%,
+                            rgba(5,11,26,.80) 62%, rgba(2,6,16,.97) 100%),
+    url('../img/bg-mountains.jpg');
+  background-size:auto, auto, cover;
+  background-position:center top, center top, center bottom;
+  background-repeat:no-repeat; background-attachment:fixed;
+  background-color:var(--ground-0);
+}
+
+.stage {
+  min-height:100vh; width:100%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:1.7rem; padding:3rem 1.25rem;
+}
+
+/* Brand block above the card: white emblem on the deep-navy ground */
+.brand { text-align:center; display:flex; flex-direction:column; align-items:center; gap:.5rem; }
+.brand-wordmark {
+  font-family:var(--serif); font-weight:600; font-size:2.4rem; line-height:1;
+  letter-spacing:.02em; color:#fff; text-shadow:0 1px 20px rgba(0,0,0,.55);
+}
+.brand-logo { display:block; width:190px; height:auto; filter:drop-shadow(0 1px 18px rgba(0,0,0,.5)); }
+.brand-sub {
+  font-size:.7rem; letter-spacing:.24em; text-transform:uppercase;
+  color:rgba(215,225,245,.6); font-weight:600;
+}
+
+/* The card: elevated, cool-white, layered depth */
+.card {
+  width:100%; max-width:418px;
+  background:linear-gradient(180deg,#ffffff 0%,#f8faff 100%);
+  border-radius:20px; border:1px solid rgba(20,34,68,.10);
+  box-shadow:
+    0 44px 100px rgba(2,6,18,.62),
+    0 16px 42px rgba(2,6,18,.42),
+    inset 0 1px 0 rgba(255,255,255,.9);
+  padding:2.25rem 2.2rem 2rem; position:relative; overflow:hidden;
+  animation:rise .55s cubic-bezier(.2,.7,.2,1) both;
+}
+.card::before {
+  content:''; position:absolute; inset:0 0 auto 0; height:4px;
+  background:linear-gradient(90deg, var(--accent) 0%, var(--navy-2) 55%, var(--navy) 100%);
+}
+@keyframes rise { from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;} }
+@media (prefers-reduced-motion:reduce){ .card{ animation:none; } }
+
+.card-head h1 {
+  font-family:var(--serif); font-weight:600; font-size:1.58rem; line-height:1.12;
+  letter-spacing:-.01em; color:var(--ink); margin:.15rem 0 .35rem;
+}
+.card-head .lead { font-size:.86rem; color:var(--ink-3); margin:0 0 1.5rem; }
+
+/* Server messages / errors */
+.alert {
+  display:flex; border-radius:11px; padding:.65rem .85rem; margin:0 0 1.15rem;
+  font-size:.85rem; line-height:1.35;
+  background:var(--alert-50); color:#8f1f2d; border:1px solid #f3c9ce;
+}
+.alert-success { background:#e8f5ee; color:#155e3b; border-color:#bfe3cd; }
+.alert-warning { background:#fbf1de; color:#8a5a12; border-color:#f0dcb0; }
+.field-error { color:var(--alert); font-size:.78rem; margin-top:.1rem; }
+
+/* Form */
+form { display:flex; flex-direction:column; gap:1.1rem; }
+.field { display:flex; flex-direction:column; gap:.42rem; }
+label { font-size:.79rem; font-weight:600; color:var(--ink-2); letter-spacing:.01em; }
+.control {
+  display:flex; align-items:center; background:#fff;
+  border:1px solid var(--line-2); border-radius:11px;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.control:focus-within { border-color:var(--navy-soft); box-shadow:0 0 0 3px rgba(55,86,143,.18); }
+.control input {
+  flex:1 1 auto; min-width:0; border:0; outline:0; background:transparent;
+  padding:.78rem .9rem; font:500 .95rem/1.2 var(--sans); color:var(--ink);
+}
+.control input::placeholder { color:var(--ink-4); font-weight:400; }
+.eye {
+  border:0; background:transparent; cursor:pointer; color:var(--ink-4);
+  padding:0 .75rem; display:flex; align-items:center; align-self:stretch;
+}
+.eye:hover { color:var(--navy-soft); }
+.eye svg { width:18px; height:18px; }
+
+/* Primary CTA: gradient navy with a navy glow */
+.btn-primary {
+  margin-top:.55rem; width:100%; border:0; cursor:pointer;
+  padding:.88rem 1rem; border-radius:12px;
+  background:linear-gradient(180deg, var(--navy-2) 0%, var(--navy) 100%);
+  color:#fff; font:600 .97rem var(--sans); letter-spacing:.02em;
+  box-shadow:0 10px 24px rgba(16,49,92,.45), inset 0 1px 0 rgba(255,255,255,.14);
+  transition:filter .15s ease, box-shadow .15s ease, transform .04s ease;
+}
+.btn-primary:hover { filter:brightness(1.09); box-shadow:0 12px 30px rgba(16,49,92,.55), inset 0 1px 0 rgba(255,255,255,.16); }
+.btn-primary:active { transform:translateY(1px); }
+
+/* "Or sign in with" divider + social buttons */
+.divider {
+  display:flex; align-items:center; gap:.85rem; margin:1.5rem 0 1.1rem; color:var(--ink-3);
+}
+.divider::before, .divider::after { content:''; height:1px; flex:1; background:var(--line); }
+.divider span { font-size:.72rem; font-weight:600; text-transform:uppercase; letter-spacing:.1em; }
+
+.social { display:flex; flex-direction:column; gap:.6rem; }
+.btn-social {
+  display:flex; align-items:center; justify-content:center; gap:.6rem;
+  width:100%; padding:.72rem 1rem; cursor:pointer; text-decoration:none;
+  background:#fff; border:1px solid var(--line-2); border-radius:11px;
+  font:500 .9rem var(--sans); color:var(--ink);
+  transition:border-color .15s ease, background .15s ease, box-shadow .15s ease;
+}
+.btn-social:hover { border-color:var(--navy-soft); background:var(--paper); box-shadow:0 3px 12px rgba(16,49,92,.10); }
+.social-badge {
+  width:22px; height:22px; border-radius:6px; display:grid; place-items:center; flex:0 0 auto;
+  background:linear-gradient(180deg, var(--navy-2), var(--navy)); color:#fff;
+  font:700 .72rem var(--sans); letter-spacing:.01em;
+}
+
+/* Footers */
+.card-foot {
+  margin-top:1.45rem; padding-top:1.05rem; border-top:1px solid var(--line);
+  text-align:center; font-size:.78rem; color:var(--ink-3);
+}
+.card-foot a { color:var(--navy-soft); font-weight:600; text-decoration:none; }
+.card-foot a:hover { text-decoration:underline; }
+.stage-foot { font-size:.72rem; letter-spacing:.05em; color:rgba(210,220,240,.5); text-align:center; }
+
+a { color:var(--navy-soft); }
+:focus-visible { outline:2px solid var(--navy-soft); outline-offset:2px; }

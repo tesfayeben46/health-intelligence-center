@@ -1,0 +1,13 @@
+# dlt provides: pipelines, incremental loading, filesystem destination (S3), Parquet writer.
+dlt[filesystem,parquet]==1.4.0
+
+# HTTP client for the Climate API.
+requests==2.32.3
+
+# Parquet engine. dlt pulls it in transitively; it is pinned so a dlt upgrade
+# cannot silently change pyarrow and the on-disk file format.
+pyarrow==17.0.0
+
+# dlt 1.4 still imports `pkg_resources` (removed from setuptools 76+). Hold
+# setuptools at a version that still ships it.
+setuptools<76

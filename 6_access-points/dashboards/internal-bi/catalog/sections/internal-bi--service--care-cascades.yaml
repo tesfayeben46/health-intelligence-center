@@ -1,0 +1,40 @@
+id: internal-bi/service/care-cascades
+page_id: internal-bi/service
+title: Care Cascades & Leakage
+description: "Where patients drop out along each programme's care pathway, and the regions and woredas where that leakage concentrates."
+ordering: 20
+columns: 12
+dense: true
+widgets:
+- id: sv-cascade-hiv
+  col_span: 3
+  row_span: 1
+  ordering: 0
+- id: sv-cascade-tb
+  col_span: 3
+  row_span: 1
+  ordering: 1
+- id: sv-cascade-mnch
+  col_span: 3
+  row_span: 1
+  ordering: 2
+- id: sv-cascade-ncd
+  col_span: 3
+  row_span: 1
+  ordering: 3
+- id: sv-continuity-mnch
+  col_span: 7
+  row_span: 3
+  ordering: 4
+- id: sv-dropoff-region
+  col_span: 5
+  row_span: 3
+  ordering: 5
+- id: sv-risk-woredas
+  col_span: 12
+  row_span: 2
+  ordering: 6
+- id: sv-zero-dose
+  col_span: 12
+  row_span: 3
+  ordering: 7

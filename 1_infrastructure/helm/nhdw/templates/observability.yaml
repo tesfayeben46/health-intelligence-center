@@ -1,0 +1,582 @@
+# Observability stack: Prometheus, Loki, Alertmanager and Promtail as plain
+# manifests (no kube-prometheus-stack). The config ConfigMaps (prometheus-config,
+# loki-config, promtail-config) are inline, so they ship with the chart, like
+# opa-config, trino-etc and trino-catalog. Their data blocks are copied verbatim
+# from the kustomize base; only metadata.namespace is templated, because kustomize
+# does not rewrite configMap data either.
+# Prometheus: single-replica metrics server that needs no external access.
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: prometheus, namespace: {{ .Values.namespace }}, labels: { app: prometheus, tier: observability } }
+---
+# Cluster-scoped read for kubernetes_sd_configs (pod discovery). Discovery is
+# filtered to the nhdw namespace in the scrape config; the API access itself is
+# cluster-scoped as the SD client requires.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: nhdw-prometheus, labels: { app: prometheus, tier: observability } }
+rules:
+  - apiGroups: [""]
+    resources: [nodes, nodes/metrics, services, endpoints, pods]
+    verbs: [get, list, watch]
+  - nonResourceURLs: ["/metrics"]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: nhdw-prometheus, labels: { app: prometheus, tier: observability } }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: nhdw-prometheus }
+subjects:
+  - { kind: ServiceAccount, name: prometheus, namespace: {{ .Values.namespace }} }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: prometheus-config, namespace: {{ .Values.namespace }}, labels: { app: prometheus, tier: observability } }
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 30s
+      scrape_timeout: 10s
+      evaluation_interval: 30s
+      external_labels:
+        cluster: nhdw-dev
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: ["alertmanager.nhdw.svc.cluster.local:9093"]
+
+    rule_files:
+      - /etc/prometheus/alerts.yml
+
+    scrape_configs:
+      # self + observability plane (these expose /metrics natively)
+      - job_name: prometheus
+        static_configs:
+          - targets: ["localhost:9090"]
+
+      - job_name: alertmanager
+        static_configs:
+          - targets: ["alertmanager.nhdw.svc.cluster.local:9093"]
+
+      - job_name: loki
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["loki.nhdw.svc.cluster.local:3100"]
+
+      - job_name: promtail
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["promtail.nhdw.svc.cluster.local:9080"]
+
+      # NHDW workloads. job_name == topology node id / health-widget key.
+      # nhdw-gateway: no /metrics yet (FastAPI has no instrumentator) -> shown
+      # `down` until the endpoint is added (docs/observability-integration.md).
+      - job_name: nhdw-gateway
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["nhdw-gateway.nhdw.svc.cluster.local:8000"]
+            labels: { service: gateway }
+
+      # mlflow: MLflow's server does not export Prometheus metrics by default.
+      - job_name: mlflow
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["mlflow.nhdw.svc.cluster.local:5000"]
+            labels: { service: mlflow }
+
+      # keycloak: needs KC_METRICS_ENABLED=true + the :9000 mgmt port on the
+      # Service (currently only :8080 is exposed) -> down until both land.
+      - job_name: keycloak
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["keycloak.nhdw.svc.cluster.local:9000"]
+            labels: { service: keycloak }
+
+      # clickhouse: needs the <prometheus> server block + :9363 on the Service.
+      - job_name: clickhouse
+        static_configs:
+          - targets: ["clickhouse.nhdw.svc.cluster.local:9363"]
+            labels: { service: clickhouse }
+
+      # forward-ready generic discovery
+      # Any nhdw pod that opts in with prometheus.io/scrape="true" (+ optional
+      # prometheus.io/port and prometheus.io/path annotations) is scraped
+      # automatically once it exposes metrics, with no Prometheus config change.
+      # Hubble flow metrics: the topology page's traffic source.
+      # Cilium agents (kube-system, k8s-app=cilium) expose hubble metrics on
+      # :9965: hubble_flows_processed_total with source/destination workload|pod
+      # labels. This is what makes controller-less lab pods visible
+      # (coroot-node-agent only traced controller-owned pods).
+      - job_name: hubble
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [kube-system]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_k8s_app]
+            action: keep
+            regex: cilium
+          - source_labels: [__address__]
+            action: replace
+            regex: '([^:]+)(?::\d+)?'
+            replacement: '$1:9965'
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_node_name]
+            target_label: node
+
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [nhdw]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: '([^:]+)(?::\d+)?;(\d+)'
+            replacement: '$1:$2'
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_container_name]
+            target_label: container
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+  alerts.yml: |
+    groups:
+      - name: nhdw-platform
+        rules:
+          # Always-firing heartbeat: proves Prometheus -> Alertmanager -> Google
+          # relay end to end (mirrors the kube-prometheus "Watchdog" convention).
+          - alert: Watchdog
+            expr: vector(1)
+            labels: { severity: info, service: prometheus }
+            annotations:
+              summary: "Observability pipeline heartbeat"
+              description: "Always-on watchdog: if this stops firing, alerting is broken."
+          # Liveness signal: fires for any scrape target that stays down.
+          - alert: TargetDown
+            expr: up == 0
+            for: 5m
+            labels: { severity: warning }
+            annotations:
+              summary: "Scrape target {{ `{{ $labels.job }}` }} is down"
+              description: "Prometheus could not scrape {{ `{{ $labels.job }}` }} ({{ `{{ $labels.instance }}` }}) for 5m."
+          # Lights up once the gateway exposes /metrics (see integration doc).
+          - alert: GatewayHighErrorRate
+            expr: >-
+              sum(rate(http_requests_total{job="nhdw-gateway",status=~"5.."}[5m]))
+              / clamp_min(sum(rate(http_requests_total{job="nhdw-gateway"}[5m])), 1) > 0.05
+            for: 2m
+            labels: { severity: critical, service: gateway }
+            annotations:
+              summary: "Gateway 5xx error ratio > 5% for 2m"
+              description: "Requires the gateway /metrics endpoint (docs/observability-integration.md)."
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: prometheus-data, namespace: {{ .Values.namespace }}, labels: { app: prometheus, tier: observability } }
+spec:
+  accessModes: [ ReadWriteOnce ]
+  resources: { requests: { storage: 4Gi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: prometheus, namespace: {{ .Values.namespace }}, labels: { app: prometheus, tier: observability } }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }          # single RWO PVC: never two writers
+  selector: { matchLabels: { app: prometheus } }
+  template:
+    metadata: { labels: { app: prometheus, tier: observability } }
+    spec:
+      serviceAccountName: prometheus
+      securityContext: { runAsUser: 65534, runAsNonRoot: true, fsGroup: 65534 }
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.53.2
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --storage.tsdb.retention.time=15d
+            - --web.enable-lifecycle          # POST /-/reload after a config change
+            - --web.console.libraries=/usr/share/prometheus/console_libraries
+            - --web.console.templates=/usr/share/prometheus/consoles
+          ports: [ { name: http, containerPort: 9090 } ]
+          readinessProbe: { httpGet: { path: /-/ready,   port: http }, initialDelaySeconds: 10, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /-/healthy, port: http }, initialDelaySeconds: 20, periodSeconds: 15 }
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          volumeMounts:
+            - { name: config, mountPath: /etc/prometheus }
+            - { name: data,   mountPath: /prometheus }
+      volumes:
+        - { name: config, configMap: { name: prometheus-config } }
+        - { name: data,   persistentVolumeClaim: { claimName: prometheus-data } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: prometheus, namespace: {{ .Values.namespace }}, labels: { app: prometheus, tier: observability } }
+spec:
+  selector: { app: prometheus }
+  ports: [ { name: http, port: 9090, targetPort: http } ]
+---
+# Loki: single binary, filesystem object store on a local-path PVC.
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: loki-config, namespace: {{ .Values.namespace }}, labels: { app: loki, tier: observability } }
+data:
+  loki.yml: |
+    auth_enabled: false
+
+    server:
+      http_listen_port: 3100
+      grpc_listen_port: 9095
+      log_level: info
+
+    common:
+      instance_addr: 127.0.0.1
+      path_prefix: /loki
+      replication_factor: 1
+      ring:
+        instance_addr: 127.0.0.1
+        kvstore:
+          store: inmemory
+      storage:
+        filesystem:
+          chunks_directory: /loki/chunks
+          rules_directory: /loki/rules
+
+    schema_config:
+      configs:
+        - from: 2020-10-24
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+
+    storage_config:
+      boltdb_shipper:
+        active_index_directory: /loki/boltdb-shipper-active
+        cache_location: /loki/boltdb-shipper-cache
+        cache_ttl: 24h
+      filesystem:
+        directory: /loki/chunks
+
+    compactor:
+      working_directory: /loki/compactor
+      compaction_interval: 10m
+      retention_enabled: true
+      retention_delete_delay: 2h
+      delete_request_store: filesystem
+
+    limits_config:
+      retention_period: 168h            # 7 days (demo scale)
+      reject_old_samples: true
+      reject_old_samples_max_age: 168h
+      max_query_length: 721h
+      ingestion_rate_mb: 8
+      ingestion_burst_size_mb: 16
+
+    ruler:
+      storage:
+        type: local
+        local:
+          directory: /loki/rules
+      rule_path: /loki/rules-temp
+      alertmanager_url: http://alertmanager.nhdw.svc.cluster.local:9093
+      ring:
+        kvstore:
+          store: inmemory
+      enable_api: true
+
+    analytics:
+      reporting_enabled: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: loki-data, namespace: {{ .Values.namespace }}, labels: { app: loki, tier: observability } }
+spec:
+  accessModes: [ ReadWriteOnce ]
+  resources: { requests: { storage: 4Gi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: loki, namespace: {{ .Values.namespace }}, labels: { app: loki, tier: observability } }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }          # single RWO PVC: never two writers
+  selector: { matchLabels: { app: loki } }
+  template:
+    metadata: { labels: { app: loki, tier: observability } }
+    spec:
+      securityContext: { runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001 }
+      containers:
+        - name: loki
+          image: grafana/loki:2.9.10
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: [ "-config.file=/etc/loki/loki.yml" ]
+          ports:
+            - { name: http, containerPort: 3100 }
+            - { name: grpc, containerPort: 9095 }
+          readinessProbe: { httpGet: { path: /ready, port: http }, initialDelaySeconds: 15, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /ready, port: http }, initialDelaySeconds: 45, periodSeconds: 15 }
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          volumeMounts:
+            - { name: config, mountPath: /etc/loki }
+            - { name: data,   mountPath: /loki }
+      volumes:
+        - { name: config, configMap: { name: loki-config } }
+        - { name: data,   persistentVolumeClaim: { claimName: loki-data } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: loki, namespace: {{ .Values.namespace }}, labels: { app: loki, tier: observability } }
+spec:
+  selector: { app: loki }
+  ports:
+    - { name: http, port: 3100, targetPort: http }
+    - { name: grpc, port: 9095, targetPort: grpc }
+---
+# Alertmanager: single replica, ephemeral (emptyDir). The config is rendered at
+# pod start from smtp-secrets by the render-config initContainer.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: alertmanager, namespace: {{ .Values.namespace }}, labels: { app: alertmanager, tier: observability } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: alertmanager } }
+  template:
+    metadata: { labels: { app: alertmanager, tier: observability } }
+    spec:
+      securityContext: { runAsUser: 65534, runAsNonRoot: true, fsGroup: 65534 }
+      initContainers:
+        # Render alertmanager.yml from smtp-secrets, using the alertmanager image
+        # itself (busybox /bin/sh), so no extra image is needed offline. The heredoc
+        # expands ${SMTP_*}; the recipient is the relay account (SMTP_USER). With
+        # email disabled or no credentials, the config uses a null receiver.
+        - name: render-config
+          image: prom/alertmanager:v0.27.0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -eu
+              OUT=/rendered/alertmanager.yml
+              # Email is opt-in via .Values.alertmanager.email (default false). Even with SMTP
+              # creds present, a rebuild stays silent unless email is explicitly enabled, so a
+              # from-bare deploy never surprises a real inbox with alerts.
+              if [ "${AM_EMAIL_ENABLED:-0}" = "1" ] && [ -n "${SMTP_HOST:-}" ] && [ -n "${SMTP_USER:-}" ]; then
+                echo "render-config: SMTP relay ${SMTP_HOST}:${SMTP_PORT:-587} -> ${SMTP_USER}"
+                cat > "$OUT" <<EOF
+              global:
+                resolve_timeout: 5m
+                smtp_smarthost: "${SMTP_HOST}:${SMTP_PORT:-587}"
+                smtp_from: "${SMTP_FROM:-alerts@nhdw.moh.gov.et}"
+                smtp_auth_username: "${SMTP_USER}"
+                smtp_auth_password: "${SMTP_PASS:-}"
+                smtp_require_tls: true
+              route:
+                group_by: ["alertname", "service"]
+                group_wait: 30s
+                group_interval: 5m
+                repeat_interval: 3h
+                receiver: email
+                routes:
+                  - matchers: [ 'alertname = "Watchdog"' ]
+                    receiver: email
+                    repeat_interval: 12h
+              receivers:
+                - name: email
+                  email_configs:
+                    - to: "${SMTP_USER}"
+                      send_resolved: true
+                      require_tls: true
+              inhibit_rules:
+                - source_matchers: [ 'severity = "critical"' ]
+                  target_matchers: [ 'severity = "warning"' ]
+                  equal: ["service"]
+              EOF
+              else
+                echo "render-config: no SMTP creds -> null receiver (email disabled)"
+                cat > "$OUT" <<'EOF'
+              global:
+                resolve_timeout: 5m
+              route:
+                group_by: ["alertname", "service"]
+                group_wait: 30s
+                group_interval: 5m
+                repeat_interval: 3h
+                receiver: "null"
+              receivers:
+                - name: "null"
+              inhibit_rules:
+                - source_matchers: [ 'severity = "critical"' ]
+                  target_matchers: [ 'severity = "warning"' ]
+                  equal: ["service"]
+              EOF
+              fi
+          env:
+            # Opt-in email switch (default false; see .Values.alertmanager.email). Off means a null receiver.
+            - { name: AM_EMAIL_ENABLED, value: "{{ if .Values.alertmanager.email }}1{{ else }}0{{ end }}" }
+            - { name: SMTP_HOST, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_HOST, optional: true } } }
+            - { name: SMTP_PORT, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PORT, optional: true } } }
+            - { name: SMTP_USER, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_USER, optional: true } } }
+            - { name: SMTP_PASS, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_PASS, optional: true } } }
+            - { name: SMTP_FROM, valueFrom: { secretKeyRef: { name: smtp-secrets, key: SMTP_FROM, optional: true } } }
+          volumeMounts:
+            - { name: config, mountPath: /rendered }
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.27.0
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - --config.file=/etc/alertmanager/alertmanager.yml
+            - --storage.path=/alertmanager
+          ports: [ { name: http, containerPort: 9093 } ]
+          readinessProbe: { httpGet: { path: /-/ready,   port: http }, initialDelaySeconds: 10, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /-/healthy, port: http }, initialDelaySeconds: 20, periodSeconds: 15 }
+          resources:
+            requests: { cpu: "10m", memory: "32Mi" }
+            limits:   { cpu: "100m", memory: "128Mi" }
+          volumeMounts:
+            - { name: config, mountPath: /etc/alertmanager }
+            - { name: data,   mountPath: /alertmanager }
+      volumes:
+        - { name: config, emptyDir: {} }
+        - { name: data,   emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: alertmanager, namespace: {{ .Values.namespace }}, labels: { app: alertmanager, tier: observability } }
+spec:
+  selector: { app: alertmanager }
+  ports: [ { name: http, port: 9093, targetPort: http } ]
+---
+# Promtail: the log shipper (DaemonSet). The overlay's imagePullPolicy patch
+# covers only Deployments and StatefulSets, so the pull policy is set on this
+# container directly.
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: promtail, namespace: {{ .Values.namespace }}, labels: { app: promtail, tier: observability } }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: nhdw-promtail, labels: { app: promtail, tier: observability } }
+rules:
+  - apiGroups: [""]
+    resources: [nodes, nodes/proxy, services, endpoints, pods]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: nhdw-promtail, labels: { app: promtail, tier: observability } }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: nhdw-promtail }
+subjects:
+  - { kind: ServiceAccount, name: promtail, namespace: {{ .Values.namespace }} }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: promtail-config, namespace: {{ .Values.namespace }}, labels: { app: promtail, tier: observability } }
+data:
+  promtail.yml: |
+    server:
+      http_listen_port: 9080
+      grpc_listen_port: 0
+      log_level: warn
+
+    positions:
+      filename: /run/promtail/positions.yaml
+
+    clients:
+      - url: http://loki.nhdw.svc.cluster.local:3100/loki/api/v1/push
+
+    scrape_configs:
+      - job_name: nhdw-pods
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [nhdw]
+        relabel_configs:
+          # Low-cardinality label set only (no labelmap: that would
+          # pull churning labels like pod-template-hash into Loki streams).
+          - source_labels: [__meta_kubernetes_pod_node_name]
+            target_label: node_name
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_container_name]
+            target_label: container
+          # default the `app` label from the pod's app label (topology node id)
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+          # __path__ -> the on-node log file for this pod/container:
+          #   /var/log/pods/<namespace>_<pod>_<uid>/<container>/*.log
+          # separator:/ joins uid+container into one value; the default regex
+          # (.*) captures the whole thing as $1, so the single-$1 replacement is
+          # the canonical form (a $1/$2 split would leave $2 empty and break it).
+          - source_labels: [__meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
+            target_label: __path__
+            separator: /
+            replacement: /var/log/pods/*$1/*.log
+        pipeline_stages:
+          # k3d/containerd writes CRI-format log lines; parse ts + stream.
+          - cri: {}
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata: { name: promtail, namespace: {{ .Values.namespace }}, labels: { app: promtail, tier: observability } }
+spec:
+  selector: { matchLabels: { app: promtail } }
+  updateStrategy: { type: RollingUpdate }
+  template:
+    metadata: { labels: { app: promtail, tier: observability } }
+    spec:
+      serviceAccountName: promtail
+      securityContext: { runAsUser: 0 }        # must read root-owned /var/log/pods
+      containers:
+        - name: promtail
+          image: grafana/promtail:2.9.10
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: [ "-config.file=/etc/promtail/promtail.yml" ]
+          env:
+            - name: HOSTNAME
+              valueFrom: { fieldRef: { fieldPath: spec.nodeName } }
+          ports: [ { name: http-metrics, containerPort: 9080 } ]
+          readinessProbe: { httpGet: { path: /ready, port: http-metrics }, initialDelaySeconds: 10, periodSeconds: 10 }
+          resources:
+            requests: { cpu: "20m", memory: "64Mi" }
+            limits:   { cpu: "200m", memory: "256Mi" }
+          volumeMounts:
+            - { name: config,    mountPath: /etc/promtail }
+            - { name: positions, mountPath: /run/promtail }
+            - { name: varlog,    mountPath: /var/log, readOnly: true }
+      volumes:
+        - { name: config,    configMap: { name: promtail-config } }
+        - { name: positions, hostPath: { path: /var/log/promtail-positions, type: DirectoryOrCreate } }
+        - { name: varlog,    hostPath: { path: /var/log } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: promtail, namespace: {{ .Values.namespace }}, labels: { app: promtail, tier: observability } }
+spec:
+  selector: { app: promtail }
+  ports: [ { name: http-metrics, port: 9080, targetPort: http-metrics } ]

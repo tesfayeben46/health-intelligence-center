@@ -1,0 +1,303 @@
+# Source ingestor Jobs: dlt ingestors that pull each external compose source replica
+# into the data lake (nhdw-raw on SeaweedFS). Run by seed-realistic.sh after
+# seaweedfs-init and before ch-raw-views. They reach the host-published source ports
+# through host.k3d.internal (k3d injects it into CoreDNS; bootstrap.sh and the
+# provision role verify or add it).
+#
+# Registry image names are remapped to the local nhdw/* images by k8s/jobs/. Source
+# DB/API credentials come from the `source-creds` Secret (overlays/dev/secrets.yaml);
+# object-store credentials from `minio-secrets` (historical name). These Jobs are not
+# part of the base deploy; they are one-shot pipeline steps run through run_job(). Each
+# Job is self-contained: YAML anchors do not cross `---` document boundaries, and a list
+# anchor cannot be spliced into an env list.
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: dhis2-ingest-metadata, namespace: nhdw, labels: { app: dhis2-ingestor, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata: { labels: { app: dhis2-ingestor, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ingestor
+          image: nhdw-registry:5500/nhdw/dhis2-ingestor:1.0.0
+          imagePullPolicy: Always
+          args: ["metadata"]
+          env:
+            - { name: DHIS2_BASE_URL, value: "http://host.k3d.internal:8080" }
+            - { name: DHIS2_USER,     valueFrom: { secretKeyRef: { name: source-creds, key: DHIS2_USER } } }
+            - { name: DHIS2_PASSWORD, valueFrom: { secretKeyRef: { name: source-creds, key: DHIS2_PASSWORD } } }
+            - { name: DHIS2_PAGE_SIZE, value: "200" }
+            - { name: MINIO_ENDPOINT,   value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            # best-effort catalog lineage (src/lineage.py): both optional; without
+            # them the emitter is a no-op
+            - { name: OM_LINEAGE_API, value: "http://openmetadata.nhdw.svc.cluster.local:8585/api" }
+            - { name: OM_LINEAGE_JWT, valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: INGESTION_BOT_TOKEN, optional: true } } }
+            - { name: MINIO_ACCESS_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER } } }
+            - { name: MINIO_SECRET_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_RAW_BUCKET, value: "nhdw-raw" }
+            - { name: MINIO_REGION,     value: "et-addis-1" }
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: dhis2-ingest-dvs, namespace: nhdw, labels: { app: dhis2-ingestor, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata: { labels: { app: dhis2-ingestor, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ingestor
+          image: nhdw-registry:5500/nhdw/dhis2-ingestor:1.0.0
+          imagePullPolicy: Always
+          args: ["data-value-sets"]
+          env:
+            - { name: DHIS2_BASE_URL, value: "http://host.k3d.internal:8080" }
+            - { name: DHIS2_USER,     valueFrom: { secretKeyRef: { name: source-creds, key: DHIS2_USER } } }
+            - { name: DHIS2_PASSWORD, valueFrom: { secretKeyRef: { name: source-creds, key: DHIS2_PASSWORD } } }
+            - { name: DHIS2_PAGE_SIZE, value: "200" }
+            # Seeded values carry import-time lastUpdated; a low floor takes all on the first run.
+            # append + dlt incremental(last_updated): later runs pull only the delta
+            # (dlt restores the watermark from lake state), so re-runs do not double-count.
+            - { name: DHIS2_INITIAL_LAST_UPDATED, value: "2020-01-01" }
+            - { name: MINIO_ENDPOINT,   value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            # best-effort catalog lineage (src/lineage.py): both optional; without
+            # them the emitter is a no-op
+            - { name: OM_LINEAGE_API, value: "http://openmetadata.nhdw.svc.cluster.local:8585/api" }
+            - { name: OM_LINEAGE_JWT, valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: INGESTION_BOT_TOKEN, optional: true } } }
+            - { name: MINIO_ACCESS_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER } } }
+            - { name: MINIO_SECRET_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_RAW_BUCKET, value: "nhdw-raw" }
+            - { name: MINIO_REGION,     value: "et-addis-1" }
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: climate-ingest, namespace: nhdw, labels: { app: climate-ingestor, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata: { labels: { app: climate-ingestor, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ingestor
+          image: nhdw-registry:5500/nhdw/climate-ingestor:1.0.0
+          imagePullPolicy: Always
+          args: ["weekly"]
+          env:
+            - { name: CLIMATE_API_BASE_URL, value: "http://host.k3d.internal:8095" }
+            - { name: MINIO_ENDPOINT,   value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            # best-effort catalog lineage (src/lineage.py): both optional; without
+            # them the emitter is a no-op
+            - { name: OM_LINEAGE_API, value: "http://openmetadata.nhdw.svc.cluster.local:8585/api" }
+            - { name: OM_LINEAGE_JWT, valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: INGESTION_BOT_TOKEN, optional: true } } }
+            - { name: MINIO_ACCESS_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER } } }
+            - { name: MINIO_SECRET_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_RAW_BUCKET, value: "nhdw-raw" }
+            - { name: MINIO_REGION,     value: "et-addis-1" }
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: ethioemr-ingest, namespace: nhdw, labels: { app: ethioemr-ingestor, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata: { labels: { app: ethioemr-ingestor, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ingestor
+          image: nhdw-registry:5500/nhdw/ethioemr-ingestor:1.0.0
+          imagePullPolicy: Always
+          args: ["extract"]
+          env:
+            - { name: ETHIOEMR_MYSQL_HOST, value: "host.k3d.internal" }
+            - { name: ETHIOEMR_MYSQL_PORT, value: "33306" }
+            - { name: ETHIOEMR_MYSQL_DB,   value: "openmrs" }
+            - { name: ETHIOEMR_MYSQL_USER, value: "ingestor" }
+            - { name: ETHIOEMR_MYSQL_PASSWORD, valueFrom: { secretKeyRef: { name: source-creds, key: ETHIOEMR_READER_PASSWORD } } }
+            - { name: MINIO_ENDPOINT,   value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            # best-effort catalog lineage (src/lineage.py): both optional; without
+            # them the emitter is a no-op
+            - { name: OM_LINEAGE_API, value: "http://openmetadata.nhdw.svc.cluster.local:8585/api" }
+            - { name: OM_LINEAGE_JWT, valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: INGESTION_BOT_TOKEN, optional: true } } }
+            - { name: MINIO_ACCESS_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER } } }
+            - { name: MINIO_SECRET_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_RAW_BUCKET, value: "nhdw-raw" }
+            - { name: MINIO_REGION,     value: "et-addis-1" }
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: hcmiswdm-ingest, namespace: nhdw, labels: { app: hcmiswdm-ingestor, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata: { labels: { app: hcmiswdm-ingestor, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ingestor
+          image: nhdw-registry:5500/nhdw/hcmiswdm-ingestor:1.0.0
+          imagePullPolicy: Always
+          args: ["extract"]
+          env:
+            - { name: HCMISWDM_HOST, value: "host.k3d.internal" }
+            - { name: HCMISWDM_PORT, value: "1433" }
+            - { name: HCMISWDM_DATABASE, value: "HCMISWDM" }
+            - { name: HCMISWDM_USER, value: "nscd_reader" }
+            - { name: HCMISWDM_PASSWORD, valueFrom: { secretKeyRef: { name: source-creds, key: HCMISWDM_READER_PASSWORD } } }
+            - { name: HCMISWDM_TRUST_SERVER_CERTIFICATE, value: "yes" }
+            - { name: MINIO_ENDPOINT,   value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            # best-effort catalog lineage (src/lineage.py): both optional; without
+            # them the emitter is a no-op
+            - { name: OM_LINEAGE_API, value: "http://openmetadata.nhdw.svc.cluster.local:8585/api" }
+            - { name: OM_LINEAGE_JWT, valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: INGESTION_BOT_TOKEN, optional: true } } }
+            - { name: MINIO_ACCESS_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER } } }
+            - { name: MINIO_SECRET_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_RAW_BUCKET, value: "nhdw-raw" }
+            - { name: MINIO_REGION,     value: "et-addis-1" }
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: mbrana-ingest, namespace: nhdw, labels: { app: mbrana-ingestor, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata: { labels: { app: mbrana-ingestor, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ingestor
+          image: nhdw-registry:5500/nhdw/mbrana-ingestor:1.0.0
+          imagePullPolicy: Always
+          args: ["extract"]
+          env:
+            - { name: MBRANA_HOST, value: "host.k3d.internal" }
+            - { name: MBRANA_PORT, value: "1433" }
+            - { name: MBRANA_DATABASE, value: "HCMISWCloud" }
+            # mBrana shares the HCMISWDM SQL Server; restore.sh creates login [ingestor].
+            - { name: MBRANA_USER, value: "ingestor" }
+            - { name: MBRANA_PASSWORD, valueFrom: { secretKeyRef: { name: source-creds, key: MBRANA_READER_PASSWORD } } }
+            - { name: MBRANA_TRUST_SERVER_CERTIFICATE, value: "yes" }
+            - { name: MINIO_ENDPOINT,   value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            # best-effort catalog lineage (src/lineage.py): both optional; without
+            # them the emitter is a no-op
+            - { name: OM_LINEAGE_API, value: "http://openmetadata.nhdw.svc.cluster.local:8585/api" }
+            - { name: OM_LINEAGE_JWT, valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: INGESTION_BOT_TOKEN, optional: true } } }
+            - { name: MINIO_ACCESS_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER } } }
+            - { name: MINIO_SECRET_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_RAW_BUCKET, value: "nhdw-raw" }
+            - { name: MINIO_REGION,     value: "et-addis-1" }
+---
+apiVersion: batch/v1
+kind: Job
+metadata: { name: mfr-ingest, namespace: nhdw, labels: { app: mfr-ingestor, tier: pipeline } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata: { labels: { app: mfr-ingestor, tier: pipeline } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: ingestor
+          image: nhdw-registry:5500/nhdw/mfr-ingestor:1.0.0
+          imagePullPolicy: Always
+          args: ["all"]
+          env:
+            - { name: MFR_FHIR_BASE_URL, value: "http://host.k3d.internal:8093/fhir" }
+            - { name: MINIO_ENDPOINT,   value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }   # SeaweedFS S3 gateway
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            # best-effort catalog lineage (src/lineage.py): both optional; without
+            # them the emitter is a no-op
+            - { name: OM_LINEAGE_API, value: "http://openmetadata.nhdw.svc.cluster.local:8585/api" }
+            - { name: OM_LINEAGE_JWT, valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: INGESTION_BOT_TOKEN, optional: true } } }
+            - { name: MINIO_ACCESS_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER } } }
+            - { name: MINIO_SECRET_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_RAW_BUCKET, value: "nhdw-raw" }
+            - { name: MINIO_REGION,     value: "et-addis-1" }
+---
+# elmis-hist-ingest · historical eLMIS v2 lane (OpenLMIS source family, lane 2)
+# Reads the restored Zambian dump (0_external/sources/OpenLMIS, host port 5434) through
+# dlt sql_database and lands 16 tables under nhdw-raw/elmis_hist/. Immutable history:
+# every run is a byte-identical `replace`.
+apiVersion: batch/v1
+kind: Job
+metadata: { name: elmis-hist-ingest, namespace: nhdw, labels: { app: openlmis-ingestor, tier: pipeline, lane: elmis-hist } }
+spec:
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 86400
+  template:
+    metadata: { labels: { app: openlmis-ingestor, tier: pipeline } }
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: ingestor
+          image: nhdw-registry:5500/nhdw/openlmis-ingestor:1.0.0
+          imagePullPolicy: Always
+          args: ["history"]
+          env:
+            - { name: OPENLMIS_HIST_HOST, value: "host.k3d.internal" }
+            - { name: OPENLMIS_HIST_PORT, value: "5434" }
+            - { name: OPENLMIS_HIST_DB,   value: "elmis" }
+            - { name: OPENLMIS_HIST_USER,     valueFrom: { secretKeyRef: { name: source-creds, key: OPENLMIS_HIST_USER } } }
+            - { name: OPENLMIS_HIST_PASSWORD, valueFrom: { secretKeyRef: { name: source-creds, key: OPENLMIS_HIST_PASSWORD } } }
+            - { name: MINIO_ENDPOINT,   value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }   # botocore#3755: dlt writes a 0-byte init marker
+            - { name: MINIO_ACCESS_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER } } }
+            - { name: MINIO_SECRET_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_RAW_BUCKET, value: "nhdw-raw" }
+            - { name: MINIO_REGION,     value: "et-addis-1" }
+            - { name: DLT_PIPELINE_NAME, value: "openlmis" }
+          resources:
+            requests: { cpu: "500m", memory: "1Gi" }
+            limits:   { memory: "3Gi" }
+---
+# openlmis-ingest · live OpenLMIS v3 API lane (lane 1), not run by default
+# The v3 reference distribution (13 containers) is not deployed by the default install.
+# The manifest is kept so the lane can be enabled by deploying the replica and adding
+# OPENLMIS_* keys to source-creds.
+apiVersion: batch/v1
+kind: Job
+metadata: { name: openlmis-ingest, namespace: nhdw, labels: { app: openlmis-ingestor, tier: pipeline, lane: openlmis-v3 } }
+spec:
+  backoffLimit: 1
+  suspend: true
+  template:
+    metadata: { labels: { app: openlmis-ingestor, tier: pipeline } }
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: ingestor
+          image: nhdw-registry:5500/nhdw/openlmis-ingestor:1.0.0
+          imagePullPolicy: Always
+          args: ["all"]
+          env:
+            - { name: OPENLMIS_BASE_URL, value: "http://host.k3d.internal:8086" }
+            - { name: OPENLMIS_USER,     valueFrom: { secretKeyRef: { name: source-creds, key: OPENLMIS_USER, optional: true } } }
+            - { name: OPENLMIS_PASSWORD, valueFrom: { secretKeyRef: { name: source-creds, key: OPENLMIS_PASSWORD, optional: true } } }
+            - { name: MINIO_ENDPOINT,   value: "http://seaweedfs-s3.nhdw.svc.cluster.local:8333" }
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            # best-effort catalog lineage (src/lineage.py): both optional; without
+            # them the emitter is a no-op
+            - { name: OM_LINEAGE_API, value: "http://openmetadata.nhdw.svc.cluster.local:8585/api" }
+            - { name: OM_LINEAGE_JWT, valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: INGESTION_BOT_TOKEN, optional: true } } }
+            - { name: MINIO_ACCESS_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_USER } } }
+            - { name: MINIO_SECRET_KEY, valueFrom: { secretKeyRef: { name: minio-secrets, key: ROOT_PASSWORD } } }
+            - { name: MINIO_RAW_BUCKET, value: "nhdw-raw" }
+            - { name: MINIO_REGION,     value: "et-addis-1" }

@@ -1,0 +1,288 @@
+# SeaweedFS: rendered from 1_infrastructure/helm/nhdw/templates/seaweedfs.yaml with
+# values-single.yaml. The chart template is the source of truth; regenerate this file
+# rather than editing it:  helm template nhdw 1_infrastructure/helm/nhdw \
+#     -f 1_infrastructure/helm/nhdw/values-single.yaml -s templates/seaweedfs.yaml
+# Design notes: 3_storage/seaweedfs/README.md
+---
+# SeaweedFS: S3 object storage for the lake. Four components, split the way
+# SeaweedFS splits them, so each can be probed and fail independently:
+#
+#   master  - topology and volume placement. Small state on its own PVC.
+#   volume  - the bytes. A StatefulSet so its DNS name is stable (it registers that
+#             name with the master and every reader dials it directly).
+#   filer   - S3 key to chunk metadata. Stateless here: the store is a database in
+#             postgres-vault (3_storage/postgres/init/23_seaweedfs_filer_db.sh), so
+#             filer metadata is covered by the existing Postgres backup.
+#   s3      - the S3 API on :8333. Identities (the whole IAM surface) come from a
+#             mounted Secret, not from runtime admin calls.
+#
+# Constraints these manifests depend on:
+#   * -max on the volume server must exceed bucket count x volumes per bucket:
+#     SeaweedFS allocates a volume collection per bucket, and running out gives
+#     "no free volumes".
+#   * the filer's Postgres table is not auto-created and must be COLLATE "C"
+#     (see the init script) or S3 list order is not byte-lexicographic.
+#   * identity prefix grants need the `bucket/prefix/*` glob form; the bare form
+#     fails closed (denies everything).
+# master
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: seaweedfs-master-data, namespace: nhdw }
+spec:
+  accessModes: [ ReadWriteOnce ]
+  storageClassName: local-path
+  resources: { requests: { storage: 1Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: seaweedfs-master, namespace: nhdw, labels: { app: seaweedfs-master, part-of: seaweedfs } }
+spec:
+  selector: { app: seaweedfs-master }
+  ports:
+    - { port: 9333,  targetPort: http, name: http }
+    - { port: 19333, targetPort: grpc, name: grpc }
+---
+# volume server
+apiVersion: v1
+kind: Service
+metadata: { name: seaweedfs-volume, namespace: nhdw, labels: { app: seaweedfs-volume, part-of: seaweedfs } }
+spec:
+  clusterIP: None                     # headless: stable per-pod DNS for -ip
+  selector: { app: seaweedfs-volume }
+  ports:
+    - { port: 8080,  targetPort: http, name: http }
+    - { port: 18080, targetPort: grpc, name: grpc }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: seaweedfs-filer, namespace: nhdw, labels: { app: seaweedfs-filer, part-of: seaweedfs } }
+spec:
+  selector: { app: seaweedfs-filer }
+  ports:
+    - { port: 8888,  targetPort: http, name: http }
+    - { port: 18888, targetPort: grpc, name: grpc }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: seaweedfs-s3, namespace: nhdw, labels: { app: seaweedfs-s3, part-of: seaweedfs } }
+spec:
+  selector: { app: seaweedfs-filer }
+  ports:
+    - { port: 8333, targetPort: s3, name: s3 }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: seaweedfs-master, namespace: nhdw, labels: { app: seaweedfs-master, tier: storage, part-of: seaweedfs } }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }        # RWO PVC: never two masters on one dir
+  selector: { matchLabels: { app: seaweedfs-master } }
+  template:
+    metadata: { labels: { app: seaweedfs-master, tier: storage, part-of: seaweedfs } }
+    spec:
+      containers:
+        - name: master
+          image: chrislusf/seaweedfs:4.45
+          imagePullPolicy: IfNotPresent
+          args:
+            - master
+            - -ip=seaweedfs-master
+            - -ip.bind=0.0.0.0
+            - -port=9333
+            - -mdir=/data
+            - -volumeSizeLimitMB=1024
+            - -defaultReplication=000
+          ports:
+            - { containerPort: 9333,  name: http }
+            - { containerPort: 19333, name: grpc }
+          volumeMounts: [ { name: data, mountPath: /data } ]
+          readinessProbe:
+            httpGet: { path: /cluster/status, port: 9333 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /cluster/status, port: 9333 }
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          resources: 
+            {}
+      volumes:
+        - { name: data, persistentVolumeClaim: { claimName: seaweedfs-master-data } }
+---
+# filer (metadata in postgres-vault)
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: seaweedfs-filer, namespace: nhdw, labels: { app: seaweedfs-filer, tier: storage, part-of: seaweedfs } }
+spec:
+  replicas: 1
+  # Two settings, both required:
+  #  * the filer's registered identity must be unique per pod (its pod IP, below).
+  #    With a shared name such as the Service name, the master notices a departed
+  #    pod about 15 s later by heartbeat timeout, and that late "leave" removes the
+  #    new pod's same-named entry from the lock ring. Every S3 write then fails with
+  #    "no lock server found" while reads keep working. Recreate alone does not
+  #    prevent this, because the leave still arrives after the join.
+  #  * Recreate, so two filers never run at once against one Postgres store.
+  strategy: { type: Recreate }
+  selector: { matchLabels: { app: seaweedfs-filer } }
+  template:
+    metadata: { labels: { app: seaweedfs-filer, tier: storage, part-of: seaweedfs } }
+    spec:
+      containers:
+        - name: filer
+          image: chrislusf/seaweedfs:4.45
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: POD_IP, valueFrom: { fieldRef: { fieldPath: status.podIP } } }
+            # Store selection. LEVELDB2 must be explicitly off, or the filer keeps
+            # its embedded store and silently ignores the Postgres config.
+            - { name: WEED_LEVELDB2_ENABLED,  value: "false" }
+            - { name: WEED_POSTGRES_ENABLED,  value: "true" }
+            - { name: WEED_POSTGRES_HOSTNAME, value: "postgres-vault.nhdw.svc.cluster.local" }
+            - { name: WEED_POSTGRES_PORT,     value: "5432" }
+            - { name: WEED_POSTGRES_DATABASE, value: "seaweedfs_filer" }
+            - { name: WEED_POSTGRES_USERNAME, value: "seaweedfs_filer" }
+            - { name: WEED_POSTGRES_PASSWORD, valueFrom: { secretKeyRef: { name: seaweedfs-secrets, key: FILER_DB_PASSWORD } } }
+            - { name: WEED_POSTGRES_SSLMODE,  value: "disable" }
+            - { name: WEED_POSTGRES_CONNECTION_MAX_IDLE, value: "5" }
+            - { name: WEED_POSTGRES_CONNECTION_MAX_OPEN, value: "20" }
+          args:
+            - filer
+            - -master=seaweedfs-master:9333
+            - -ip=$(POD_IP)            # unique per pod; see the strategy note above
+            - -ip.bind=0.0.0.0
+            - -port=8888
+            - -defaultReplicaPlacement=000
+            # The S3 gateway runs inside the filer process (a supported SeaweedFS mode).
+            # A standalone gateway learns filer addresses from the master on a roughly
+            # five-minute tick, so after a filer restart it keeps dialling the old pod IP
+            # and writes fail for up to five minutes while health checks stay green.
+            # In-process, the gateway cannot hold a stale address for its own filer and
+            # the two restart together. Consumers still use seaweedfs-s3:8333.
+            - -s3
+            - -s3.port=8333
+            - -s3.ip.bind=0.0.0.0
+            - -s3.config=/etc/seaweedfs/identities.json
+          ports:
+            - { containerPort: 8888,  name: http }
+            - { containerPort: 18888, name: grpc }
+            - { containerPort: 8333,  name: s3 }
+          readinessProbe:
+            httpGet: { path: /, port: 8888 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /, port: 8888 }
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          volumeMounts:
+            - { name: identities, mountPath: /etc/seaweedfs, readOnly: true }
+          resources: 
+            {}
+      volumes:
+        - name: identities
+          secret:
+            secretName: seaweedfs-secrets
+            items: [ { key: identities.json, path: identities.json } ]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: seaweedfs-volume, namespace: nhdw, labels: { app: seaweedfs-volume, tier: storage, part-of: seaweedfs } }
+spec:
+  serviceName: seaweedfs-volume
+  replicas: 1
+  selector: { matchLabels: { app: seaweedfs-volume } }
+  template:
+    metadata: { labels: { app: seaweedfs-volume, tier: storage, part-of: seaweedfs } }
+    spec:
+      containers:
+        - name: volume
+          image: chrislusf/seaweedfs:4.45
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: POD_NAME, valueFrom: { fieldRef: { fieldPath: metadata.name } } }
+          args:
+            - volume
+            - -mserver=seaweedfs-master:9333
+            - -ip=$(POD_NAME).seaweedfs-volume
+            - -ip.bind=0.0.0.0
+            - -port=8080
+            - -dir=/data
+            - -max=200
+            - -dataCenter=dc1
+            - -rack=rack1
+          ports:
+            - { containerPort: 8080,  name: http }
+            - { containerPort: 18080, name: grpc }
+          volumeMounts: [ { name: data, mountPath: /data } ]
+          readinessProbe:
+            httpGet: { path: /status, port: 8080 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /status, port: 8080 }
+            initialDelaySeconds: 30
+            periodSeconds: 15
+          resources: 
+            {}
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: [ ReadWriteOnce ]
+        storageClassName: local-path
+        resources: { requests: { storage: 20Gi } }
+---
+# seaweedfs-init · buckets, versioning, lifecycle
+# Creates buckets and sets versioning and lifecycle rules using plain S3 calls
+# (mb, version, ilm). Users, policies and anonymous access are static identities
+# in seaweedfs-secrets, not runtime admin calls. The MinIO `mc` client is used
+# because it is already in the offline image bundle; it speaks plain S3.
+apiVersion: batch/v1
+kind: Job
+metadata: { name: seaweedfs-init, namespace: nhdw, labels: { app: seaweedfs-init, tier: pipeline, part-of: seaweedfs } }
+spec:
+  backoffLimit: 2
+  template:
+    metadata: { labels: { app: seaweedfs-init, tier: pipeline, part-of: seaweedfs } }
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mc
+          image: minio/mc:RELEASE.2025-04-08T15-39-49Z
+          imagePullPolicy: IfNotPresent
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              set -eu
+              EP="http://seaweedfs-s3.nhdw.svc.cluster.local:8333"
+              for i in $(seq 1 30); do
+                mc alias set sw "$EP" "$SW_ADMIN_ACCESS_KEY" "$SW_ADMIN_SECRET_KEY" >/dev/null 2>&1 && break
+                echo "  … waiting for $EP ($i)"; sleep 5
+              done
+              for b in nhdw-raw nhdw-processed nhdw-archive nhdw-lake nhdw-exports \
+                       nhdw-artifacts nhdw-backups nhdw-static nhdw-logs nhdw-docs; do
+                mc mb --ignore-existing "sw/$b" >/dev/null
+                echo "  ok: bucket $b ready"
+              done
+              # Overwrite protection on the zones that are hard to regenerate.
+              for b in nhdw-raw nhdw-archive nhdw-artifacts nhdw-backups; do
+                mc version enable "sw/$b" >/dev/null || echo "  ! versioning not enabled on $b"
+              done
+              # Retention. The legacy `mc ilm add --id` form runs first so the rule IDs
+              # keep their established names (exports-ttl-90d / backups-ttl-365d) and an audit lines
+              # up; `mc ilm rule add` (verified against SeaweedFS) is the
+              # fallback and assigns an auto-generated ID. Idempotent either way.
+              mc ilm add --expiry-days 90  --id exports-ttl-90d  "sw/nhdw-exports" >/dev/null 2>&1 \
+                || mc ilm rule add --expire-days 90  "sw/nhdw-exports" >/dev/null 2>&1 || echo "  ! ilm nhdw-exports"
+              mc ilm add --expiry-days 365 --id backups-ttl-365d "sw/nhdw-backups" >/dev/null 2>&1 \
+                || mc ilm rule add --expire-days 365 "sw/nhdw-backups" >/dev/null 2>&1 || echo "  ! ilm nhdw-backups"
+              echo "seaweedfs-init complete"
+              mc ls sw
+          env:
+            - { name: SW_ADMIN_ACCESS_KEY, valueFrom: { secretKeyRef: { name: seaweedfs-secrets, key: ADMIN_ACCESS_KEY } } }
+            - { name: SW_ADMIN_SECRET_KEY, valueFrom: { secretKeyRef: { name: seaweedfs-secrets, key: ADMIN_SECRET_KEY } } }
+---
+# S3 endpoint
+# No standalone gateway Deployment: the gateway is embedded in the filer (see the
+# filer args). This Service provides the endpoint every consumer uses,
+# seaweedfs-s3:8333, and selects the filer pod.

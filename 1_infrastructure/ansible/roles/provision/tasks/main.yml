@@ -1,0 +1,12 @@
+---
+# Provision the cluster. `nhdw_runtime` (group_vars/all.yml, overridable per inventory)
+# selects the path:
+#   k3s: k3s on the host. Installs docker, k3s, kubectl, helm, kustomize, kernel modules and
+#        sysctls, the host.k3d.internal CoreDNS alias and, optionally, the signed GPU driver.
+#        The remote and production form; starts from a near-bare Ubuntu host. (tasks/k3s.yml)
+#   k3d: legacy Docker-in-Docker laptop form; asserts that the tools are pre-installed.
+#        (tasks/k3d.yml)
+# The cni, images, deploy, seed and verify roles and the Helm chart are runtime-agnostic.
+
+- name: Select the runtime provisioning path
+  ansible.builtin.include_tasks: "{{ nhdw_runtime }}.yml"

@@ -1,0 +1,6 @@
+source_code,source_vocabulary_id,source_code_description,target_vocabulary_id,target_concept_code
+AEFI-MILD,DHIS2.dataElement,parity: deployed CASE maps to OTHER (entity model says EPI; a stewarded change will align it),NHDW-PROGRAMME,OTHER
+AEFI-SERIOUS,DHIS2.dataElement,parity: deployed CASE maps to OTHER (entity model says EPI; a stewarded change will align it),NHDW-PROGRAMME,OTHER
+CC-EXCURSION,DHIS2.dataElement,parity: deployed CASE maps to OTHER (entity model says EPI; a stewarded change will align it),NHDW-PROGRAMME,OTHER
+PHEM-COMPL,DHIS2.dataElement,parity: deployed CASE maps to OTHER (entity model says HIV; to be corrected),NHDW-PROGRAMME,OTHER
+PHEM-TIMELY,DHIS2.dataElement,parity: deployed CASE maps to OTHER (entity model says HIV; to be corrected),NHDW-PROGRAMME,OTHER

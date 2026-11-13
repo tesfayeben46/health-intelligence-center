@@ -1,0 +1,12 @@
+id: rm-stockout-risk-kpi
+title: Commodities at Stockout Risk
+kind: kpi
+# Reads the stockout_forecast model's batch predictions through the gateway ML
+# route (GET /api/ml/stockout_forecast/predictions), which enforces PRG/DC.PRO
+# itself (analysts & decision-makers). This entity-bound widget carries no
+# gateway fetcher; `requires` documents the class, and the route is the actual gate.
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

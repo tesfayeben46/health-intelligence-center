@@ -1,0 +1,8 @@
+id: dz-climate-ts
+title: Climate Drivers
+kind: chart
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

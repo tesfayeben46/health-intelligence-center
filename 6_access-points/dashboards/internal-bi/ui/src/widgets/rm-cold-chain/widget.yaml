@@ -1,0 +1,8 @@
+id: rm-cold-chain
+title: Cold-Chain & Safety
+kind: flow
+requires:
+  subject: PRD
+  verb: read
+  granularity: aggregate
+  sensitivity: default

@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: nhdw
+  labels: { app: keycloak, tier: security }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: keycloak } }
+  template:
+    metadata:
+      labels: { app: keycloak, tier: security }
+    spec:
+      initContainers:
+        # Keycloak exits(1) and crash-loops if postgres-vault (its metadata
+        # store) is not ready when it starts, which on a cold boot outlasts
+        # keycloak-seed's readiness wait. Block startup until the `keycloak` role
+        # can connect to nhdw_vault. Uses the already cached postgres:16-alpine
+        # image (works offline; not an nhdw-registry image).
+        - name: wait-for-db
+          image: postgres:16-alpine
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              until PGPASSWORD="$KC_DB_PASSWORD" psql -h postgres-vault.nhdw.svc.cluster.local \
+                    -U keycloak -d nhdw_vault -tAc 'SELECT 1' >/dev/null 2>&1; do
+                echo "  waiting for postgres-vault (keycloak role on nhdw_vault)…"; sleep 5
+              done
+              echo "postgres-vault ready for keycloak"
+          env:
+            - { name: KC_DB_PASSWORD, valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KC_DB_PASSWORD } } }
+      containers:
+        - name: keycloak
+          # Custom image: stock keycloak:26.0.7 plus the baked-in "nhdw" login theme
+          # (7_security/keycloak/Dockerfile). The dev overlay's images: block remaps
+          # it to nhdw/keycloak:1.0.0.
+          image: nhdw-registry:5500/nhdw/keycloak:1.0.0
+          args: [ "start-dev", "--import-realm" ]
+          ports:
+            - { containerPort: 8080, name: http }
+            - { containerPort: 9000, name: mgmt }
+          env:
+            - { name: KC_DB,         value: "postgres" }
+            - { name: KC_DB_URL,     value: "jdbc:postgresql://postgres-vault.nhdw.svc.cluster.local:5432/nhdw_vault?currentSchema=keycloak_metadata" }
+            - { name: KC_DB_USERNAME, value: "keycloak" }
+            - { name: KC_DB_PASSWORD, valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KC_DB_PASSWORD } } }
+            - { name: KC_DB_SCHEMA,   value: "keycloak_metadata" }
+            - { name: KC_HOSTNAME,    value: "http://127.0.0.1:8090" }
+            - { name: KC_HOSTNAME_STRICT, value: "false" }
+            - { name: KC_HOSTNAME_BACKCHANNEL_DYNAMIC, value: "true" }
+            - { name: KC_HTTP_ENABLED, value: "true" }
+            - { name: KC_HEALTH_ENABLED, value: "true" }
+            - { name: KC_BOOTSTRAP_ADMIN_USERNAME, value: "keycloak_admin" }
+            - { name: KC_BOOTSTRAP_ADMIN_PASSWORD, valueFrom: { secretKeyRef: { name: keycloak-secrets, key: KC_BOOTSTRAP_ADMIN_PASSWORD } } }
+            - { name: KC_LOG_LEVEL,  value: "info" }
+          volumeMounts:
+            - { name: realms, mountPath: /opt/keycloak/data/import, readOnly: true }
+          readinessProbe:
+            tcpSocket: { port: 8080 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            tcpSocket: { port: 8080 }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      volumes:
+        - { name: realms, configMap: { name: keycloak-realm-configs } }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: nhdw
+  labels: { app: keycloak, tier: security }
+spec:
+  type: ClusterIP
+  selector: { app: keycloak }
+  ports: [ { port: 8080, targetPort: http, name: http } ]

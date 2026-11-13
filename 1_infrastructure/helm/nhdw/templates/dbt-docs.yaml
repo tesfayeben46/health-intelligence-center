@@ -1,0 +1,61 @@
+# dbt-docs: the data-lineage surface. A small FastAPI app serves the dbt-generated
+# static docs behind its own multi-realm Keycloak OIDC, so a user already logged
+# into a dashboard (moh-staff or privileged-ops) is admitted silently from the
+# shared Keycloak SSO cookie. Served on its own host dbt-docs.{{ .Values.hostBase }}.
+#
+# Content: PROJECTS_ROOT holds each dbt project's target/ (dbt docs generate),
+# delivered through the shared dbt-docs-content volume that the dbt-staging,
+# dbt-vault and dbt-marts Jobs write (each project's entrypoint.py runs `dbt docs
+# generate` into /dbt-docs-out/<project>/target). Until a project's Job has run,
+# the app shows "docs not yet generated" for it.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: dbt-docs, namespace: {{ .Values.namespace }}, labels: { app: dbt-docs, tier: dashboard } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: dbt-docs } }
+  template:
+    metadata: { labels: { app: dbt-docs, tier: dashboard } }
+    spec:
+      containers:
+        - name: app
+          image: {{ include "nhdw.image" (dict "name" "dbt-docs" "ctx" .) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports: [ { containerPort: 80, name: http } ]
+          env:
+            - { name: KEYCLOAK_BASE,        value: "http://keycloak.{{ .Values.namespace }}.svc.cluster.local:8080" }
+            - { name: KEYCLOAK_PUBLIC_BASE, value: "https://keycloak.{{ .Values.hostBase }}" }
+            # Multi-realm: privileged-ops by default (the admin DQ button's realm);
+            # moh-staff is accepted too (staff lineage links pass ?realm=moh-staff).
+            - { name: OIDC_REALMS,   value: "privileged-ops,moh-staff" }
+            - { name: OIDC_CLIENT_ID, value: "dbt-docs" }
+            - name: OIDC_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: dbt-docs-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - { name: OIDC_REDIRECT_URI, value: "https://dbt-docs.{{ .Values.hostBase }}/callback" }
+            - { name: APP_BASE,          value: "https://dbt-docs.{{ .Values.hostBase }}" }
+            - { name: PROJECTS_ROOT,     value: "/dbt-projects" }
+            - { name: ALLOWED_PROJECTS,  value: "marts,vault,staging" }
+            - { name: LOKI_URL,          value: "http://loki.{{ .Values.namespace }}.svc.cluster.local:3100" }
+            - name: SESSION_SECRET
+              valueFrom: { secretKeyRef: { name: app-signing-secrets, key: DBT_DOCS_SESSION_SECRET, optional: true } }
+          volumeMounts:
+            - { name: docs, mountPath: /dbt-projects, readOnly: true }
+          readinessProbe: { httpGet: { path: /health, port: 80 }, initialDelaySeconds: 3, periodSeconds: 5 }
+      volumes:
+        # Written by the dbt Jobs (dbt docs generate into /dbt-projects/<proj>/target).
+        - name: docs
+          persistentVolumeClaim: { claimName: dbt-docs-content }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: dbt-docs-content, namespace: {{ .Values.namespace }} }
+spec:
+  accessModes: [ ReadWriteOnce ]     # local-path on a single node, so the dbt Jobs and dbt-docs can share it
+  resources: { requests: { storage: 512Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: dbt-docs, namespace: {{ .Values.namespace }}, labels: { app: dbt-docs } }
+spec:
+  selector: { app: dbt-docs }
+  ports: [ { port: 80, targetPort: http, name: http } ]

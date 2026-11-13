@@ -1,0 +1,8 @@
+id: admin/classification
+title: Column Governance
+ordering: 42
+widgets:
+- id: adm-classification
+  col_span: 6
+  row_span: 1
+  ordering: 10

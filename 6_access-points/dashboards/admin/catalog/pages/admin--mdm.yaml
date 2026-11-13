@@ -1,0 +1,8 @@
+id: admin/mdm
+title: MDM Stewardship
+ordering: 41
+widgets:
+- id: adm-mdm-review
+  col_span: 6
+  row_span: 1
+  ordering: 10

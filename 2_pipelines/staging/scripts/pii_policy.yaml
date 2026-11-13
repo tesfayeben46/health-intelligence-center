@@ -1,0 +1,156 @@
+# pii_policy.yaml: column-level PII policy for the processed zone (nhdw-processed).
+#
+# Consumed by scripts/build_processed_zone.py: every populated nhdw-raw table
+# is copied to nhdw-processed WITHOUT the columns listed under `drop` (plus all
+# _dlt_* bookkeeping, dropped implicitly). Tables not listed here are skipped
+# loudly: unclassified data never reaches the ML-access zone (fail-safe).
+# When a new source/table lands: classify it (sample real values) and add it here.
+#
+# Column drop only (no hashing/generalisation). Principles:
+#   drop  personal names + *display strings carrying names, person-level
+#         identifier value+system pairs (MRN...), personal birth dates,
+#         phones/emails/contact persons, data-entry/modified-by usernames,
+#         free-text columns that can embed PII, whole-record blobs (a raw
+#         JSON/XML column defeats column-level policy the moment the source
+#         adds a contact field; mfr.raw_resource is dropped for that reason).
+#   keep  opaque surrogate ids / join keys, codes, statuses, quantities,
+#         facility & geography names (public infrastructure), gender,
+#         non-personal dates.
+# Provenance: column-by-column classification with value sampling and an
+# independent review (no surviving PII, no joinability breaks).
+# IDSR rides the dhis2 prefix; climate is its own source; both are covered.
+
+tables:
+  # climate
+  climate/weekly: { drop: [] }
+
+  # dhis2
+  dhis2/category_combos: { drop: [] }
+  dhis2/category_combos__categories: { drop: [] }
+  dhis2/category_combos__category_option_combos: { drop: [] }
+  dhis2/category_option_combos: { drop: [] }
+  dhis2/category_option_combos__category_options: { drop: [] }
+  dhis2/data_element_groups: { drop: [] }
+  dhis2/data_element_groups__data_elements: { drop: [] }
+  dhis2/data_elements: { drop: [] }
+  dhis2/data_sets: { drop: [] }
+  dhis2/data_sets__data_set_elements: { drop: [] }
+  dhis2/data_sets__organisation_units: { drop: [] }
+  dhis2/data_value_sets:
+    drop:
+      - stored_by  # Data-entry username (DHIS2 storedBy)
+  dhis2/organisation_units: { drop: [] }
+
+  # ethioemr
+  ethioemr/encounter:
+    drop:
+      - subject__display  # Patient full name (OpenMRS person_name, given + family)
+      - subject__identifier__system  # System of the patient MRN identifier; dropped with its value
+      - subject__identifier__value  # Person-level identifier value: patient MRN
+  ethioemr/observation:
+    drop:
+      - subject__display  # Patient full name (same display name as encounter)
+      - value_string  # Free-text observation value (OpenMRS obs.value_text); can embed names, notes, PII
+  ethioemr/patient:
+    drop:
+      - birth_date  # Personal date of birth: a quasi-identifier
+      - text__div  # FHIR narrative HTML that embeds the patient's full name
+
+  # hcmiswdm
+  hcmiswdm/commodity_category: { drop: [] }
+  hcmiswdm/commodity_commoditytype: { drop: [] }
+  hcmiswdm/commodity_country: { drop: [] }
+  hcmiswdm/commodity_dosageform: { drop: [] }
+  hcmiswdm/commodity_manufacturer: { drop: [] }
+  hcmiswdm/commodity_product: { drop: [] }
+  hcmiswdm/commodity_program: { drop: [] }
+  hcmiswdm/commodity_supplier:
+    drop:
+      - contact_person  # Personal name of a supplier's contact person: direct PII by schema design
+      - telephone  # Supplier contact phone: often a specific person's line, dropped by default
+      - mobile  # Mobile number: typically a contact person's personal mobile
+      - email  # Contact email address: typically a person's email, not a generic inbox
+      - company_info  # Free-text company blob that can embed contact names, phones, emails
+  hcmiswdm/commodity_suppliertype: { drop: [] }
+  hcmiswdm/commodity_unitofissue: { drop: [] }
+  hcmiswdm/dim_date: { drop: [] }
+  hcmiswdm/dim_environment: { drop: [] }
+  hcmiswdm/dim_item: { drop: [] }
+  hcmiswdm/dim_mode: { drop: [] }
+  hcmiswdm/dim_program: { drop: [] }
+  hcmiswdm/fact_dailyrecord: { drop: [] }
+  hcmiswdm/fact_inventory: { drop: [] }
+  hcmiswdm/vaccine_dailyrecord: { drop: [] }
+  hcmiswdm/vaccine_environment: { drop: [] }
+  hcmiswdm/vaccine_expired: { drop: [] }
+  hcmiswdm/vaccine_institution: { drop: [] }
+  hcmiswdm/vaccine_purchaseorder: { drop: [] }   # procurement pipeline (open POs); no PII; feeds sat_hcmis_purchase_order
+  hcmiswdm/vaccine_issued: { drop: [] }
+  hcmiswdm/vaccine_item: { drop: [] }
+  hcmiswdm/vaccine_received: { drop: [] }
+  hcmiswdm/vaccine_unit: { drop: [] }
+
+  # mbrana
+  mbrana/administrativeunit_administrativeunit: { drop: [] }
+  mbrana/commodity_commoditytype: { drop: [] }
+  mbrana/commodity_product: { drop: [] }
+  mbrana/dbo_institution:
+    drop:
+      - phone  # Facility contact number (gray zone): often a staff member's personal mobile
+      - supervisor_cell_number  # Cell number of a named role-holder (supervisor): a specific person's phone
+      - purchaser_cell_number  # Cell number of a named role-holder (purchaser): a specific person's phone
+      - landline_number  # Facility contact column (gray zone), dropped by default: it can route to a person
+      - modified_by  # Data-entry username of the person who last modified the record
+      - vat_no  # Tax identifier: for sole-proprietor facilities and drug shops it identifies the owner
+      - tin_no  # Tax identifier (TIN): issued to individuals for sole-proprietor facilities
+  mbrana/dbo_region:
+    drop:
+      - modified_by  # Data-entry username of the person who last modified the record
+  mbrana/dbo_woreda:
+    drop:
+      - modified_by  # Data-entry username of the person who last modified the record
+  mbrana/dbo_zone:
+    drop:
+      - modified_by  # Data-entry username of the person who last modified the record
+  mbrana/institution_ownershiptype: { drop: [] }
+  mbrana/mbrana_institutionenvironment: { drop: [] }
+  mbrana/mbrana_sitestatus: { drop: [] }
+  mbrana/mbrana_trendstatus: { drop: [] }
+  mbrana/mflowussd_asnlines: { drop: [] }
+  mbrana/mflowussd_asns: { drop: [] }
+  mbrana/mflowussd_commodities: { drop: [] }
+  mbrana/mflowussd_institutions: { drop: [] }
+  mbrana/mflowussd_requestlines: { drop: [] }
+  mbrana/mflowussd_requests: { drop: [] }
+  mbrana/mflowussd_sohlogs: { drop: [] }
+  mbrana/mflowussd_users:
+    drop:
+      - user_name  # Display/login name of a human USSD user
+      - phone_no  # Personal mobile number of the human user
+  mbrana/usm_environment:
+    drop:
+      - reason  # Free-text explanation of site/trend status changes; free text can carry PII
+  mbrana/usm_environmentgroup: { drop: [] }
+
+  # mfr
+  mfr/organizations:
+    drop:
+      - telecom  # Facility contact JSON (phone/fax/email), dropped by default as gray zone
+      - raw_resource  # Whole-record FHIR Organization JSON blob that embeds every field, including telecom
+  # elmis_hist (OpenLMIS family; no patient-level data, facility identity is governed at display)
+  elmis_hist/reference_geographic_level: { drop: [] }
+  elmis_hist/reference_geographic_zone: { drop: [] }
+  elmis_hist/reference_facility_type: { drop: [] }
+  elmis_hist/reference_facility: { drop: [] }
+  elmis_hist/reference_product_category: { drop: [] }
+  elmis_hist/reference_product_form: { drop: [] }
+  elmis_hist/reference_product_group: { drop: [] }
+  elmis_hist/reference_dosage_unit: { drop: [] }
+  elmis_hist/reference_product: { drop: [] }
+  elmis_hist/reference_programme: { drop: [] }
+  elmis_hist/reference_programme_product: { drop: [] }
+  elmis_hist/reference_processing_schedule: { drop: [] }
+  elmis_hist/reference_reporting_period: { drop: [] }
+  elmis_hist/reference_facility_programme_schedule: { drop: [] }
+  elmis_hist/history_requisition: { drop: [] }
+  elmis_hist/history_requisition_line: { drop: [] }

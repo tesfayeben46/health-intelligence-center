@@ -1,0 +1,23 @@
+id: internal-bi/control-tower/main
+page_id: internal-bi/control-tower
+title: Movement planning
+ordering: 10
+columns: 12
+dense: true
+widgets:
+- id: ct-filters
+  col_span: 12
+  row_span: 1
+  ordering: 0
+- id: ct-kpis
+  col_span: 12
+  row_span: 2
+  ordering: 1
+- id: ct-movement
+  col_span: 12
+  row_span: 10
+  ordering: 2
+- id: ct-dispatch
+  col_span: 12
+  row_span: 6
+  ordering: 3

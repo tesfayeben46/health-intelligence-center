@@ -1,0 +1,6 @@
+# Seasonal default hyperparameters (scalar keys overridable at predict time).
+z: 2.0                 # threshold = mu + z * spread
+min_history_years: 2   # >= this many ISO-years per series activates the multi-year branch
+ratio_lo: 0.3          # current-year level ratio clip (low)
+ratio_hi: 3.0          # current-year level ratio clip (high)
+smooth_window: 5       # centred rolling window for the single-year fallback profile

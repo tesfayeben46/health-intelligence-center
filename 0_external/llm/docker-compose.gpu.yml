@@ -1,0 +1,23 @@
+# GPU overlay for the external Ollama, layered on top of docker-compose.yml by
+# bundle/scripts/sources-up.sh (up_llm) only when the host has an NVIDIA GPU
+# (nvidia-smi). It reserves the GPU device so ollama offloads the model to it
+# (qwen2.5:14b runs at roughly 20 times its CPU speed). Requires the NVIDIA
+# Container Toolkit on the host.
+#
+# CPU-only hosts never load this file; the base docker-compose.yml runs
+# unchanged. Manual bring-up with GPU:
+#
+#     docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+#
+# (`deploy.resources.reservations.devices` is the compose-native GPU request,
+#  honoured by `docker compose up` when the nvidia runtime is present; equivalent
+#  to `docker run --gpus all`.)
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

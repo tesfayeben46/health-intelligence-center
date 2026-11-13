@@ -1,0 +1,8 @@
+id: admin/sso
+title: SSO & Identity
+ordering: 80
+widgets:
+- id: adm-sso-cards
+  col_span: 6
+  row_span: 1
+  ordering: 9

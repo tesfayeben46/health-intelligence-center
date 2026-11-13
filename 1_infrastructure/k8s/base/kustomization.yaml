@@ -1,0 +1,149 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: nhdw
+
+resources:
+  - namespace.yaml
+  # storage
+  - postgres-vault.yaml
+  - seaweedfs.yaml           # object store (S3 API); see 3_storage/seaweedfs/README.md
+  - clickhouse.yaml
+  - trino.yaml
+  # security
+  - opa.yaml
+  - keycloak.yaml
+  # api + ml
+  - gateway-rbac.yaml
+  - nhdw-gateway.yaml
+  - dbt-docs.yaml
+  - superset.yaml            # self-service SQL/BI over the marts (Trino), FAB OIDC
+  - tool-gates.yaml
+  # Each operator tool has its own role-aware front (tool-gates.yaml or native OIDC).
+  # workshop compute: the in-cluster JupyterHub (per-user labs)
+  - jupyterhub.yaml
+  # The LLM is an external component (0_external/llm/), reached at
+  # host.k3d.internal:11434; 0_external/llm/ also documents an in-cluster GPU
+  # recipe for bare-metal Linux.
+  - mlflow.yaml
+  # metadata plane (catalog, lineage): OpenMetadata and its OpenSearch backend
+  - opensearch.yaml
+  - openmetadata.yaml
+  # orchestrator (Airflow: ML batch inference, monitoring, DQ, catalog DAGs)
+  - airflow.yaml
+  # dashboards (5)
+  - internal-bi.yaml
+  - dashboards.yaml
+  - keycloak-seed-job.yaml
+  # ops console
+  - headlamp.yaml
+  # App email uses the external SMTP relay; creds live in the smtp-secrets Secret.
+  # observability stack: Prometheus, Loki, Alertmanager, Promtail.
+  # In-cluster DNS: prometheus:9090, loki:3100, alertmanager:9093; the gateway's
+  # PROMETHEUS_URL / LOKI_URL / ALERTMANAGER_URL default to these.
+  - observability
+  # gateway HPA (metrics-server.yaml is applied separately)
+  - nhdw-gateway-hpa.yaml
+
+configMapGenerator:
+  - name: workspace-profiles
+    files:
+      - profiles.yaml=../../../6_access-points/jupyterhub/profiles.yaml
+  - name: opa-policies
+    files:
+      - ../../../7_security/opa/policies/common.rego
+      - ../../../7_security/opa/policies/role_r_cons_ana.rego
+      - ../../../7_security/opa/policies/role_r_cons_prt.rego
+      - ../../../7_security/opa/policies/role_r_cons_res.rego
+      - ../../../7_security/opa/policies/role_r_cons_sci.rego
+      - ../../../7_security/opa/policies/role_r_dec.rego
+      - ../../../7_security/opa/policies/role_r_ops_adm.rego
+      - ../../../7_security/opa/policies/role_r_ops_eng.rego
+      - ../../../7_security/opa/policies/role_r_ops_sec.rego
+      - ../../../7_security/opa/policies/role_r_prod_clin.rego
+      - ../../../7_security/opa/policies/role_r_prod_submit.rego
+      - ../../../7_security/opa/policies/role_r_pub_anon.rego
+      - ../../../7_security/opa/policies/role_r_stew.rego
+      - ../../../7_security/opa/policies/role_r_super.rego
+
+  - name: keycloak-realm-configs
+    files:
+      - ../../../7_security/keycloak/realm-configs/moh-staff.json
+      - ../../../7_security/keycloak/realm-configs/privileged-ops.json
+      - ../../../7_security/keycloak/realm-configs/ehia-saml-mock.json
+
+  - name: postgres-vault-init
+    files:
+      - ../../../3_storage/postgres/init/00_users.sh
+      - ../../../3_storage/postgres/init/00_users.sql.template
+      - ../../../3_storage/postgres/init/01_schemas.sql
+      - ../../../3_storage/postgres/init/03_program_demo.sql
+      - ../../../3_storage/postgres/init/04_ops_db.sh
+      - ../../../3_storage/postgres/init/05_ops_schemas.sql
+      - ../../../3_storage/postgres/init/06_ops_users.sql.template
+      - ../../../3_storage/postgres/init/07_marts_schemas_extras.sql
+      - ../../../3_storage/postgres/init/08_grafana_db.sh
+      - ../../../3_storage/postgres/init/09_mlflow_db.sh
+      - ../../../3_storage/postgres/init/10_mfr_landing.sql
+      - ../../../3_storage/postgres/init/11_ml_predictions.sh
+      - ../../../3_storage/postgres/init/12_resource_request.sh
+      - ../../../3_storage/postgres/init/13_graduation.sh
+      - ../../../3_storage/postgres/init/14_access_request.sh
+      # 15_workshop_groups_seed.sh is not listed: it seeds workshop members with
+      # FKs to identity rows that do not exist at DB init; it runs in the seeding step.
+      - ../../../3_storage/postgres/init/16_saved_query_schedule.sh
+      - ../../../3_storage/postgres/init/17_perm_schemas.sql
+      # 18_security_seed.sh is not listed: it runs load_security_seed.py (not
+      # mounted in the postgres pod) against identity data in the seeding step.
+      - ../../../3_storage/postgres/init/19_api_tokens.sql
+      - ../../../3_storage/postgres/init/20_keycloak_db.sh
+      - ../../../3_storage/postgres/init/21_airflow_db.sh
+      - ../../../3_storage/postgres/init/22_project.sh
+      - ../../../3_storage/postgres/init/23_perm_admin_grants.sql
+      - ../../../3_storage/postgres/init/24_public_article.sql
+      - ../../../3_storage/postgres/init/25_perm_scope_migration.sql
+      - ../../../3_storage/postgres/init/26_artifact_project.sh
+      - ../../../3_storage/postgres/init/27_ml_monitoring.sh
+      - ../../../3_storage/postgres/init/28_dataset_project_link.sh
+      - ../../../3_storage/postgres/init/29_alert_routing.sql
+      - ../../../3_storage/postgres/init/30_demo_patient_phi.sql
+      - ../../../3_storage/postgres/init/31_superset_db.sh
+      - ../../../3_storage/postgres/init/23_seaweedfs_filer_db.sh
+      # 32/33 are also applied by seed-app-security.sh; listed here so a cold
+      # boot runs the same files as the cold-boot test.
+      - ../../../3_storage/postgres/init/32_permission_store.sql
+      - ../../../3_storage/postgres/init/33_workshop_group_flows.sh
+      # vocabulary and MDM. initdb runs the configmap in filename order on a
+      # fresh volume; without these a cold boot has no nhdw_ref or MDM decision
+      # tier and the vocabulary seed fails on a missing schema.
+      - ../../../3_storage/postgres/init/34_ref_vocab.sql
+      - ../../../3_storage/postgres/init/35_mdm.sql
+      - ../../../3_storage/postgres/init/36_mdm_decisions_read.sql
+      - ../../../3_storage/postgres/init/37_openmetadata_db.sh
+      - ../../../3_storage/postgres/init/38_governance.sql
+      - ../../../3_storage/postgres/init/39_mdm_release.sql
+      - ../../../3_storage/postgres/init/40_dq_read.sql
+      - ../../../3_storage/postgres/init/41_ml_read.sql
+      - ../../../3_storage/postgres/init/42_pct_plan.sql
+      - ../../../3_storage/postgres/init/43_pct_plan_read.sql
+      # MDM maker-checker (proposals wait for a second person before the decision log)
+      - ../../../3_storage/postgres/init/44_mdm_proposal.sql
+      # MDM matcher rules registry + run log (Setup screen, record history)
+      - ../../../3_storage/postgres/init/45_mdm_rules_runs.sql
+      - ../../../3_storage/postgres/init/99_init_complete.sql
+
+
+  - name: keycloak-seed-script
+    files:
+      - ../../../7_security/keycloak/scripts/setup-keycloak.py
+
+  - name: keycloak-users-seed
+    files:
+      - ../../../bundle/seed-pack/app/security/users.yaml
+
+
+  - name: clickhouse-users-d
+    files:
+      - ../../../3_storage/clickhouse/config/users.d/nhdw-named-collections.xml
+
+generatorOptions:
+  disableNameSuffixHash: true

@@ -1,0 +1,12 @@
+# Observability stack: Prometheus, Loki, Alertmanager, Promtail.
+# Grouped so the whole plane is one entry (`- observability`) in the base
+# kustomization and can be toggled as a unit. Plain manifests only (no
+# kube-prometheus-stack).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: nhdw
+resources:
+  - prometheus.yaml
+  - loki.yaml
+  - alertmanager.yaml
+  - promtail.yaml

@@ -1,0 +1,21 @@
+-- Three service users. Passwords are substituted from container env by
+-- 00_users.sh. This script only creates the roles (it runs first, before
+-- 01_schemas.sql). The schema-dependent GRANTs live at the end of
+-- 01_schemas.sql, after the schemas they reference exist; otherwise we'd
+-- have a circular dependency (schemas AUTHORIZE these roles, these roles
+-- are GRANTed on those schemas).
+--
+--   landing_writer  : CH->PG bridge job (TRUNCATE+COPY stg_* mirror tables).
+--   vault_writer    : dbt-postgres + AutomateDV (raw + business vault).
+--   bi_reader       : read-only marts consumer (CloudBeaver, Superset, dashboards).
+--
+-- Idempotent (DROP + CREATE so password rotation works on rerun).
+
+DROP USER IF EXISTS landing_writer;
+CREATE USER landing_writer WITH PASSWORD '${LANDING_WRITER_PASSWORD}';
+
+DROP USER IF EXISTS vault_writer;
+CREATE USER vault_writer WITH PASSWORD '${VAULT_WRITER_PASSWORD}';
+
+DROP USER IF EXISTS bi_reader;
+CREATE USER bi_reader WITH PASSWORD '${BI_READER_PASSWORD}';

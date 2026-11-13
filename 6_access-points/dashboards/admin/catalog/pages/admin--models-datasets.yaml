@@ -1,0 +1,8 @@
+id: admin/models-datasets
+title: Models and datasets
+ordering: 42
+widgets:
+- id: adm-models-datasets
+  col_span: 6
+  row_span: 1
+  ordering: 30

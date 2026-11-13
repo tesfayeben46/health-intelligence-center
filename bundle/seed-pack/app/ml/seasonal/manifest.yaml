@@ -1,0 +1,19 @@
+name: seasonal
+version: v1
+kind: detector
+deployment_kind: batch
+engine: python-seasonal-profile
+provenance: seasonal
+description: >-
+  Seasonal-profile expectation channel. Profile = mean of prior years per
+  ISO-week scaled by the current-year level ratio (clipped 0.3..3); falls back
+  to a single-year leave-one-out smoothed profile when < 2 years of history.
+  Threshold = mu + z*spread (z=2). Emits the flat forecast schema.
+actuals:
+  mart: bi_idsr.mart_ml_disease_input
+  value_col: cases
+  join_keys:
+    district: woreda_uid
+    disease: disease_code
+    year: year
+    week: week

@@ -1,0 +1,8 @@
+id: ct-dispatch
+title: Dispatch runs
+kind: table
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

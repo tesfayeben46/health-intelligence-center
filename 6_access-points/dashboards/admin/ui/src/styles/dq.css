@@ -1,0 +1,194 @@
+/*
+   Data Quality & lineage: page-specific styles.
+   Built entirely on the admin design tokens (base.css). Reuses .kpi, .card,
+   .pill, .page-section, table.dash; adds only what this page needs: source
+   cards, quality meters, sparklines, reconciliation rows, lineage summary,
+   and the operator tool strip.
+   */
+
+.dq-page .page-lede { max-width: 62rem; }
+.dq-kpis { margin-top: 1rem; }
+.dq-kpis .kpi-delta strong { color: var(--ink); font-weight: 700; }
+
+/* Inline notes */
+.dq-note {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-top: 0.9rem; padding: 0.6rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: 0.82rem; color: var(--ink-2);
+  background: #fff; box-shadow: var(--shadow-1);
+}
+.dq-note .ico { flex-shrink: 0; }
+.dq-note-warn  { color: var(--watch); }
+.dq-note-alert { color: var(--alert); background: var(--alert-50); box-shadow: none; }
+.dq-note-inline { font-size: 0.74rem; margin-top: 0.8rem; }
+
+/* Reusable quality meter */
+.dq-meter {
+  height: 6px; border-radius: 999px;
+  background: var(--bg-2); overflow: hidden;
+}
+.dq-meter-fill {
+  display: block; height: 100%; border-radius: 999px;
+  background: var(--ink-4);
+  transition: width .4s cubic-bezier(.2,.7,.2,1);
+}
+.dq-meter-fill.good  { background: var(--good); }
+.dq-meter-fill.watch { background: var(--watch); }
+.dq-meter-fill.alert { background: var(--alert); }
+.dq-meter-fill.flat  { background: var(--border-2); }
+
+/* Merged source-health widget (freshness + quality, one row/source) */
+.dq-src-panel { padding-top: 0.6rem; }
+.dq-table-scroll { overflow-x: auto; }
+table.dash.dq-src-table { margin: 0; }
+table.dash th.num, table.dash td.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.dash td.num.dq-over { color: var(--alert); font-weight: 600; }
+.dq-src-table td { vertical-align: middle; }
+.dq-src-table th { white-space: nowrap; }
+
+.dq-src-name { font-size: 0.9rem; font-weight: 700; color: var(--ink); line-height: 1.15; }
+.dq-src-blurb { font-size: 0.72rem; color: var(--ink-4); margin-top: 0.1rem; }
+
+/* status pill (base .pill already draws the leading state dot) */
+.dq-status { text-transform: capitalize; font-variant-numeric: tabular-nums; }
+
+/* quality cell: meter + tabular % */
+.dq-src-table td.dq-q { min-width: 128px; }
+.dq-q-cell { display: flex; align-items: center; gap: 0.55rem; }
+.dq-q-cell .dq-meter { flex: 1; min-width: 56px; }
+.dq-q-pct {
+  font-size: 0.8rem; font-weight: 600; font-variant-numeric: tabular-nums;
+  color: var(--ink-3); min-width: 2.9rem; text-align: right;
+}
+.dq-q-pct.good  { color: var(--good); }
+.dq-q-pct.watch { color: var(--watch); }
+.dq-q-pct.alert { color: var(--alert); }
+.dq-q-pct.is-na { color: var(--ink-4); font-weight: 500; }
+
+.dq-src-foot-notes {
+  display: flex; flex-direction: column; gap: 0.35rem;
+  margin-top: 0.85rem; padding-top: 0.8rem; border-top: 1px solid var(--border);
+  font-size: 0.74rem;
+}
+.dq-src-foot-notes .muted { display: inline-flex; align-items: center; gap: 0.4rem; }
+.dq-src-foot-notes .ico { color: var(--ink-4); flex-shrink: 0; }
+
+.dq-chip {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  padding: 0.12rem 0.5rem; border-radius: 999px;
+  font-size: 0.68rem; font-weight: 600;
+  background: var(--bg-2); color: var(--ink-3);
+  white-space: nowrap;
+}
+.dq-chip-changed { background: var(--info-50); color: var(--info); }
+.dq-chip-alert { background: var(--alert-50); color: var(--alert); }
+.dq-chip-watch { background: var(--watch-50); color: var(--watch); }
+.dq-chip-flat  { background: var(--paper-2, #f4f4f2); color: var(--ink-3, #6b7280); }
+/* the incidents queue shows no row-count label (the pager already conveys
+   size); scoped to this card only */
+.dq-card .tk-count { display: none; }
+.dq-chip-changed::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.dq-src-table td .dq-chip { margin-top: 0.3rem; }
+
+/* Sparkline */
+.dq-spark { display: block; overflow: visible; }
+.dq-spark path { fill: none; stroke: var(--navy-500); stroke-width: 1.6; stroke-linejoin: round; stroke-linecap: round; }
+.dq-spark circle { fill: var(--navy-700); }
+.dq-spark.up   path   { stroke: var(--good); }
+.dq-spark.up   circle { fill: var(--good); }
+.dq-spark.down path   { stroke: var(--alert); }
+.dq-spark.down circle { fill: var(--alert); }
+.dq-spark-empty { font-size: 0.72rem; color: var(--ink-4); }
+
+/* Quality & reconciliation row */
+.dq-qr { margin-top: 0.2rem; align-items: stretch; }
+.dq-qr .card { display: flex; flex-direction: column; }
+
+/* Dimension scorecard */
+.dq-dim-list { display: flex; flex-direction: column; gap: 0.85rem; margin-top: 0.3rem; }
+.dq-dim { display: flex; flex-direction: column; gap: 0.35rem; }
+.dq-dim-head { display: flex; justify-content: space-between; align-items: baseline; }
+.dq-dim-name { font-size: 0.86rem; font-weight: 600; color: var(--ink-2); }
+.dq-dim-pct { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-3); }
+.dq-dim.good  .dq-dim-pct { color: var(--good); }
+.dq-dim.watch .dq-dim-pct { color: var(--watch); }
+.dq-dim.alert .dq-dim-pct { color: var(--alert); }
+.dq-dim-hint { font-size: 0.7rem; color: var(--ink-4); }
+
+/* Reconciliation */
+.dq-recon-list { display: flex; flex-direction: column; gap: 1.05rem; margin-top: 0.3rem; }
+.dq-recon { display: flex; flex-direction: column; gap: 0.45rem; }
+.dq-recon-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 0.6rem; }
+.dq-recon-name { font-size: 0.9rem; font-weight: 700; color: var(--ink); }
+.dq-recon-sys { font-size: 0.72rem; }
+.dq-recon-pct { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-3); line-height: 1; }
+.dq-recon-pct.good  { color: var(--good); }
+.dq-recon-pct.watch { color: var(--watch); }
+.dq-recon-pct.alert { color: var(--alert); }
+.dq-recon-foot { display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.76rem; color: var(--ink-2); }
+.dq-recon-chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.dq-empty { margin: 0.6rem 0; font-size: 0.84rem; }
+
+/* dbt tests table */
+table.dash.dq-tests { margin: 0; }
+.dq-tests tr.is-acked td { background: var(--good-50) !important; }
+.dq-tests tr.is-acked:hover td { background: var(--good-50) !important; }
+.dq-ack-btn { font-weight: 600; }
+.dq-acked {
+  display: inline-flex; align-items: center; gap: 0.32rem;
+  font-size: 0.76rem; font-weight: 600; color: var(--good);
+}
+.dq-allgreen {
+  display: flex; align-items: center; gap: 0.6rem;
+  margin: 0.6rem 0.2rem; font-size: 0.9rem; color: var(--ink-2);
+}
+.dq-allgreen .ico { color: var(--good); width: 1.3em; height: 1.3em; }
+
+/* Lineage summary + tools */
+.dq-lineage-card { display: flex; flex-direction: column; gap: 1.1rem; }
+.dq-lineage-summary {
+  display: flex; flex-wrap: wrap; align-items: stretch; gap: 0.5rem;
+}
+.dq-tier {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.55rem 0.9rem; border-radius: var(--radius);
+  background: var(--paper-2); border: 1px solid var(--border);
+}
+.dq-tier-n { font-size: 1.15rem; font-weight: 700; color: var(--navy-800); font-variant-numeric: tabular-nums; }
+.dq-tier-lbl { font-size: 0.76rem; font-weight: 600; color: var(--ink-3); }
+.dq-tier-arrow { color: var(--ink-4); margin-left: 0.15rem; }
+
+.dq-lineage-rollup {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;
+  padding-top: 1rem; border-top: 1px solid var(--border);
+}
+.dq-lineage-lbl { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-4); margin-right: 0.2rem; }
+.dq-dbt-link { margin-left: auto; }
+
+.dq-tools {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+  padding-top: 1rem; border-top: 1px solid var(--border);
+}
+.dq-tool {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.8rem 0.95rem; border-radius: var(--radius-lg);
+  background: var(--paper); box-shadow: var(--shadow-1);
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+.dq-tool:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.dq-tool-ico {
+  width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: rgba(45,51,67,0.08); color: var(--navy-700);
+}
+.dq-tool-ico .ico { width: 20px; height: 20px; }
+.dq-tool-txt { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.dq-tool-name { font-size: 0.9rem; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 0.35rem; }
+.dq-tool-name .ico { color: var(--ink-4); }
+.dq-tool-sub { font-size: 0.73rem; color: var(--ink-3); }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .dq-tools { grid-template-columns: 1fr; }
+}

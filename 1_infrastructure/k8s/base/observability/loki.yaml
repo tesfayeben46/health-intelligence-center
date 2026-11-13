@@ -1,0 +1,130 @@
+# Loki: single binary, filesystem object store (boltdb-shipper index) on a
+# local-path PVC, with no S3 dependency so logs stay self-contained and work
+# offline. One replica, in-memory ring, auth disabled.
+#
+# Wiring contracts:
+#   * Service DNS  loki.nhdw.svc.cluster.local:3100  is the gateway's LOKI_URL
+#     (routes/observability.py /logs proxy) and the dbt-docs / public dashboards
+#     (they push app events to /loki/api/v1/push). The Service is named `loki` so
+#     the bare default `http://loki:3100` resolves in-namespace as well.
+#   * Promtail ships every nhdw pod's stdout/stderr here with labels
+#     {namespace,app,pod,container,stream} so topology can tail per node.
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: loki-config, namespace: nhdw, labels: { app: loki, tier: observability } }
+data:
+  loki.yml: |
+    auth_enabled: false
+
+    server:
+      http_listen_port: 3100
+      grpc_listen_port: 9095
+      log_level: info
+
+    common:
+      instance_addr: 127.0.0.1
+      path_prefix: /loki
+      replication_factor: 1
+      ring:
+        instance_addr: 127.0.0.1
+        kvstore:
+          store: inmemory
+      storage:
+        filesystem:
+          chunks_directory: /loki/chunks
+          rules_directory: /loki/rules
+
+    schema_config:
+      configs:
+        - from: 2020-10-24
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v11
+          index:
+            prefix: index_
+            period: 24h
+
+    storage_config:
+      boltdb_shipper:
+        active_index_directory: /loki/boltdb-shipper-active
+        cache_location: /loki/boltdb-shipper-cache
+        cache_ttl: 24h
+      filesystem:
+        directory: /loki/chunks
+
+    compactor:
+      working_directory: /loki/compactor
+      compaction_interval: 10m
+      retention_enabled: true
+      retention_delete_delay: 2h
+      delete_request_store: filesystem
+
+    limits_config:
+      retention_period: 168h            # 7 days (demo scale)
+      reject_old_samples: true
+      reject_old_samples_max_age: 168h
+      max_query_length: 721h
+      ingestion_rate_mb: 8
+      ingestion_burst_size_mb: 16
+
+    ruler:
+      storage:
+        type: local
+        local:
+          directory: /loki/rules
+      rule_path: /loki/rules-temp
+      alertmanager_url: http://alertmanager.nhdw.svc.cluster.local:9093
+      ring:
+        kvstore:
+          store: inmemory
+      enable_api: true
+
+    analytics:
+      reporting_enabled: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: loki-data, namespace: nhdw, labels: { app: loki, tier: observability } }
+spec:
+  accessModes: [ ReadWriteOnce ]
+  resources: { requests: { storage: 4Gi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: loki, namespace: nhdw, labels: { app: loki, tier: observability } }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }          # single RWO PVC: never two writers
+  selector: { matchLabels: { app: loki } }
+  template:
+    metadata: { labels: { app: loki, tier: observability } }
+    spec:
+      securityContext: { runAsUser: 10001, runAsGroup: 10001, fsGroup: 10001 }
+      containers:
+        - name: loki
+          image: grafana/loki:2.9.10
+          imagePullPolicy: IfNotPresent
+          args: [ "-config.file=/etc/loki/loki.yml" ]
+          ports:
+            - { name: http, containerPort: 3100 }
+            - { name: grpc, containerPort: 9095 }
+          readinessProbe: { httpGet: { path: /ready, port: http }, initialDelaySeconds: 15, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /ready, port: http }, initialDelaySeconds: 45, periodSeconds: 15 }
+          resources:
+            requests: { cpu: "100m", memory: "128Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          volumeMounts:
+            - { name: config, mountPath: /etc/loki }
+            - { name: data,   mountPath: /loki }
+      volumes:
+        - { name: config, configMap: { name: loki-config } }
+        - { name: data,   persistentVolumeClaim: { claimName: loki-data } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: loki, namespace: nhdw, labels: { app: loki, tier: observability } }
+spec:
+  selector: { app: loki }
+  ports:
+    - { name: http, port: 3100, targetPort: http }
+    - { name: grpc, port: 9095, targetPort: grpc }

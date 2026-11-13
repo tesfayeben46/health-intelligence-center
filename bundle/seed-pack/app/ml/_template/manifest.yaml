@@ -1,0 +1,78 @@
+# manifest.yaml: the identity card of an NHDW model package.
+#
+# This _template/ directory documents the package contract: copy it, rename
+# it, fill it in. The same layout is used by
+#   * bundle seeds        bundle/seed-pack/app/ml/<name>/     (trained at boot)
+#   * community uploads   a .tar.gz of this layout, uploaded through the
+#                         workshop and stored in the object store (SeaweedFS)
+#                         at nhdw-artifacts/ml-packages/<name>/<vN>/
+#   * external imports    partners pushing to the same gateway API
+# All three run through the same execution primitive, the ephemeral
+# ml-runner Job (2_pipelines/ml/runner/); no path bypasses it.
+#
+# Files in a package (required unless marked optional):
+#   manifest.yaml       this file
+#   feature_spec.yaml   what data the model trains/predicts on
+#   train.py            train(df, params) -> mlflow.pyfunc.PythonModel
+#   params.yaml         default hyperparameters             (optional, {} if absent)
+#   requirements.txt    pip extras beyond the runner image  (optional, usually empty)
+#   model_card.md       plain-language description
+#   tests/              self-tests the validators run       (≥ 1 smoke test)
+#
+# No widgets in a package: a dashboard widget catalog
+# (6_access-points/dashboards/*/catalog/widgets.yaml) references a model by name.
+# No model binaries in a package: fitted models live only in MLflow and its
+# object-store artifact bucket.
+
+# Registry key. Lowercase snake_case, globally unique. This becomes the
+# MLflow registered-model name, the ops_ml.ml_predictions.model_name value,
+# the ops_ml.model_deployment.model_name key, and the /api/ml/<name> path.
+name: my_model
+
+# Package version (versions the package code; the MLflow registry assigns its
+# own model-version numbers per training run). Bump on any behaviour change.
+version: v1
+
+# forecaster : emits the unified flat forecast schema (see train.py) that
+#              ops_ml.ml_predictions stores and the dz-* widgets read.
+# detector   : classification/scoring models that are only run ad-hoc.
+kind: forecaster
+
+# batch     : the weekly Airflow DAG runs `predict-batch` for every enabled
+#             ops_ml.model_deployment row, writing to ops_ml.ml_predictions.
+# on_demand : only runnable via the gateway's async predict (CSV in/out).
+deployment_kind: batch
+
+# Free-text engine label, surfaced in the model catalogue.
+# Examples: python-endemic-channel · python-statsmodels-nb2 · holt-winters
+engine: python-endemic-channel
+
+# One paragraph. Shown as the MLflow registered-model description and in
+# the workshop catalogue. Keep the detail in model_card.md.
+description: >-
+  Template forecaster: same-ISO-week endemic channel with an 8-week rolling
+  fallback when history is shorter than two years. Replace with what YOUR
+  model predicts.
+
+# Where the method comes from: 'ewars' for the WHO EWARS ports, 'community'
+# for workshop uploads, an org name for external imports. Stored as a model
+# tag; widgets show it as the data_provenance of a forecast.
+provenance: community
+
+# optional: actuals binding (performance scoring)
+# Tells the platform where the ground truth for your predictions lives, so
+# ops_ml.model_performance (MAE/MAPE/coverage per window) can be computed by
+# joining your predictions back to a mart. Omit the whole block if your
+# model has no scoreable truth (e.g. ad-hoc detectors).
+#   mart       schema-qualified relation to read actuals from
+#   value_col  the truth column in that mart
+#   join_keys  prediction-column to mart-column mapping (the flat-schema keys
+#              on the left; year/week always join on themselves)
+actuals:
+  mart: bi_idsr.mart_ml_disease_input
+  value_col: cases
+  join_keys:
+    district: woreda_uid
+    disease: disease_code
+    year: year
+    week: week

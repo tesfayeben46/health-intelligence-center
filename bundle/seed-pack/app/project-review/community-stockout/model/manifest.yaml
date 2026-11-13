@@ -1,0 +1,15 @@
+name: community_stockout
+version: v1
+kind: forecaster
+deployment_kind: batch
+engine: holt-winters
+provenance: holt_winters
+description: >-
+  Holt-Winters consumption forecast -> days-to-stockout per commodity, from the
+  monthly bi_supply.mart_resource_allocation. Emits the flat forecast schema:
+  district=commodity_name, pred_cases_*=projected consumption, alarm_prob=
+  stockout risk, attrs={soh_now, amc_30d, days_remaining, stockout_date, status}.
+# No actuals block: the truth (next-month amc) aligns by month_id, not by the
+# projection year/week the flat schema stores, so it does not fit the standard
+# year/week actuals-join convention. Performance scoring for supply models
+# needs a month-grain join of its own.

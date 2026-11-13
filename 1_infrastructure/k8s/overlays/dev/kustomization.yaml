@@ -1,0 +1,226 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: nhdw
+resources:
+  - ../../base
+  - secrets.yaml
+  - ingress.yaml
+
+# Remap the CI registry-pinned images to the locally built nhdw/*:1.0.0 images
+# (built by bundle/scripts/build-images.sh and imported into the cluster).
+images:
+  - { name: "nhdw-registry:5500/nhdw/openlmis-ingestor", newName: nhdw/openlmis-ingestor, newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/admin",            newName: nhdw/admin,            newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/gateway",          newName: nhdw/gateway,          newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/keycloak",         newName: nhdw/keycloak,         newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/internal-bi",      newName: nhdw/internal-bi,      newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/workshop",         newName: nhdw/workshop,         newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/mlflow",           newName: nhdw/mlflow,           newTag: 1.0.0 }
+  # (No LLM image: the LLM is external, served by stock ollama/ollama:0.6.8 from
+  # 0_external/llm/.)
+  # orchestrator and ML runner (the runner is also referenced by ML_RUNNER_IMAGE
+  # on the airflow Deployment, patched below; keep in sync).
+  - { name: "nhdw-registry:5500/nhdw/airflow",          newName: nhdw/airflow,          newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/ml-runner",        newName: nhdw/ml-runner,        newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/public-dashboard", newName: nhdw/public-dashboard, newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/dbt-docs",         newName: nhdw/dbt-docs,         newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/superset",         newName: nhdw/superset,         newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/tool-gate",        newName: nhdw/tool-gate,        newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/vault-bridge",     newName: nhdw/vault-bridge,     newTag: 1.0.0 }
+  # workshop compute: the hub itself; the singleuser lab image is carried in env
+  # (SINGLEUSER_IMAGE, patched below like ML_RUNNER_IMAGE; keep in sync).
+  - { name: "nhdw-registry:5500/nhdw/jupyterhub",       newName: nhdw/jupyterhub,       newTag: 1.0.0 }
+
+# All nhdw images are pre-imported into the cluster; never pull them from a
+# registry. Force IfNotPresent on the first container of every workload kind.
+patches:
+  - target: { kind: Deployment }
+    patch: |
+      - { op: add, path: /spec/template/spec/containers/0/imagePullPolicy, value: IfNotPresent }
+  - target: { kind: StatefulSet }
+    patch: |
+      - { op: add, path: /spec/template/spec/containers/0/imagePullPolicy, value: IfNotPresent }
+  - target: { kind: CronJob }
+    patch: |
+      - { op: add, path: /spec/jobTemplate/spec/template/spec/containers/0/imagePullPolicy, value: IfNotPresent }
+
+  # airflow: force local images on all its containers (the generic patch above
+  # covers only containers[0]) and point DAG-launched pods at the locally built
+  # images. A kustomize `images:` remap cannot reach image strings inside the
+  # DAGs, so they read ML_RUNNER_IMAGE and the other *_IMAGE env vars (keep in
+  # sync with the images block above).
+  - target: { kind: Deployment, name: airflow }
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata: { name: airflow }
+      spec:
+        template:
+          spec:
+            initContainers:
+              - name: airflow-init
+                imagePullPolicy: IfNotPresent
+            containers:
+              - name: scheduler
+                imagePullPolicy: IfNotPresent
+                env:
+                  - { name: ML_RUNNER_IMAGE, value: "nhdw/ml-runner:1.0.0" }
+                  # The DAG builds every pipeline image name from these vars (the default, nhdw-registry:5500
+                  # …:v1, is unreachable locally), so each image is set here, not only the runner.
+                  - { name: INGESTOR_DHIS2_IMAGE, value: "nhdw/dhis2-ingestor:1.0.0" }
+                  - { name: INGESTOR_CLIMATE_IMAGE, value: "nhdw/climate-ingestor:1.0.0" }
+                  - { name: INGESTOR_ETHIOEMR_IMAGE, value: "nhdw/ethioemr-ingestor:1.0.0" }
+                  - { name: INGESTOR_HCMISWDM_IMAGE, value: "nhdw/hcmiswdm-ingestor:1.0.0" }
+                  - { name: INGESTOR_MBRANA_IMAGE, value: "nhdw/mbrana-ingestor:1.0.0" }
+                  - { name: INGESTOR_MFR_IMAGE, value: "nhdw/mfr-ingestor:1.0.0" }
+                  - { name: INGESTOR_OPENLMIS_IMAGE, value: "nhdw/openlmis-ingestor:1.0.0" }
+                  - { name: STAGING_DBT_IMAGE, value: "nhdw/staging-dbt:1.0.0" }
+                  - { name: VAULT_BRIDGE_IMAGE, value: "nhdw/vault-bridge:1.0.0" }
+                  - { name: VAULT_DBT_IMAGE, value: "nhdw/vault-dbt:1.0.0" }
+                  - { name: MARTS_DBT_IMAGE, value: "nhdw/marts-dbt:1.0.0" }
+              - name: webserver
+                imagePullPolicy: IfNotPresent
+                env:
+                  - { name: ML_RUNNER_IMAGE, value: "nhdw/ml-runner:1.0.0" }
+                  # The DAG builds every pipeline image name from these vars (the default, nhdw-registry:5500
+                  # …:v1, is unreachable locally), so each image is set here, not only the runner.
+                  - { name: INGESTOR_DHIS2_IMAGE, value: "nhdw/dhis2-ingestor:1.0.0" }
+                  - { name: INGESTOR_CLIMATE_IMAGE, value: "nhdw/climate-ingestor:1.0.0" }
+                  - { name: INGESTOR_ETHIOEMR_IMAGE, value: "nhdw/ethioemr-ingestor:1.0.0" }
+                  - { name: INGESTOR_HCMISWDM_IMAGE, value: "nhdw/hcmiswdm-ingestor:1.0.0" }
+                  - { name: INGESTOR_MBRANA_IMAGE, value: "nhdw/mbrana-ingestor:1.0.0" }
+                  - { name: INGESTOR_MFR_IMAGE, value: "nhdw/mfr-ingestor:1.0.0" }
+                  - { name: INGESTOR_OPENLMIS_IMAGE, value: "nhdw/openlmis-ingestor:1.0.0" }
+                  - { name: STAGING_DBT_IMAGE, value: "nhdw/staging-dbt:1.0.0" }
+                  - { name: VAULT_BRIDGE_IMAGE, value: "nhdw/vault-bridge:1.0.0" }
+                  - { name: VAULT_DBT_IMAGE, value: "nhdw/vault-dbt:1.0.0" }
+                  - { name: MARTS_DBT_IMAGE, value: "nhdw/marts-dbt:1.0.0" }
+
+  # JupyterHub spawns lab pods from an env-carried image ref (SINGLEUSER_IMAGE)
+  # that the images: transform cannot reach; patch it to the local image
+  # (same pattern as ML_RUNNER_IMAGE above; keep in sync).
+  - patch: |-
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata: { name: jupyterhub, namespace: nhdw }
+      spec:
+        template:
+          spec:
+            containers:
+              - name: hub
+                imagePullPolicy: IfNotPresent
+                env:
+                  - { name: SINGLEUSER_IMAGE, value: "nhdw/jupyterlab:1.0.0" }
+
+  # OIDC consistent-hostname wiring (HTTPS via Traefik ingress and nip.io)
+  # Keycloak: advertise the external HTTPS URL and trust the edge proxy headers
+  # so it emits https URLs and sets Secure cross-origin session cookies.
+  - target: { kind: Deployment, name: keycloak }
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata: { name: keycloak }
+      spec:
+        template:
+          spec:
+            containers:
+              - name: keycloak
+                env:
+                  - { name: KC_HOSTNAME, value: "https://keycloak.127.0.0.1.nip.io" }
+                  - { name: KC_PROXY_HEADERS, value: "xforwarded" }
+  # internal-bi (moh-staff)
+  - target: { kind: Deployment, name: internal-bi }
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata: { name: internal-bi }
+      spec:
+        template:
+          spec:
+            containers:
+              - name: dashboard
+                env:
+                  - { name: KEYCLOAK_PUBLIC_BASE, value: "https://keycloak.127.0.0.1.nip.io" }
+                  - { name: OIDC_REDIRECT_URI,    value: "https://internal-bi.127.0.0.1.nip.io/" }
+                  - { name: APP_BASE,           value: "https://internal-bi.127.0.0.1.nip.io" }
+  # workshop (moh-staff)
+  - target: { kind: Deployment, name: workshop }
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata: { name: workshop }
+      spec:
+        template:
+          spec:
+            containers:
+              - name: dashboard
+                env:
+                  - { name: KEYCLOAK_PUBLIC_BASE, value: "https://keycloak.127.0.0.1.nip.io" }
+                  - { name: OIDC_REDIRECT_URI,    value: "https://workshop.127.0.0.1.nip.io/" }
+                  - { name: APP_BASE,           value: "https://workshop.127.0.0.1.nip.io" }
+  # admin (privileged-ops)
+  - target: { kind: Deployment, name: admin }
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata: { name: admin }
+      spec:
+        template:
+          spec:
+            containers:
+              - name: dashboard
+                env:
+                  - { name: KEYCLOAK_PUBLIC_BASE, value: "https://keycloak.127.0.0.1.nip.io" }
+                  - { name: OIDC_REDIRECT_URI,    value: "https://admin.127.0.0.1.nip.io/" }
+                  - { name: APP_BASE,           value: "https://admin.127.0.0.1.nip.io" }
+  # public-dashboard: resolve the SPA's sibling sign-in and admin-queue links to
+  # the nip.io Ingress hosts. The SPA fetches these from /api/access-points, which
+  # derives https://<sub>.<NHDW_BASE_DOMAIN> from this var (unset: localhost dev
+  # ports). Same base as every other surface; keep in sync with the hosts above.
+  - target: { kind: Deployment, name: public-dashboard }
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata: { name: public-dashboard }
+      spec:
+        template:
+          spec:
+            containers:
+              - name: dashboard
+                env:
+                  - { name: NHDW_BASE_DOMAIN, value: "127.0.0.1.nip.io" }
+  # keycloak-seed: configure client redirect URIs and broker issuer to match
+  - target: { kind: Job, name: keycloak-seed }
+    patch: |
+      apiVersion: batch/v1
+      kind: Job
+      metadata: { name: keycloak-seed }
+      spec:
+        template:
+          spec:
+            containers:
+              - name: seed
+                env:
+                  - { name: KC_PUBLIC_BASE,        value: "https://keycloak.127.0.0.1.nip.io" }
+                  - { name: DASH_BASE_INTERNAL_BI, value: "https://internal-bi.127.0.0.1.nip.io" }
+                  - { name: DASH_BASE_WORKSHOP,    value: "https://workshop.127.0.0.1.nip.io" }
+                  - { name: DASH_BASE_ADMIN,       value: "https://admin.127.0.0.1.nip.io" }
+  # gateway: accept tokens whose issuer is the new HTTPS hostname, and rewrite
+  # that public base to the internal keycloak URL when fetching JWKS.
+  # ML_RUNNER_IMAGE: gateway-spawned runner Jobs (retrain / predict-adhoc)
+  # bypass the kustomize images remap, so point them at the local dev image
+  # (same pattern as the airflow patch above; keep in sync).
+  - target: { kind: Deployment, name: nhdw-gateway }
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata: { name: nhdw-gateway }
+      spec:
+        template:
+          spec:
+            containers:
+              - name: gateway
+                env:
+                  - { name: KEYCLOAK_ALLOWED_ISSUERS, value: "https://keycloak.127.0.0.1.nip.io/realms/moh-staff,https://keycloak.127.0.0.1.nip.io/realms/privileged-ops" }
+                  - { name: KEYCLOAK_PUBLIC_BASE,     value: "https://keycloak.127.0.0.1.nip.io" }
+                  - { name: ML_RUNNER_IMAGE,          value: "nhdw/ml-runner:1.0.0" }

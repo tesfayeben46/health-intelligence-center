@@ -1,0 +1,29 @@
+dataset:
+  slug: hmis-monthly
+  title: HMIS Monthly Report
+  family: producer-payload
+
+  source_system: submitted
+  schema: null
+  table: null
+
+  data_classes: [DC.ENC, DC.PRF]
+  sensitivity: default
+  subjects: [FAC]
+  contains_phi: false
+  pii_fields: []
+
+  owner_role: R-STEW
+  visible_to: [R-STEW]              # the payload is consumed downstream, not read raw
+  writable_by: [R-PROD-SUBMIT]
+  k_anon_min: null
+  retention_days: 2555
+
+  format: csv
+  description: >
+    Aggregate health indicators per facility-month. Submitted by facility
+    data clerks via the Submission Portal. CSV columns: facility_id,
+    indicator_code, period, value, unit.
+
+  last_reviewed_at: 2026-06-07
+  last_reviewer: R-STEW

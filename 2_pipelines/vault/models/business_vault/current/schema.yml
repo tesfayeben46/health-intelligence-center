@@ -1,0 +1,206 @@
+# Hand-maintained (business vault is outside gen-vault-tests.py scope).
+# Current-record layer: one view per raw-vault satellite, DISTINCT ON the
+# hash key ORDER BY load_ts DESC. The unique test on the hash key is the
+# layer's contract: exactly one row per hash key at any history depth.
+
+models:
+  - name: v_sat_climate_week_current
+    description: 'Latest sat_climate_week record per hash key (current-record view).'
+    columns:
+      - name: hk_climate_week
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_dhis2_category_combo_current
+    description: 'Latest sat_dhis2_category_combo record per hash key (current-record view).'
+    columns:
+      - name: hk_dhis2_category_combo
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_dhis2_category_option_combo_current
+    description: 'Latest sat_dhis2_category_option_combo record per hash key (current-record view).'
+    columns:
+      - name: hk_dhis2_category_option_combo
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_dhis2_data_element_current
+    description: 'Latest sat_dhis2_data_element record per hash key (current-record view).'
+    columns:
+      - name: hk_dhis2_data_element
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_dhis2_data_set_current
+    description: 'Latest sat_dhis2_data_set record per hash key (current-record view).'
+    columns:
+      - name: hk_dhis2_data_set
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_dhis2_data_value_current
+    description: 'Latest sat_dhis2_data_value record per hash key (current-record view).'
+    columns:
+      - name: hk_dhis2_data_value
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_dhis2_org_unit_current
+    description: 'Latest sat_dhis2_org_unit record per hash key (current-record view).'
+    columns:
+      - name: hk_dhis2_org_unit
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_ethioemr_encounter_current
+    description: 'Latest sat_ethioemr_encounter record per hash key (current-record view).'
+    columns:
+      - name: hk_ethioemr_encounter
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_ethioemr_observation_current
+    description: 'Latest sat_ethioemr_observation record per hash key (current-record view).'
+    columns:
+      - name: hk_ethioemr_observation
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_ethioemr_patient_current
+    description: 'Latest sat_ethioemr_patient record per hash key (current-record view).'
+    columns:
+      - name: hk_ethioemr_patient
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_hcmis_commodity_current
+    description: 'Latest sat_hcmis_commodity record per hash key (current-record view).'
+    columns:
+      - name: hk_hcmis_commodity
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_hcmis_date_current
+    description: 'Latest sat_hcmis_date record per hash key (current-record view).'
+    columns:
+      - name: hk_hcmis_date
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_hcmis_facility_current
+    description: 'Latest sat_hcmis_facility record per hash key (current-record view).'
+    columns:
+      - name: hk_hcmis_facility
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_hcmis_item_current
+    description: 'Latest sat_hcmis_item record per hash key (current-record view).'
+    columns:
+      - name: hk_hcmis_item
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_hcmis_stock_event_current
+    description: 'Latest sat_hcmis_stock_event record per hash key (current-record view).'
+    columns:
+      - name: hk_hcmis_stock_event
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_hcmis_vaccine_event_current
+    description: 'Latest sat_hcmis_vaccine_event record per hash key (current-record view).'
+    columns:
+      - name: hk_hcmis_vaccine_event
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_mbrana_commodity_current
+    description: 'Latest sat_mbrana_commodity record per hash key (current-record view).'
+    columns:
+      - name: hk_mbrana_commodity
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_mbrana_facility_current
+    description: 'Latest sat_mbrana_facility record per hash key (current-record view).'
+    columns:
+      - name: hk_mbrana_facility
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_mbrana_region_current
+    description: 'Latest sat_mbrana_region record per hash key (current-record view).'
+    columns:
+      - name: hk_mbrana_region
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_mbrana_stock_event_current
+    description: 'Latest sat_mbrana_stock_event record per hash key (current-record view).'
+    columns:
+      - name: hk_mbrana_stock_event
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_mbrana_ussd_facility_current
+    description: 'Latest sat_mbrana_ussd_facility record per hash key (current-record view).'
+    columns:
+      - name: hk_mbrana_ussd_facility
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_mbrana_woreda_current
+    description: 'Latest sat_mbrana_woreda record per hash key (current-record view).'
+    columns:
+      - name: hk_mbrana_woreda
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_mbrana_zone_current
+    description: 'Latest sat_mbrana_zone record per hash key (current-record view).'
+    columns:
+      - name: hk_mbrana_zone
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_mfr_facility_current
+    description: 'Latest sat_mfr_facility record per hash key (current-record view).'
+    columns:
+      - name: hk_mfr_facility
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+  - name: v_sat_mfr_organization_current
+    description: 'Latest sat_mfr_organization record per hash key (current-record view).'
+    columns:
+      - name: hk_mfr_organization
+        description: 'Hash key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique

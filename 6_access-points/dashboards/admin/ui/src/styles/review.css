@@ -1,0 +1,126 @@
+/*
+   Review Queue (admin/review): page-specific styles.
+   Built entirely on the admin design tokens (base.css). Reuses .card,
+   .pill, .btn, .field-group, table.dash; adds only the master-detail
+   layout the graduation console needs: queue rows, fact grid, decision
+   forms and inline notes. Namespace: .rv-*.
+   */
+
+.rv-page .page-lede { max-width: 62rem; }
+
+/* Inline notes (success / failure banners) */
+.rv-note {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin-top: 0.9rem; padding: 0.6rem 0.9rem;
+  border-radius: var(--radius);
+  font-size: 0.84rem; color: var(--ink-2);
+  background: #fff; box-shadow: var(--shadow-1);
+}
+.rv-note .ico { flex-shrink: 0; }
+.rv-note-good  { color: var(--good);  background: var(--good-50);  box-shadow: none; }
+.rv-note-alert { color: var(--alert); background: var(--alert-50); box-shadow: none; }
+.rv-note-txt { flex: 1; min-width: 0; }
+.rv-note-dismiss {
+  border: none; background: transparent; color: inherit; cursor: pointer;
+  display: grid; place-items: center; padding: 0.15rem; border-radius: 6px;
+}
+.rv-note-dismiss:hover { background: rgba(0,0,0,0.06); }
+
+/* Master-detail layout */
+.rv-layout {
+  display: grid; grid-template-columns: minmax(300px, 380px) 1fr;
+  gap: 1.2rem; align-items: start; margin-top: 1rem;
+}
+.rv-detail-wrap { position: sticky; top: 1rem; min-width: 0; }
+
+/* Queue list */
+.rv-list { padding: 0.6rem 0.6rem 0.8rem; display: flex; flex-direction: column; gap: 0.35rem; }
+.rv-list .tk-toolbar { padding: 0.35rem 0.1rem 0.45rem; }
+.rv-list .tk-toolbar .tk-search { min-width: 0; flex: 1 1 auto; }
+/* fixed-height scroll body (table standard) */
+.rv-list-body {
+  display: flex; flex-direction: column; gap: 0.35rem;
+  max-height: 480px; overflow: auto;
+}
+.rv-list .tk-pager { padding: 0.55rem 0.2rem 0; margin-top: 0.2rem; }
+.rv-list-hdr {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.6rem 0.65rem; border-bottom: 1px solid var(--border);
+}
+.rv-list-hdr .ico { color: var(--navy-700); }
+.rv-list-hdr h4 { font-size: 0.95rem; }
+
+.rv-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 0.6rem;
+  width: 100%; text-align: left; cursor: pointer;
+  padding: 0.6rem 0.7rem; border-radius: var(--radius);
+  border: 1px solid transparent; background: transparent;
+  font: inherit; color: inherit;
+  transition: background .15s ease, border-color .15s ease;
+}
+.rv-row:hover { background: var(--navy-50); }
+.rv-row.active { background: var(--navy-50); border-color: var(--border-2); }
+.rv-row-main { display: flex; flex-direction: column; gap: 0.3rem; min-width: 0; }
+/* One-line, auto-truncating title: smaller so it always
+   fits on one line; longer titles ellipsize. rv-row-main has min-width:0 so the
+   flex child is allowed to shrink below its content width. */
+.rv-row-name { font-size: 0.82rem; font-weight: 700; color: var(--ink); line-height: 1.25;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.rv-row-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem; font-size: 0.74rem; color: var(--ink-3); }
+.rv-row-kind { display: inline-flex; align-items: center; gap: 0.25rem; }
+.rv-row-side { display: flex; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+.rv-row-side .ico { color: var(--ink-4); }
+.rv-row-when { font-size: 0.72rem; white-space: nowrap; }
+
+.rv-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+  padding: 2.2rem 1rem; text-align: center;
+}
+.rv-empty .ico { width: 26px; height: 26px; color: var(--good); }
+.rv-empty h4 { font-size: 0.98rem; }
+.rv-empty p { font-size: 0.8rem; color: var(--ink-3); max-width: 26rem; }
+
+/* Detail panel */
+.rv-detail { display: flex; flex-direction: column; gap: 0.6rem; min-width: 0; }
+.rv-detail-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.rv-detail-name { font-size: 1.35rem; }
+.rv-detail-desc { font-size: 0.88rem; color: var(--ink-2); line-height: 1.55; }
+.rv-hint { font-size: 0.78rem; line-height: 1.5; }
+
+.rv-facts {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem;
+  padding: 0.8rem 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+}
+.rv-fact { display: flex; align-items: flex-start; gap: 0.55rem; min-width: 0; }
+.rv-fact > .ico { color: var(--navy-700); flex-shrink: 0; margin-top: 0.1rem; }
+.rv-fact-lbl { font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-4); }
+.rv-fact-val { font-size: 0.86rem; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+
+.rv-section { padding-top: 0.5rem; }
+.rv-section-h {
+  font-family: var(--font-sans); font-size: 0.74rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-4);
+  margin-bottom: 0.5rem;
+}
+.rv-table-scroll { overflow-x: auto; }
+table.dash.rv-table { margin: 0; }
+
+/* Decision forms / actions */
+.rv-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.3rem; }
+.rv-form { display: flex; flex-direction: column; gap: 0.15rem; }
+.rv-form .rv-note { margin-top: 0.3rem; }
+
+/* 403 state */
+.rv-denied {
+  display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  padding: 3rem 1.5rem; text-align: center; margin-top: 1rem;
+}
+.rv-denied .ico { width: 28px; height: 28px; color: var(--ink-4); }
+.rv-denied p { font-size: 0.85rem; color: var(--ink-3); max-width: 30rem; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .rv-layout { grid-template-columns: 1fr; }
+  .rv-detail-wrap { position: static; }
+  .rv-facts { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,5 @@
+dlt[filesystem,parquet,sql_database]==1.4.0
+pyodbc==5.1.0
+SQLAlchemy==2.0.35
+pyarrow==17.0.0
+setuptools<76

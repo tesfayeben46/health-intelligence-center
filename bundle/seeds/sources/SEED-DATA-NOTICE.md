@@ -1,0 +1,3 @@
+# Source seed CSVs: not included in the repository
+
+The per-source CSV extracts that belong in this directory are excluded from the repository and distributed separately. The one the bring-up needs is `mfr/` (`organizations.csv`, `facilities.csv`, `devices.csv`): `seed-realistic.sh` loads it directly into the `nhdw_landing.stg_mfr__*` tables, and nothing else fills those tables, so without it the MFR marts are empty. `bundle/scripts/export-source-seeds.sh` writes these files from the landing tables of a platform that already has them loaded; it copies an existing load and cannot create one. The Climate generator writes `climate/weekly.csv` here at bring-up. See also `0_external/sources/*/sample-data/` and [`docs/data-provenance.md`](../../../docs/data-provenance.md).

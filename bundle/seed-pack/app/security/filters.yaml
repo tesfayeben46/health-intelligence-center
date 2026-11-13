@@ -1,0 +1,107 @@
+# Catalog of every filter (global or local). Loaded into ops_perm.filter.
+# source: how the resolver fetches the canonical value set.
+#   static       -> static_values is the full canonical list
+#   mart_query   -> source_ref is a mart view to SELECT DISTINCT from
+#   ops_db_query -> source_ref is an ops-DB table/view (e.g. user's groups)
+#
+# A role's allowed_values is intersected with whatever this catalog returns.
+# A new filter dimension (e.g. 'partner_org') needs a catalog row here and a
+# reference from role_grants.yaml; no code change.
+
+- id: region
+  title: Region (admin-1)
+  source: mart_query
+  source_ref: marts.dim_geography
+  static_values: null
+
+- id: woreda
+  title: Woreda (admin-3)
+  source: mart_query
+  source_ref: marts.dim_geography
+  static_values: null
+
+- id: facility
+  title: Facility
+  source: mart_query
+  source_ref: marts.dim_facility
+  static_values: null
+
+- id: programme
+  title: Programme
+  source: static
+  source_ref: null
+  static_values: [HIV, TB, EPI, MNCH, NCD, Malaria, FP, Nutrition]
+
+# Commodity is a plain UI narrowing filter (like 'period'): it has no scope
+# dimension (absent from app/dimensions.py::FILTER_DIMENSION), so it is always
+# wildcard and never role-capped; it narrows only through the fetchers' commodity
+# column WHERE. static_values are the exact commodity_name values in the supply
+# marts (bi_supply.mart_supply_region_stock / mart_resource_allocation).
+- id: commodity
+  title: Commodity
+  source: static
+  source_ref: null
+  static_values:
+    ["Amlodipine 5mg", "Amoxicillin 250 DT", "Artemether-Lumefantrine",
+     "BCG vaccine", "COVID-19 vaccine", "Combined oral contracept.",
+     "Depo-Provera", "Fortified blended food", "GeneXpert cartridge",
+     "HIV RDT kit", "HPV vaccine", "IPV (inactivated polio)", "Implanon NXT",
+     "Insulin · regular 100 IU", "Iron-folate", "Isoniazid 300mg",
+     "LLIN bed net", "Losartan 50mg", "Magnesium sulphate 50%",
+     "Malaria RDT pf/pv", "Measles-Rubella", "Metformin 500mg",
+     "OPV trivalent", "ORS sachet", "Oxytocin 10 IU/ml", "PCV-13",
+     "Paracetamol 500mg", "Pediatric ART", "Pentavalent DTwP-HepB-Hib",
+     "RHZE fixed-dose combo", "RUTF (ready-to-use)", "Rotavirus vaccine",
+     "TLD · adult ART", "Tetanus toxoid"]
+
+- id: disease
+  title: Notifiable disease
+  source: static
+  source_ref: null
+  static_values:
+    [cholera, measles, awd, malaria, meningitis, dengue, yellowfever, pertussis,
+     typhoid, plague, rabies, tetanus, anthrax, hepa, chikungunya, mpox, covid19,
+     leishmaniasis, leptospirosis, guineaworm]
+
+- id: period
+  title: Period
+  source: static
+  source_ref: null
+  static_values: [last_4wk, last_12wk, last_6mo, last_12mo, last_24mo, ytd, efy_ytd]
+
+- id: severity
+  title: Severity
+  source: static
+  source_ref: null
+  static_values: [info, watch, alert, critical]
+
+- id: facility_tier
+  title: Facility tier
+  source: static
+  source_ref: null
+  static_values: [health-post, health-centre, primary-hospital, general-hospital, specialised-hospital]
+
+- id: artifact_tier
+  title: Artifact tier (workshop)
+  source: static
+  source_ref: null
+  static_values: [public, shared, personal]
+
+- id: workshop_group
+  title: Workshop group (member of)
+  source: ops_db_query
+  source_ref: ops_artifact.workshop_group
+  static_values: null
+
+- id: project
+  title: Project
+  source: ops_db_query
+  source_ref: ops_workspace.project
+  static_values: null
+
+# Tool-scope filter for the chatbot widget
+- id: chatbot-tools
+  title: Chatbot tools available
+  source: static
+  source_ref: null
+  static_values: [read, run_sql, interact]

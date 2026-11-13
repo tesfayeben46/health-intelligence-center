@@ -1,0 +1,103 @@
+# Public-dashboard newsroom (articles CMS) seed for Zambia (zm-v1).
+#
+# These articles are illustrative sample content written for the demonstration
+# deployment. They are not statements by the organisations, agencies or
+# officials named in them (such as the Ministry of Health, ZAMMSA (Zambia
+# Medicines and Medical Supplies Agency) or ZNPHI (Zambia National Public
+# Health Institute)), and they are not official publications.
+#
+# Country-specific sibling of articles.yaml (Ethiopia), loaded when the active
+# profile resolves to this file, so a Zambian deployment never shows Ethiopian
+# bulletins. The supply topics follow the eLMIS demonstration data. body is
+# curated HTML.
+
+articles:
+  - id: z-001
+    category: Programme
+    author: ZAMMSA
+    date: 2026-06-14
+    title: "Tracer commodity availability holds at 95% nationwide"
+    tags: [eLMIS, availability, commodity-security]
+    linked_widget: pub-zm-supply
+    summary: >-
+      The latest eLMIS position shows on-shelf availability of tracer commodities
+      at 95% across all 10 provinces, with stockout exposure of 16% of
+      facility-product-months. Order fill against calculated need stands at 82%.
+    body: |
+      <p>The Zambia Medicines and Medical Supplies Agency (ZAMMSA) reports that on-shelf availability of tracer commodities held steady at <strong>95%</strong> in the latest monthly eLMIS reporting period, drawing on facility-level requisitions from health facilities across all ten provinces.</p>
+      <p>Stockout exposure (the share of facility-product-months recording any stockout) was <strong>16%</strong>, and the order fill rate (approved against system-calculated order quantity) was <strong>82%</strong>. Availability was strongest in North Western and Muchinga, with Central and Eastern provinces marginally below the national average.</p>
+      <p>The National Health Data Warehouse surfaces these figures on the public Supply Insights panel, aggregated to national and provincial level from the eLMIS archive. Province-level supply managers can drill to facility and commodity detail in the internal Control Tower.</p>
+
+  - id: z-002
+    category: Press
+    author: MoH Communications
+    date: 2026-06-11
+    title: "Ministry launches consultations on the National Health Strategic Plan"
+    tags: [NHSP, policy, consultation]
+    summary: >-
+      The Ministry of Health begins national consultations on the next National
+      Health Strategic Plan, with commodity security and digital health among the
+      priority pillars.
+    body: |
+      <p>The Ministry of Health today opened national consultations on the forthcoming National Health Strategic Plan at a stakeholders' forum in Lusaka.</p>
+      <p>The plan is organised around <strong>universal health coverage</strong>, <strong>commodity and supply-chain security</strong>, and <strong>digital transformation of the health information system</strong>. Provincial consultations will run through the coming quarter.</p>
+      <p>Cooperating partners, professional associations, and the public are invited to submit input. A full draft will be published for review, and progress indicators will be tracked through the National Health Data Warehouse.</p>
+
+  - id: z-003
+    category: Advisory
+    author: ZAMMSA Supply Chain
+    date: 2026-06-08
+    title: "Redistribution advisory: tracer ARVs in three districts"
+    tags: [ARV, redistribution, stockout]
+    linked_widget: pub-zm-supply
+    summary: >-
+      A small number of districts are carrying under one month of stock of key
+      antiretrovirals while neighbouring districts hold surplus. Provincial teams
+      are advised to redistribute within the district hub before re-ordering.
+    body: |
+      <p>Routine eLMIS monitoring has flagged a handful of facilities carrying <strong>under one month of stock</strong> of first-line antiretrovirals, while facilities in the same district report surplus above the maximum stock level.</p>
+      <p>Provincial supply teams are advised to action <strong>within-district redistribution</strong> ahead of the next order cycle, as the platform's replenishment view estimates the movable surplus covers the shortfall in most affected districts. Emergency orders should be reserved for districts where no local surplus exists.</p>
+      <p>The Supply Insights panel tracks stockout exposure and months-of-stock bands for tracer commodities; the internal Control Tower ranks facilities by stockout risk for the coming month.</p>
+
+  - id: z-004
+    category: PHEM
+    author: ZNPHI Surveillance
+    date: 2026-06-05
+    title: "Malaria diagnostic supply ahead of the transmission season"
+    tags: [malaria, RDT, diagnostics]
+    summary: >-
+      Rapid diagnostic test (RDT) availability for malaria is being scaled up in
+      high-burden provinces ahead of the rainy-season transmission peak.
+    body: |
+      <p>The Zambia National Public Health Institute (ZNPHI), working with the national malaria programme, is scaling up availability of malaria rapid diagnostic tests (RDTs) in high-burden districts ahead of the seasonal transmission peak.</p>
+      <p>Diagnostic supply is a leading indicator for case management: eLMIS availability data for malaria RDTs is being reviewed weekly, and provinces below target availability are prioritised for resupply. Treatment commodity availability is tracked alongside diagnostics.</p>
+      <p>Surveillance and supply signals are read together in the warehouse so that a rise in demand can be matched to commodity position at facility level.</p>
+
+  - id: z-005
+    category: Advisory
+    author: Child Health Unit
+    date: 2026-06-02
+    title: "Routine immunization outreach: June schedule"
+    tags: [immunisation, outreach, child-health]
+    summary: >-
+      The routine immunization programme is running catch-up outreach in selected
+      districts this month. Caregivers are encouraged to visit their nearest
+      health facility.
+    body: |
+      <p>The child health programme is conducting routine immunization catch-up outreach in selected districts this month, targeting children under five who have missed scheduled doses.</p>
+      <p>Vaccine and cold-chain commodity availability is monitored through the supply chain ahead of each outreach round so that sessions are not disrupted by stockouts. Caregivers are encouraged to visit their nearest health facility or outreach point.</p>
+      <p>Coverage and commodity-availability indicators are published through the National Health Data Warehouse.</p>
+
+  - id: z-006
+    category: Press
+    author: MoH Digital Health
+    date: 2026-05-28
+    title: "National Health Data Warehouse opens public data catalogue"
+    tags: [open-data, digital-health, transparency]
+    summary: >-
+      The Ministry's data warehouse now publishes a curated, privacy-protected
+      open-data catalogue, alongside the supply and public-health dashboards.
+    body: |
+      <p>The Ministry of Health's National Health Data Warehouse has opened a curated <strong>open-data catalogue</strong>, publishing privacy-protected, aggregate datasets for public use.</p>
+      <p>The catalogue sits alongside the public supply and public-health dashboards, all drawn from the same governed marts. Every published figure is aggregated and k-anonymity-protected before release, and each dataset carries its definition and update cadence.</p>
+      <p>The initiative is part of a broader digital-health transformation to make routine health data accessible to researchers, partners, and the public while protecting individual privacy.</p>

@@ -1,0 +1,54 @@
+dhis2:
+  category_option_combos:
+    category_combo_id: category_combo__id
+  data_elements:
+    category_combo_id: category_combo__id
+  data_sets:
+    category_combo_id: category_combo__id
+  indicators:
+    indicator_type_id: indicator_type__id
+  organisation_units:
+    parent_id: parent__id
+ethioemr:
+  patient:
+    meta_version_id: meta__version_id
+    meta_last_updated: meta__last_updated
+    meta_source: meta__source
+    text_status: text__status
+    text_div: text__div
+  encounter:
+    meta_version_id: meta__version_id
+    meta_last_updated: meta__last_updated
+    meta_source: meta__source
+    class_system: class__system
+    class_code: class__code
+    class_display: class__display
+    subject_reference: subject__reference
+    subject_display: subject__display
+    subject_type: subject__type
+    subject_identifier_system: subject__identifier__system
+    subject_identifier_value: subject__identifier__value
+    period_start: period__start
+    period_end: period__end
+    part_of_reference: part_of__reference
+    service_provider_reference: service_provider__reference
+    service_provider_display: service_provider__display
+    service_provider_identifier_system: service_provider__identifier__system
+    service_provider_identifier_value: service_provider__identifier__value
+  observation:
+    meta_version_id: meta__version_id
+    meta_last_updated: meta__last_updated
+    meta_source: meta__source
+    code_text: code__text
+    subject_reference: subject__reference
+    subject_display: subject__display
+    encounter_reference: encounter__reference
+    effective_period_start: effective_period__start
+    effective_period_end: effective_period__end
+    value_quantity_value: value_quantity__value
+    value_quantity_unit: value_quantity__unit
+    value_quantity_system: value_quantity__system
+    value_quantity_code: value_quantity__code
+    value_codeable_concept_text: value_codeable_concept__text
+    method_text: method__text
+    effective_dt: effective_date_time

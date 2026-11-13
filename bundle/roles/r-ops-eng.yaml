@@ -1,0 +1,58 @@
+# R-OPS-ENG: Data Engineer / Platform Operator
+role:
+  id: R-OPS-ENG
+  name: "Data Engineer"
+  group: Operator
+  identity_provider: Privileged-Keycloak
+  mfa_required: true
+  mfa_factor: WebAuthn   # hardware mandatory
+  phase_activated: 1
+  audit_class: privileged
+  notes: |
+    Engineers running ETL pipelines, dbt models, the object store, the warehouse,
+    the orchestrator. Triggers, retries, pauses pipelines.
+
+    PHI access is METADATA only by default (counts, run health, schema).
+    Direct PHI reads require break-glass: time-limited token issued by
+    R-OPS-SEC approval, triggers immediate alert + post-hoc review.
+  permissions:
+    # Every subject: metadata only, never row-level content by default.
+    - subject: PT
+      data_class: []
+      members: all
+      granularity: metadata
+      sensitivity: []
+      verbs: [read, annotate]
+      purpose_of_use: [operations]
+
+    - subject: HP
+      data_class: []
+      members: all
+      granularity: metadata
+      sensitivity: []
+      verbs: [read, annotate]
+      purpose_of_use: [operations]
+
+    - subject: FAC
+      data_class: []
+      members: all
+      granularity: metadata
+      sensitivity: []
+      verbs: [read, annotate]
+      purpose_of_use: [operations]
+
+    - subject: PRD
+      data_class: []
+      members: all
+      granularity: metadata
+      sensitivity: []
+      verbs: [read, annotate]
+      purpose_of_use: [operations]
+
+    - subject: PRG
+      data_class: []
+      members: all
+      granularity: metadata
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [operations]

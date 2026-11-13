@@ -1,0 +1,66 @@
+# R-PROD-SUBMIT: Data Submitter / HMIS Clerk
+role:
+  id: R-PROD-SUBMIT
+  name: "Data Submitter"
+  group: Producer
+  identity_provider: MoH-Keycloak
+  mfa_required: true
+  mfa_factor: TOTP
+  phase_activated: 1
+  audit_class: standard
+  notes: |
+    Facility / agency IT focal points, HMIS clerks, supply-chain officers.
+    Submits structured files (CSV/JSON/FHIR Bundle); views submission
+    status; resubmits corrections. No PHI access: submissions of
+    aggregate facility data only.
+  permissions:
+    # Facility: own facility/agency, profile + performance, with submit verb.
+    - subject: FAC
+      data_class: [DC.PRO, DC.PRF]
+      members: scoped
+      scope:
+        geography:
+          level: facility
+          values: ['param:user.assigned_facility']
+        cohort: facility
+      granularity: raw
+      sensitivity: []
+      verbs: [read, submit, annotate]
+      purpose_of_use: [operations]
+
+    # Programmes at own facility: aggregate read and submit.
+    - subject: PRG
+      data_class: []
+      members: scoped
+      scope:
+        programmatic: ['param:user.assigned_program']
+        cohort: facility
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read, submit]
+      purpose_of_use: [operations]
+
+    # Stock and orders at own facility, raw: they manage the inventory submissions.
+    - subject: PRD
+      data_class: [DC.STK, DC.ORD]
+      members: scoped
+      scope:
+        geography:
+          level: facility
+          values: ['param:user.assigned_facility']
+        cohort: facility
+      granularity: raw
+      sensitivity: []
+      verbs: [read, submit]
+      purpose_of_use: [operations]
+
+    # Health Professionals: aggregate roster at own facility (no PHI).
+    - subject: HP
+      data_class: [DC.PRO]
+      members: scoped
+      scope:
+        cohort: facility
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [operations]

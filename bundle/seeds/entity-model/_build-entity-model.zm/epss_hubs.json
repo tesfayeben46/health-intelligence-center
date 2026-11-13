@@ -1,0 +1,26 @@
+[
+  {
+    "id": "LSK",
+    "name": "Lusaka Regional Hub",
+    "region_id": "ZM-50",
+    "serves": [
+      "ZM-10",
+      "ZM-80",
+      "ZM-90",
+      "ZM-30",
+      "ZM-50"
+    ]
+  },
+  {
+    "id": "NDL",
+    "name": "Ndola Regional Hub",
+    "region_id": "ZM-20",
+    "serves": [
+      "ZM-20",
+      "ZM-70",
+      "ZM-40",
+      "ZM-60",
+      "ZM-91"
+    ]
+  }
+]

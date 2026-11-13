@@ -1,0 +1,19 @@
+id: workshop/models/catalog
+page_id: workshop/models
+title: Model catalogue
+eyebrow: Registry · @champion / @challenger
+ordering: 10
+columns: 12
+dense: true
+widgets:
+- id: ws-models-table
+  col_span: 12
+  row_span: 1
+  ordering: 0
+  filters:
+  - artifact_tier
+  - project
+- id: ws-model-workbench
+  col_span: 12
+  row_span: 1
+  ordering: 10

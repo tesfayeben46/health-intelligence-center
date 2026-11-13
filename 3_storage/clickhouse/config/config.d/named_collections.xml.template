@@ -1,0 +1,21 @@
+<!--
+  Template: the real file is the `clickhouse-named-collections` Secret in
+  1_infrastructure/k8s/overlays/dev/secrets.yaml (gitignored), mounted at
+  /etc/clickhouse-server/config.d/named_collections.xml. Values MUST equal the
+  minio-secrets ROOT_USER/ROOT_PASSWORD (same file; keep in lock-step).
+
+  Every raw view reads the lake through this server-side collection, so SQL
+  never carries credentials and no orchestration injects them:
+      SELECT * FROM s3(nhdw_minio, url = 'http://.../nhdw-raw/<src>/<tbl>/**/*.parquet',
+                       format = 'Parquet')
+  (The old from_env variant crashed CH 24.3 at startup; literal values via a
+  mounted Secret are the supported shape.)
+-->
+<clickhouse>
+    <named_collections>
+        <nhdw_minio>
+            <access_key_id>changeme-minio-root-user</access_key_id>
+            <secret_access_key>changeme-minio-root-password</secret_access_key>
+        </nhdw_minio>
+    </named_collections>
+</clickhouse>

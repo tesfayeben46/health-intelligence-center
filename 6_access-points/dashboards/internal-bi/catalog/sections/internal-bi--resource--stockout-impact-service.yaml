@@ -1,0 +1,19 @@
+id: internal-bi/resource/stockout-impact-service
+page_id: internal-bi/resource
+title: Stockout Impact on Service
+ordering: 40
+columns: 12
+dense: true
+widgets:
+- id: rm-stockout-impact
+  col_span: 7
+  row_span: 3
+  ordering: 0
+- id: rm-forecast
+  col_span: 5
+  row_span: 3
+  ordering: 1
+- id: rm-events
+  col_span: 12
+  row_span: 3
+  ordering: 2

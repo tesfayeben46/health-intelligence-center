@@ -1,0 +1,36 @@
+id: public/home
+title: Home
+ordering: 10
+widgets:
+- id: pub-hero
+  col_span: 6
+  row_span: 1
+  ordering: 0
+- id: pub-newsroom
+  col_span: 6
+  row_span: 1
+  ordering: 1
+- id: pub-insights
+  col_span: 6
+  row_span: 1
+  ordering: 2
+- id: pub-zm-supply
+  col_span: 6
+  row_span: 1
+  ordering: 2
+- id: pub-region
+  col_span: 6
+  row_span: 1
+  ordering: 3
+- id: pub-supply
+  col_span: 6
+  row_span: 1
+  ordering: 4
+- id: pub-zm-kpi
+  col_span: 6
+  row_span: 1
+  ordering: 5
+- id: pub-zm-province
+  col_span: 6
+  row_span: 1
+  ordering: 6

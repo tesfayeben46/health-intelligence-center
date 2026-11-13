@@ -1,0 +1,12 @@
+id: internal-bi/disease/geographic-risk
+page_id: internal-bi/disease
+title: Geographic Risk
+description: "Where disease burden and response readiness concentrate by region. Click a region to see its worst-affected woredas."
+ordering: 20
+columns: 12
+dense: true
+widgets:
+- id: dz-region-map
+  col_span: 12
+  row_span: 4
+  ordering: 0

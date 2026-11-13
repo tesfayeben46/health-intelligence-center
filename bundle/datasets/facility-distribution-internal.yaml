@@ -1,0 +1,29 @@
+dataset:
+  slug: facility-distribution-internal
+  title: Health Facility Distribution (internal view)
+  family: mart-internal
+
+  source_system: DHIS2
+  schema: bi_facility
+  table: bi_facility_distribution
+
+  data_classes: [DC.PRO, DC.PRF]
+  sensitivity: default
+  subjects: [FAC]
+  contains_phi: false
+  pii_fields: []
+
+  owner_role: R-STEW
+  visible_to: [R-DEC, R-CONS-ANA, R-STEW]
+  writable_by: [R-STEW]      # rebuilt by the dbt-marts Job, not by humans
+  k_anon_min: null
+  retention_days: 1825
+
+  format: sql-view
+  description: >
+    Counts of DHIS2 PHCUs (level 5) and health facilities (level 6) per
+    region. Sourced from the conformed DHIS2 org_unit hub + sat. No
+    individual identifiers: facility-level aggregates only.
+
+  last_reviewed_at: 2026-06-07
+  last_reviewer: R-STEW

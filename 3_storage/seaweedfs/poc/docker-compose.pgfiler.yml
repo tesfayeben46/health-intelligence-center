@@ -1,0 +1,37 @@
+# Stage B overlay: runs the filer against a PostgreSQL metadata store, as in
+# the deployment, instead of the default embedded LevelDB. Filer metadata then
+# shares the platform Postgres and its backups.
+#
+# Run:  docker compose -f docker-compose.yml -f docker-compose.pgfiler.yml up -d
+services:
+  filer-db:
+    image: postgres:16
+    container_name: swpoc-filerdb
+    environment:
+      POSTGRES_DB: seaweedfs_filer
+      POSTGRES_USER: seaweedfs
+      POSTGRES_PASSWORD: pocfilerpass
+    networks: [ swpoc ]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U seaweedfs -d seaweedfs_filer"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  filer:
+    depends_on:
+      master: { condition: service_healthy }
+      filer-db: { condition: service_healthy }
+    environment:
+      WEED_POSTGRES_ENABLED: "true"
+      WEED_POSTGRES_HOSTNAME: filer-db
+      WEED_POSTGRES_PORT: "5432"
+      WEED_POSTGRES_USERNAME: seaweedfs
+      WEED_POSTGRES_PASSWORD: pocfilerpass
+      WEED_POSTGRES_DATABASE: seaweedfs_filer
+      WEED_POSTGRES_SSLMODE: disable
+      WEED_POSTGRES_CONNECTION_MAX_IDLE: "5"
+      WEED_POSTGRES_CONNECTION_MAX_OPEN: "20"
+      # Turn the default store OFF, or the filer keeps using leveldb2 and the
+      # test silently proves nothing.
+      WEED_LEVELDB2_ENABLED: "false"

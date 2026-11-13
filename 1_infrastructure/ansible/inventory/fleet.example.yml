@@ -1,0 +1,29 @@
+# NHDW inventory, fleet example: one k3s server and N agents, local or remote.
+#
+# Copy to `fleet.yml`, fill in the real hosts and deploy against it with the same playbook
+# as single-node. Hosts may be local VMs or remote machines reached over SSH (set
+# ansible_host, ansible_user and the key). `nhdw_topology: fleet` selects the values-fleet
+# profile (HA control-plane option, real storage class, resource requests, pod
+# anti-affinity) at deploy time.
+all:
+  vars:
+    nhdw_topology: fleet
+    nhdw_cluster_name: nhdw
+    # SSH defaults for remote hosts (override per-host as needed).
+    ansible_user: ubuntu
+    ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+    ansible_python_interpreter: /usr/bin/python3
+  children:
+    control_plane:
+      # One server for a simple fleet; use three (an odd number) for an HA control plane.
+      hosts:
+        nhdw-server-1:
+          ansible_host: 10.0.0.11
+    workers:
+      hosts:
+        nhdw-agent-1:
+          ansible_host: 10.0.0.21
+        nhdw-agent-2:
+          ansible_host: 10.0.0.22
+        nhdw-agent-3:
+          ansible_host: 10.0.0.23

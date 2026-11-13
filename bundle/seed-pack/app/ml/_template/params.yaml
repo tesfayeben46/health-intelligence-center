@@ -1,0 +1,21 @@
+# params.yaml: default hyperparameters.
+#
+# Passed to train(df, params) as a plain dict at train time. Every entry is
+# also logged to the MLflow run as a parameter (audit trail).
+#
+# Scalar entries (str/int/float/bool, or lists of those) also become the
+# model's MLflow *params schema*: they can be overridden at predict time
+# without retraining:
+#     runner.py predict-batch <name> --params '{"k": 2.5}'
+# or via the params jsonb column of the model's ops_ml.model_deployment row.
+# Nested mappings stay train-time-only.
+#
+# Optional file: omit it if the model has no parameters ({} is passed).
+
+# Endemic-channel sensitivity: threshold = mean + k·spread.
+k: 3.0
+
+# Short-history fallback: how many preceding weeks form the baseline when
+# fewer than min_history_years of prior years exist (see train.py docstring).
+fallback_window: 8
+min_history_years: 2

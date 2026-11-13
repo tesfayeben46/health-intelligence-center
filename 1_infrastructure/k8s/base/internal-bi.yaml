@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: internal-bi
+  namespace: nhdw
+  labels: { app: internal-bi, tier: dashboard }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: internal-bi }
+  template:
+    metadata:
+      labels: { app: internal-bi, tier: dashboard }
+    spec:
+      containers:
+        - name: dashboard
+          image: nhdw-registry:5500/nhdw/internal-bi:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [ { containerPort: 80, name: http } ]
+          env:
+            - { name: DEV_AUTH,              value: "false" }
+            - { name: KEYCLOAK_BASE,         value: "http://keycloak.nhdw.svc.cluster.local:8080" }
+            - { name: KEYCLOAK_PUBLIC_BASE,  value: "http://127.0.0.1:8090" }
+            - { name: OIDC_REALM,            value: "moh-staff" }
+            - { name: OIDC_CLIENT_ID,        value: "internal-bi" }
+            - { name: OIDC_REDIRECT_URI,     value: "http://127.0.0.1:8087/" }
+            - { name: APP_BASE,              value: "http://127.0.0.1:8087" }
+            - { name: GATEWAY_URL,           value: "http://nhdw-gateway.nhdw.svc.cluster.local:8000" }
+          readinessProbe:
+            httpGet: { path: /health, port: 80 }
+            initialDelaySeconds: 3
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: internal-bi
+  namespace: nhdw
+  labels: { app: internal-bi, tier: dashboard }
+spec:
+  type: ClusterIP
+  selector: { app: internal-bi }
+  ports:
+    - { port: 80, targetPort: http, name: http }

@@ -1,0 +1,8 @@
+source_key,cadence,deadline_offset_days,grace_hours,note
+DHIS2,monthly,15,24,"facility monthly reports due by the 15th of the following month"
+EthioEMR,daily,1,6,"encounter feed expected next-day"
+HCMIS,weekly,7,24,"warehouse stock snapshot weekly"
+mBrana,daily,1,12,"USSD stock events expected next-day"
+Climate,weekly,7,48,"weekly climate series"
+MFR,quarterly,90,168,"facility registry refresh"
+eLMIS-hist,monthly,15,0,"monthly R&R due 15 days after the period closes; the rule mart_elmis_hist_timeliness measures against; grace 0 keeps that baseline exact"

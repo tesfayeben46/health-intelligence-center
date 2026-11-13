@@ -1,0 +1,12 @@
+id: workshop/settings/profile
+page_id: workshop/settings
+title: Profile
+eyebrow: Identity · roles
+ordering: 10
+columns: 12
+dense: true
+widgets:
+- id: ws-settings-profile
+  col_span: 12
+  row_span: 1
+  ordering: 0

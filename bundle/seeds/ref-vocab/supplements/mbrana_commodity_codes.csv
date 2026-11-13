@@ -1,0 +1,35 @@
+source_code,source_vocabulary_id,source_code_description,target_vocabulary_id,target_concept_code
+EPI-001,MBRANA.commodityCode,live-derived: BCG vaccine,NHDW-COMMODITY,bcg vaccine
+EPI-002,MBRANA.commodityCode,live-derived: OPV trivalent,NHDW-COMMODITY,opv trivalent
+EPI-003,MBRANA.commodityCode,live-derived: IPV (inactivated polio),NHDW-COMMODITY,ipv inactivated polio
+EPI-004,MBRANA.commodityCode,live-derived: Pentavalent DTwP-HepB-Hib,NHDW-COMMODITY,pentavalent dtwphepbhib
+EPI-005,MBRANA.commodityCode,live-derived: PCV-13,NHDW-COMMODITY,pcv13
+EPI-006,MBRANA.commodityCode,live-derived: Rotavirus vaccine,NHDW-COMMODITY,rotavirus vaccine
+EPI-007,MBRANA.commodityCode,live-derived: Measles-Rubella,NHDW-COMMODITY,measlesrubella
+EPI-008,MBRANA.commodityCode,live-derived: HPV vaccine,NHDW-COMMODITY,hpv vaccine
+EPI-009,MBRANA.commodityCode,live-derived: COVID-19 vaccine,NHDW-COMMODITY,covid19 vaccine
+EPI-010,MBRANA.commodityCode,live-derived: Tetanus toxoid,NHDW-COMMODITY,tetanus toxoid
+FP-023,MBRANA.commodityCode,live-derived: Implanon NXT,NHDW-COMMODITY,implanon nxt
+FP-024,MBRANA.commodityCode,live-derived: Depo-Provera,NHDW-COMMODITY,depoprovera
+FP-025,MBRANA.commodityCode,live-derived: Combined oral contracept.,NHDW-COMMODITY,combined oral contracept
+GEN-033,MBRANA.commodityCode,live-derived: Amoxicillin 250 DT,NHDW-COMMODITY,amoxicillin 250 dt
+GEN-034,MBRANA.commodityCode,live-derived: Paracetamol 500mg,NHDW-COMMODITY,paracetamol 500mg
+HIV-014,MBRANA.commodityCode,live-derived: TLD · adult ART,NHDW-COMMODITY,tld  adult art
+HIV-015,MBRANA.commodityCode,live-derived: Pediatric ART,NHDW-COMMODITY,pediatric art
+HIV-016,MBRANA.commodityCode,live-derived: HIV RDT kit,NHDW-COMMODITY,hiv rdt kit
+MAL-020,MBRANA.commodityCode,live-derived: Artemether-Lumefantrine,NHDW-COMMODITY,artemetherlumefantrine
+MAL-021,MBRANA.commodityCode,live-derived: Malaria RDT pf/pv,NHDW-COMMODITY,malaria rdt pfpv
+MAL-022,MBRANA.commodityCode,live-derived: LLIN bed net,NHDW-COMMODITY,llin bed net
+MNC-011,MBRANA.commodityCode,live-derived: Oxytocin 10 IU/ml,NHDW-COMMODITY,oxytocin 10 iuml
+MNC-012,MBRANA.commodityCode,live-derived: Magnesium sulphate 50%,NHDW-COMMODITY,magnesium sulphate 50
+MNC-013,MBRANA.commodityCode,live-derived: Iron-folate,NHDW-COMMODITY,ironfolate
+NCD-026,MBRANA.commodityCode,live-derived: Amlodipine 5mg,NHDW-COMMODITY,amlodipine 5mg
+NCD-027,MBRANA.commodityCode,live-derived: Insulin · regular 100 IU,NHDW-COMMODITY,insulin  regular 100 iu
+NCD-028,MBRANA.commodityCode,live-derived: Metformin 500mg,NHDW-COMMODITY,metformin 500mg
+NCD-029,MBRANA.commodityCode,live-derived: Losartan 50mg,NHDW-COMMODITY,losartan 50mg
+NUT-030,MBRANA.commodityCode,live-derived: RUTF (ready-to-use),NHDW-COMMODITY,rutf readytouse
+NUT-031,MBRANA.commodityCode,live-derived: Fortified blended food,NHDW-COMMODITY,fortified blended food
+NUT-032,MBRANA.commodityCode,live-derived: ORS sachet,NHDW-COMMODITY,ors sachet
+TB-017,MBRANA.commodityCode,live-derived: RHZE fixed-dose combo,NHDW-COMMODITY,rhze fixeddose combo
+TB-018,MBRANA.commodityCode,live-derived: GeneXpert cartridge,NHDW-COMMODITY,genexpert cartridge
+TB-019,MBRANA.commodityCode,live-derived: Isoniazid 300mg,NHDW-COMMODITY,isoniazid 300mg

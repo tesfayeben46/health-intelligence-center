@@ -1,0 +1,8 @@
+id: sv-compliance
+title: Clinical-guideline compliance
+kind: chart
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

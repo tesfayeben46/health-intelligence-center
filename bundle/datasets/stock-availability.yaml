@@ -1,0 +1,29 @@
+dataset:
+  slug: stock-availability
+  title: Commodity Stock Levels
+  family: producer-payload
+
+  source_system: submitted
+  schema: null
+  table: null
+
+  data_classes: [DC.STK]
+  sensitivity: default
+  subjects: [FAC, PRD]
+  contains_phi: false
+  pii_fields: []
+
+  owner_role: R-STEW
+  visible_to: [R-STEW]
+  writable_by: [R-PROD-SUBMIT]
+  k_anon_min: null
+  retention_days: 1825
+
+  format: csv
+  description: >
+    Drug code + on-hand units + week_ending per facility-commodity. Used
+    downstream by stock-out and months-of-stock marts in bi_supply.
+    Submitted via Submission Portal.
+
+  last_reviewed_at: 2026-06-07
+  last_reviewer: R-STEW

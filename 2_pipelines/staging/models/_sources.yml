@@ -1,0 +1,125 @@
+# dbt sources: one entry per raw_<source>__<object> view in nhdw_staging.
+#
+# These ext views are created by 2_pipelines/staging/raw_views/raw_views.sql.
+# A `{{ source('raw', 'dhis2__data_value_sets') }}` in a model resolves to
+# `nhdw_staging.raw_dhis2__data_value_sets` at compile time.
+#
+# When the ingestor lands a new object, add the ext view there and register it
+# here; both halves of the contract live in one repo.
+
+version: 2
+
+sources:
+  - name: raw
+    description: "External views over the lake's Parquet (SeaweedFS), created by `2_pipelines/staging/raw_views/raw_views.sql`. No data materialised in this database."
+    database: nhdw_staging
+    schema: nhdw_staging
+    tables:
+      # DHIS2
+      - name: dhis2__data_value_sets
+        identifier: raw_dhis2__data_value_sets
+        description: "DHIS2 dataValueSets: the canonical fact-row source."
+      - name: dhis2__organisation_units
+        identifier: raw_dhis2__organisation_units
+        description: "DHIS2 organisation tree: facilities, woredas, regions, federal."
+      - name: dhis2__data_elements
+        identifier: raw_dhis2__data_elements
+      - name: dhis2__data_sets
+        identifier: raw_dhis2__data_sets
+      - name: dhis2__category_combos
+        identifier: raw_dhis2__category_combos
+      - name: dhis2__category_option_combos
+        identifier: raw_dhis2__category_option_combos
+
+      # EthioEMR (FHIR R4)
+      - name: ethioemr__patient
+        identifier: raw_ethioemr__patient
+      - name: ethioemr__encounter
+        identifier: raw_ethioemr__encounter
+      - name: ethioemr__observation
+        identifier: raw_ethioemr__observation
+
+      # HCMIS WDM
+      - name: hcmiswdm__fact_dailyrecord
+        identifier: raw_hcmiswdm__fact_dailyrecord
+        description: "HCMIS canonical fact: stock-on-hand daily snapshots per facility/item."
+      - name: hcmiswdm__fact_inventory
+        identifier: raw_hcmiswdm__fact_inventory
+      - name: hcmiswdm__vaccine_dailyrecord
+        identifier: raw_hcmiswdm__vaccine_dailyrecord
+      - name: hcmiswdm__vaccine_institution
+        identifier: raw_hcmiswdm__vaccine_institution
+      - name: hcmiswdm__vaccine_purchaseorder
+        identifier: raw_hcmiswdm__vaccine_purchaseorder
+        description: "HCMIS vaccine procurement pipeline: open + recently-closed purchase orders."
+      - name: hcmiswdm__dim_dispatchhub
+        identifier: raw_hcmiswdm__dim_dispatchhub
+        description: "EPSS dispatch-plan hubs (warehouses): coords + fleet (Supply Control Tower)."
+      - name: hcmiswdm__dim_dispatchfacility
+        identifier: raw_hcmiswdm__dim_dispatchfacility
+        description: "EPSS dispatch-plan delivery facilities (nodes): coords/region/type/capacity."
+      - name: hcmiswdm__dim_dispatchperiod
+        identifier: raw_hcmiswdm__dim_dispatchperiod
+        description: "EPSS dispatch-plan planning periods + plan-level KPI/savings summary."
+      - name: hcmiswdm__fact_dispatch
+        identifier: raw_hcmiswdm__fact_dispatch
+        description: "EPSS dispatch-plan movement lines (hub->facility by commodity per period)."
+      - name: hcmiswdm__fact_dispatchrun
+        identifier: raw_hcmiswdm__fact_dispatchrun
+        description: "EPSS dispatch-plan vehicle runs (stops + road path as JSON)."
+      - name: hcmiswdm__commodity_product
+        identifier: raw_hcmiswdm__commodity_product
+      - name: hcmiswdm__dim_date
+        identifier: raw_hcmiswdm__dim_date
+      - name: hcmiswdm__dim_environment
+        identifier: raw_hcmiswdm__dim_environment
+        description: "HCMIS stocking environments (the EPSS hubs); carries region_id for the region-grained supply marts."
+      - name: hcmiswdm__dim_item
+        identifier: raw_hcmiswdm__dim_item
+
+      # mBrana (HCMISWCloud)
+      - name: mbrana__mflowussd_sohlogs
+        identifier: raw_mbrana__mflowussd_sohlogs
+        description: "mBrana canonical fact: USSD-reported stock-on-hand logs."
+      - name: mbrana__mflowussd_institutions
+        identifier: raw_mbrana__mflowussd_institutions
+      - name: mbrana__mflowussd_commodities
+        identifier: raw_mbrana__mflowussd_commodities
+      - name: mbrana__dbo_institution
+        identifier: raw_mbrana__dbo_institution
+      - name: mbrana__dbo_region
+        identifier: raw_mbrana__dbo_region
+      - name: mbrana__dbo_woreda
+        identifier: raw_mbrana__dbo_woreda
+      - name: mbrana__dbo_zone
+        identifier: raw_mbrana__dbo_zone
+
+      # Climate (weekly meteorological drivers)
+      - name: climate__weekly
+        identifier: raw_climate__weekly
+        description: "Weekly rainfall / temperature / humidity per region."
+      # eLMIS v2 history (legacy lane of the OpenLMIS source family)
+      - name: elmis_hist__reference_facility
+        identifier: raw_elmis_hist__reference_facility
+      - name: elmis_hist__reference_geographic_zone
+        identifier: raw_elmis_hist__reference_geographic_zone
+      - name: elmis_hist__reference_product
+        identifier: raw_elmis_hist__reference_product
+      - name: elmis_hist__reference_programme
+        identifier: raw_elmis_hist__reference_programme
+      - name: elmis_hist__reference_reporting_period
+        identifier: raw_elmis_hist__reference_reporting_period
+      - name: elmis_hist__reference_facility_type
+        identifier: raw_elmis_hist__reference_facility_type
+      - name: elmis_hist__reference_product_group
+        identifier: raw_elmis_hist__reference_product_group
+      - name: elmis_hist__reference_product_category
+        identifier: raw_elmis_hist__reference_product_category
+      - name: elmis_hist__reference_programme_product
+        identifier: raw_elmis_hist__reference_programme_product
+      - name: elmis_hist__reference_facility_programme_schedule
+        identifier: raw_elmis_hist__reference_facility_programme_schedule
+      - name: elmis_hist__history_requisition
+        identifier: raw_elmis_hist__history_requisition
+      - name: elmis_hist__history_requisition_line
+        identifier: raw_elmis_hist__history_requisition_line

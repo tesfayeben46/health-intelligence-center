@@ -1,0 +1,12 @@
+# dlt + SQL Server source + filesystem destination.
+dlt[filesystem,parquet,sql_database]==1.4.0
+
+# SQL Server driver. pyodbc is dlt's reference driver for mssql.
+pyodbc==5.1.0
+SQLAlchemy==2.0.35
+
+# Parquet engine, pinned so a dlt upgrade cannot silently change the file format.
+pyarrow==17.0.0
+
+# dlt 1.4 still imports pkg_resources.
+setuptools<76

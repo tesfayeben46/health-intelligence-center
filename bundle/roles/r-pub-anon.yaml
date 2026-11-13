@@ -1,0 +1,32 @@
+# R-PUB-ANON: Anonymous Public
+role:
+  id: R-PUB-ANON
+  name: "Anonymous Public"
+  group: Public
+  identity_provider: none
+  mfa_required: false
+  mfa_factor: null
+  phase_activated: 1
+  audit_class: standard
+  notes: |
+    Pre-published public dashboards only. No login state preserved.
+    Anyone can view aggregate program / facility metadata at national
+    geography only.
+  permissions:
+    # Program (transversal filter): aggregate read across all programs.
+    - subject: PRG
+      data_class: []
+      members: all
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read, export]
+      purpose_of_use: [public-health]
+
+    # Facility: profile (master) only, aggregate.
+    - subject: FAC
+      data_class: [DC.PRO]
+      members: all
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [public-health]

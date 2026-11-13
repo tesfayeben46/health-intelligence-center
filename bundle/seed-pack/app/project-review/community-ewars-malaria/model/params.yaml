@@ -1,0 +1,8 @@
+# EWARS-lite default hyperparameters (scalar keys overridable at predict time).
+nlags: 8               # climate lags 1..nlags weeks (rainfall/temp/humidity)
+nharmonics: 2          # seasonal sin/cos harmonic pairs of ISO-week
+n_draws: 500           # NB posterior draws for bands + alarm_prob
+k: 3.0                 # endemic-channel threshold = endemic_mean + k*endemic_sd
+min_history_years: 2   # >= this many ISO-years activates the endemic multi-year branch
+fallback_window: 8     # rolling preceding-N-week endemic baseline when < min_history_years
+random_state: 42       # NB sampling seed (deterministic)

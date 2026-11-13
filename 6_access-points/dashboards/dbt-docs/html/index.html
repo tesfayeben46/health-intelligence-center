@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NHDW data lineage (dbt docs)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <span class="brand-mark">NHDW</span>
+      <span class="brand-div">·</span>
+      <span class="brand-title">Data lineage</span>
+    </div>
+    <div class="topbar-right" id="who"></div>
+  </div>
+</header>
+
+<main class="content">
+  <div class="lede">
+    <h1>Model &amp; column lineage</h1>
+    <p>Auto-generated from every <code>dbt build</code>: the interactive DAG and column-level
+       documentation for each pipeline layer. Choose a layer to open its lineage graph.</p>
+  </div>
+
+  <ul class="proj-list" id="projects">
+    <li class="proj-empty">Loading pipeline layers…</li>
+  </ul>
+
+  <div class="lake-note">
+    <div class="lake-copy">
+      <strong>Looking for the raw data lake?</strong>
+      <p class="muted">The landing zone (unmodelled source extracts) lives in object storage,
+         outside dbt's model graph, so it isn't shown here.</p>
+    </div>
+    <a class="lake-link" id="lake-link" href="#" target="_blank" rel="noreferrer">
+      Browse the lake (SeaweedFS)
+    </a>
+  </div>
+
+  <footer class="foot"><a href="/logout">Sign out</a></footer>
+</main>
+
+<script>
+(async () => {
+  // The lake console lives at seaweedfs.<same host base as this page>, behind
+  // its SSO gate, derived at runtime so the link is right on any deployment.
+  const lakeLink = document.getElementById('lake-link');
+  if (lakeLink) lakeLink.href = `https://seaweedfs.${location.hostname.split('.').slice(1).join('.')}/`;
+  const fmt = (iso) => { if (!iso) return 'n/a'; const d = new Date(iso); return isNaN(d.getTime()) ? iso : d.toLocaleString(); };
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+
+  try {
+    const r = await fetch('/api/me');
+    if (r.ok) { const me = await r.json();
+      document.getElementById('who').innerHTML =
+        `<span class="who-name">${esc(me.name || me.username || 'Signed in')}</span>` +
+        `<span class="who-role">${esc((me.roles || []).join(' · '))}</span>`; }
+  } catch {}
+
+  const list = document.getElementById('projects');
+  try {
+    const { projects } = await (await fetch('/api/projects')).json();
+    if (!projects || !projects.length) { list.innerHTML = '<li class="proj-empty">No dbt layers found.</li>'; return; }
+    list.innerHTML = '';
+    for (const p of projects) {
+      const li = document.createElement('li');
+      if (p.url) {
+        li.className = 'proj-card';
+        li.innerHTML =
+          `<a href="${esc(p.url)}">
+             <span class="proj-name">${esc(p.project)}</span>
+             <span class="proj-meta">
+               <span class="pill pill-ready">ready</span>
+               <span class="proj-built">built ${esc(fmt(p.built_at))}</span>
+               <span class="chev" aria-hidden="true">→</span>
+             </span>
+           </a>`;
+      } else {
+        li.className = 'proj-card is-disabled';
+        li.innerHTML =
+          `<span class="proj-name">${esc(p.project)}</span>
+           <span class="proj-meta"><span class="pill pill-pending">not generated</span></span>`;
+      }
+      list.appendChild(li);
+    }
+  } catch (e) { list.innerHTML = '<li class="proj-empty">Could not load the lineage layers.</li>'; }
+})();
+</script>
+</body>
+</html>

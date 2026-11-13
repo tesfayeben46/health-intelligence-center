@@ -1,0 +1,8 @@
+id: sv-cascade-tb
+title: TB Diagnostic Cascade
+kind: funnel
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

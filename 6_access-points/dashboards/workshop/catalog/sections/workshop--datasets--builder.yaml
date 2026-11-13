@@ -1,0 +1,12 @@
+id: workshop/datasets/builder
+page_id: workshop/datasets
+title: Dataset builder
+eyebrow: Templates · governed queries
+ordering: 10
+columns: 12
+dense: true
+widgets:
+- id: ws-dataset-builder
+  col_span: 12
+  row_span: 1
+  ordering: 0

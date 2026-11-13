@@ -1,0 +1,8 @@
+id: sv-cascade-ncd
+title: NCD / HEARTS Cascade
+kind: funnel
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

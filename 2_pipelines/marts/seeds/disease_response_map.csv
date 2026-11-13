@@ -1,0 +1,14 @@
+disease_code,commodity_id,commodity_name,role
+CHOL,NT-ORS,ORS sachet,treatment
+DENG,GEN-PARA,Paracetamol 500mg,supportive
+MAL,MAL-AL,Artemether-Lumefantrine,treatment
+MAL,MAL-RDT,Malaria RDT pf/pv,diagnostic
+MAL,MAL-LLIN,LLIN bed net,prevention
+MEA,VAC-MR,Measles-Rubella,prevention
+NNT,VAC-TT,Tetanus toxoid,prevention
+TB,TB-RHZE,RHZE fixed-dose combo,treatment
+TB,TB-GENEXPERT,GeneXpert cartridge,diagnostic
+TB,TB-ISO,Isoniazid 300mg,prevention
+TYPH,GEN-AMOX,Amoxicillin 250 DT,treatment
+TYPH,NT-ORS,ORS sachet,supportive
+YF,GEN-PARA,Paracetamol 500mg,supportive

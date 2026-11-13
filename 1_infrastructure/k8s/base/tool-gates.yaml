@@ -1,0 +1,231 @@
+# NHDW tool gates: role-aware OIDC reverse proxies in front of operator tools.
+# One nhdw/tool-gate image, deployed once per tool and configured by env
+# (UPSTREAM_URL, ALLOWED_ROLES, OIDC client). Provides shared-session
+# auto-login, per-tool role enforcement (403) and direct login with the same
+# credentials. Unlike a plain forward-auth proxy, a valid session without an
+# allowed role is refused.
+# mlflow-gate: fronts the MLflow tracking/registry UI. A data-science tool, so
+# scientists, researchers and admins. Accepts a session from either staff realm.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: mlflow-gate, namespace: nhdw, labels: { app: mlflow-gate, tier: tool-sso } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: mlflow-gate } }
+  template:
+    metadata: { labels: { app: mlflow-gate, tier: tool-sso } }
+    spec:
+      containers:
+        - name: gate
+          image: nhdw-registry:5500/nhdw/tool-gate:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [ { containerPort: 80, name: http } ]
+          env:
+            - { name: TOOL_NAME,           value: "mlflow" }
+            - { name: UPSTREAM_URL,        value: "http://mlflow.nhdw.svc.cluster.local:5000" }
+            - { name: ALLOWED_ROLES,       value: "R-CONS-SCI,R-CONS-RES,R-CONS-ANA,R-OPS-ADM,R-SUPER" }
+            - { name: OIDC_REALMS,         value: "moh-staff,privileged-ops" }
+            - { name: OIDC_CLIENT_ID,      value: "mlflow" }
+            - name: OIDC_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: mlflow-gate-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - { name: OIDC_REDIRECT_URI,   value: "https://mlflow.127.0.0.1.nip.io/oauth2gate/callback" }
+            - { name: APP_BASE,            value: "https://mlflow.127.0.0.1.nip.io" }
+            - { name: KEYCLOAK_BASE,        value: "http://keycloak.nhdw.svc.cluster.local:8080" }
+            - { name: KEYCLOAK_PUBLIC_BASE, value: "https://keycloak.127.0.0.1.nip.io" }
+            - { name: LOKI_URL,            value: "http://loki.nhdw.svc.cluster.local:3100" }
+            - name: SESSION_SECRET
+              valueFrom: { secretKeyRef: { name: mlflow-gate-secrets, key: SESSION_SECRET, optional: true } }
+          readinessProbe: { httpGet: { path: /oauth2gate/health, port: http }, initialDelaySeconds: 5, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /oauth2gate/health, port: http }, initialDelaySeconds: 10, periodSeconds: 20 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: mlflow-gate, namespace: nhdw, labels: { app: mlflow-gate } }
+spec:
+  selector: { app: mlflow-gate }
+  ports: [ { port: 80, targetPort: http, name: http } ]
+---
+# prometheus-gate: fronts the Prometheus expression browser. Read-only
+# observability for every ops role and the superuser, from either staff realm
+# (R-OPS-ENG can live in moh-staff while R-OPS-ADM/R-SUPER live in privileged-ops).
+# Prometheus has no auth of its own, so this gate is the only control in front of it.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: prometheus-gate, namespace: nhdw, labels: { app: prometheus-gate, tier: tool-sso } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: prometheus-gate } }
+  template:
+    metadata: { labels: { app: prometheus-gate, tier: tool-sso } }
+    spec:
+      containers:
+        - name: gate
+          image: nhdw-registry:5500/nhdw/tool-gate:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [ { containerPort: 80, name: http } ]
+          env:
+            - { name: TOOL_NAME,            value: "prometheus" }
+            - { name: UPSTREAM_URL,         value: "http://prometheus.nhdw.svc.cluster.local:9090" }
+            - { name: ALLOWED_ROLES,        value: "R-OPS-ADM,R-OPS-ENG,R-OPS-SEC,R-SUPER" }
+            - { name: OIDC_REALMS,          value: "privileged-ops,moh-staff" }
+            - { name: OIDC_CLIENT_ID,       value: "prometheus" }
+            - name: OIDC_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: prometheus-gate-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - { name: OIDC_REDIRECT_URI,    value: "https://prometheus.127.0.0.1.nip.io/oauth2gate/callback" }
+            - { name: APP_BASE,             value: "https://prometheus.127.0.0.1.nip.io" }
+            - { name: KEYCLOAK_BASE,        value: "http://keycloak.nhdw.svc.cluster.local:8080" }
+            - { name: KEYCLOAK_PUBLIC_BASE, value: "https://keycloak.127.0.0.1.nip.io" }
+            - { name: LOKI_URL,             value: "http://loki.nhdw.svc.cluster.local:3100" }
+            - name: SESSION_SECRET
+              valueFrom: { secretKeyRef: { name: prometheus-gate-secrets, key: SESSION_SECRET, optional: true } }
+          readinessProbe: { httpGet: { path: /oauth2gate/health, port: http }, initialDelaySeconds: 5, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /oauth2gate/health, port: http }, initialDelaySeconds: 10, periodSeconds: 20 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: prometheus-gate, namespace: nhdw, labels: { app: prometheus-gate } }
+spec:
+  selector: { app: prometheus-gate }
+  ports: [ { port: 80, targetPort: http, name: http } ]
+---
+# alertmanager-gate: fronts the Alertmanager UI. Same roles as Prometheus.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: alertmanager-gate, namespace: nhdw, labels: { app: alertmanager-gate, tier: tool-sso } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: alertmanager-gate } }
+  template:
+    metadata: { labels: { app: alertmanager-gate, tier: tool-sso } }
+    spec:
+      containers:
+        - name: gate
+          image: nhdw-registry:5500/nhdw/tool-gate:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [ { containerPort: 80, name: http } ]
+          env:
+            - { name: TOOL_NAME,            value: "alertmanager" }
+            - { name: UPSTREAM_URL,         value: "http://alertmanager.nhdw.svc.cluster.local:9093" }
+            - { name: ALLOWED_ROLES,        value: "R-OPS-ADM,R-OPS-ENG,R-OPS-SEC,R-SUPER" }
+            - { name: OIDC_REALMS,          value: "privileged-ops,moh-staff" }
+            - { name: OIDC_CLIENT_ID,       value: "alertmanager" }
+            - name: OIDC_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: alertmanager-gate-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - { name: OIDC_REDIRECT_URI,    value: "https://alertmanager.127.0.0.1.nip.io/oauth2gate/callback" }
+            - { name: APP_BASE,             value: "https://alertmanager.127.0.0.1.nip.io" }
+            - { name: KEYCLOAK_BASE,        value: "http://keycloak.nhdw.svc.cluster.local:8080" }
+            - { name: KEYCLOAK_PUBLIC_BASE, value: "https://keycloak.127.0.0.1.nip.io" }
+            - { name: LOKI_URL,             value: "http://loki.nhdw.svc.cluster.local:3100" }
+            - name: SESSION_SECRET
+              valueFrom: { secretKeyRef: { name: alertmanager-gate-secrets, key: SESSION_SECRET, optional: true } }
+          readinessProbe: { httpGet: { path: /oauth2gate/health, port: http }, initialDelaySeconds: 5, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /oauth2gate/health, port: http }, initialDelaySeconds: 10, periodSeconds: 20 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: alertmanager-gate, namespace: nhdw, labels: { app: alertmanager-gate } }
+spec:
+  selector: { app: alertmanager-gate }
+  ports: [ { port: 80, targetPort: http, name: http } ]
+---
+# headlamp-gate: fronts the Headlamp cluster console at /k8s on the admin host
+# (path-routed beside the admin SPA). The gate does two things:
+#   - per-role OIDC enforcement (403 for a non-ops login), and
+#   - SA-bearer injection: INJECT_BEARER_FILE mounts the headlamp-token secret so
+#     every proxied HTTP/WS request carries the console's identity (view, plus
+#     edit in nhdw) and Headlamp opens without its token-paste screen.
+# Websocket support in the gate carries Headlamp's live watch multiplexer.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: headlamp-gate, namespace: nhdw, labels: { app: headlamp-gate, tier: tool-sso } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: headlamp-gate } }
+  template:
+    metadata: { labels: { app: headlamp-gate, tier: tool-sso } }
+    spec:
+      containers:
+        - name: gate
+          image: nhdw-registry:5500/nhdw/tool-gate:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [ { containerPort: 80, name: http } ]
+          env:
+            - { name: TOOL_NAME,            value: "headlamp" }
+            - { name: UPSTREAM_URL,         value: "http://headlamp.nhdw.svc.cluster.local:80" }
+            - { name: ALLOWED_ROLES,        value: "R-OPS-ADM,R-OPS-ENG,R-OPS-SEC,R-SUPER" }
+            - { name: OIDC_REALMS,          value: "privileged-ops,moh-staff" }
+            - { name: OIDC_CLIENT_ID,       value: "headlamp" }
+            - name: OIDC_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: headlamp-gate-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            # Headlamp is path-routed at /k8s on the admin host, so the gate's OIDC
+            # legs and APP_BASE are the admin host; the deep-link button passes
+            # rd=/k8s/ so the post-login redirect lands in the console.
+            - { name: OIDC_REDIRECT_URI,    value: "https://admin.127.0.0.1.nip.io/oauth2gate/callback" }
+            - { name: APP_BASE,             value: "https://admin.127.0.0.1.nip.io" }
+            - { name: KEYCLOAK_BASE,        value: "http://keycloak.nhdw.svc.cluster.local:8080" }
+            - { name: KEYCLOAK_PUBLIC_BASE, value: "https://keycloak.127.0.0.1.nip.io" }
+            - { name: LOKI_URL,             value: "http://loki.nhdw.svc.cluster.local:3100" }
+            # SA bearer the upstream (Headlamp) needs, injected on every request.
+            - { name: INJECT_BEARER_FILE,   value: "/var/run/headlamp/token" }
+            - name: SESSION_SECRET
+              valueFrom: { secretKeyRef: { name: headlamp-gate-secrets, key: SESSION_SECRET, optional: true } }
+          volumeMounts:
+            - { name: sa-token, mountPath: /var/run/headlamp, readOnly: true }
+          readinessProbe: { httpGet: { path: /oauth2gate/health, port: http }, initialDelaySeconds: 5, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /oauth2gate/health, port: http }, initialDelaySeconds: 10, periodSeconds: 20 }
+      volumes:
+        # The auto-populated headlamp SA token (view, plus edit in nhdw).
+        - name: sa-token
+          secret:
+            secretName: headlamp-token
+            items: [ { key: token, path: token } ]
+---
+apiVersion: v1
+kind: Service
+metadata: { name: headlamp-gate, namespace: nhdw, labels: { app: headlamp-gate } }
+spec:
+  selector: { app: headlamp-gate }
+  ports: [ { port: 80, targetPort: http, name: http } ]
+---
+# seaweedfs-gate: fronts the SeaweedFS filer's built-in file browser, which
+# serves as the lake console (SeaweedFS has no separate console app; the filer UI
+# at :8888 is it). The UI can upload and delete, so the role set is tighter than
+# the read-only observability gates: platform admins only, no R-OPS-SEC/ENG.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: seaweedfs-gate, namespace: nhdw, labels: { app: seaweedfs-gate, tier: tool-sso } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: seaweedfs-gate } }
+  template:
+    metadata: { labels: { app: seaweedfs-gate, tier: tool-sso } }
+    spec:
+      containers:
+        - name: gate
+          image: nhdw-registry:5500/nhdw/tool-gate:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports: [ { containerPort: 80, name: http } ]
+          env:
+            - { name: TOOL_NAME,            value: "seaweedfs" }
+            - { name: UPSTREAM_URL,         value: "http://seaweedfs-filer.nhdw.svc.cluster.local:8888" }
+            - { name: ALLOWED_ROLES,        value: "R-OPS-ADM,R-SUPER" }
+            - { name: OIDC_REALMS,          value: "privileged-ops,moh-staff" }
+            - { name: OIDC_CLIENT_ID,       value: "seaweedfs" }
+            - name: OIDC_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: seaweedfs-gate-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - { name: OIDC_REDIRECT_URI,    value: "https://seaweedfs.127.0.0.1.nip.io/oauth2gate/callback" }
+            - { name: APP_BASE,             value: "https://seaweedfs.127.0.0.1.nip.io" }
+            - { name: KEYCLOAK_BASE,        value: "http://keycloak.nhdw.svc.cluster.local:8080" }
+            - { name: KEYCLOAK_PUBLIC_BASE, value: "https://keycloak.127.0.0.1.nip.io" }
+            - { name: LOKI_URL,             value: "http://loki.nhdw.svc.cluster.local:3100" }
+            - name: SESSION_SECRET
+              valueFrom: { secretKeyRef: { name: seaweedfs-gate-secrets, key: SESSION_SECRET, optional: true } }
+          readinessProbe: { httpGet: { path: /oauth2gate/health, port: http }, initialDelaySeconds: 5, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /oauth2gate/health, port: http }, initialDelaySeconds: 10, periodSeconds: 20 }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: seaweedfs-gate, namespace: nhdw, labels: { app: seaweedfs-gate } }
+spec:
+  selector: { app: seaweedfs-gate }
+  ports: [ { port: 80, targetPort: http, name: http } ]

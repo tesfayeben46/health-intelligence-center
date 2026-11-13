@@ -1,0 +1,1139 @@
+{
+  "credentials": [
+    {
+      "username": "admin",
+      "password": "$SEED_PASSWORD",
+      "realm": "both",
+      "role_label": "R-SUPER",
+      "full_name": "NHDW Admin",
+      "description": "Simple demo root login. R-SUPER in both realms; wildcard access, everything visible everywhere. Same credentials on every dashboard and stable across a profile switch.",
+      "sign_in_at": [
+        "https://admin.127.0.0.1.nip.io/ (admin)",
+        "https://internal-bi.127.0.0.1.nip.io/ (BI)",
+        "https://workshop.127.0.0.1.nip.io/ (workshop)",
+        "https://public.127.0.0.1.nip.io/ (public)"
+      ]
+    },
+    {
+      "username": "root",
+      "password": "$SEED_PASSWORD",
+      "realm": "privileged-ops",
+      "role_label": "R-SUPER",
+      "full_name": "NHDW Root",
+      "description": "Super-user. Wildcard access; everything visible everywhere.",
+      "sign_in_at": [
+        "https://admin.127.0.0.1.nip.io/ (admin)",
+        "http://localhost:8500/ (demo control room)",
+        "https://internal-bi.127.0.0.1.nip.io/ (BI)",
+        "https://workshop.127.0.0.1.nip.io/ (workshop)"
+      ]
+    },
+    {
+      "username": "solomon.m",
+      "password": "$SEED_PASSWORD",
+      "realm": "privileged-ops",
+      "role_label": "R-OPS-ADM",
+      "full_name": "Solomon Mengistu",
+      "description": "System administrator. Manages users, roles, IdPs; DENIED on every analytic mart read.",
+      "sign_in_at": [
+        "https://admin.127.0.0.1.nip.io/ (admin)"
+      ]
+    },
+    {
+      "username": "sec.officer",
+      "password": "$SEED_PASSWORD",
+      "realm": "privileged-ops",
+      "role_label": "R-OPS-SEC",
+      "full_name": "Demo Security Officer",
+      "description": "Security officer. Read-only on audit + observability; approves privileged actions (break-glass).",
+      "sign_in_at": [
+        "https://admin.127.0.0.1.nip.io/ (admin -> Audit + Topology)"
+      ]
+    },
+    {
+      "username": "dec.nat",
+      "password": "$SEED_PASSWORD",
+      "realm": "moh-staff",
+      "role_label": "R-DEC",
+      "full_name": "National Decision-Maker",
+      "description": "National-scope decision-maker. Every region, every programme; aggregate / deidentified data only.",
+      "sign_in_at": [
+        "https://internal-bi.127.0.0.1.nip.io/ (BI)"
+      ]
+    },
+    {
+      "username": "kebede.oromia",
+      "password": "$SEED_PASSWORD",
+      "realm": "moh-staff",
+      "role_label": "R-RHB-OROMIA",
+      "full_name": "Kebede Asfaw (RHB Director, Oromia)",
+      "description": "Same widgets as R-DEC but region filter constrained to Oromia.",
+      "sign_in_at": [
+        "https://internal-bi.127.0.0.1.nip.io/ (BI)"
+      ]
+    },
+    {
+      "username": "analyst.ana",
+      "password": "$SEED_PASSWORD",
+      "realm": "moh-staff",
+      "role_label": "R-CONS-ANA",
+      "full_name": "Demo Analyst",
+      "description": "Internal analyst. SQL Lab access; saved queries; reads every cataloged mart.",
+      "sign_in_at": [
+        "https://internal-bi.127.0.0.1.nip.io/ (BI)",
+        "https://jupyter.127.0.0.1.nip.io/ (JupyterHub)"
+      ]
+    },
+    {
+      "username": "sci.demo",
+      "password": "$SEED_PASSWORD",
+      "realm": "moh-staff",
+      "role_label": "R-CONS-SCI",
+      "full_name": "Demo Data Scientist",
+      "description": "Workshop access; submits artifacts; production marts DENIED (workshop sandbox only).",
+      "sign_in_at": [
+        "https://workshop.127.0.0.1.nip.io/ (workshop)"
+      ]
+    },
+    {
+      "username": "demo.steward",
+      "password": "$SEED_PASSWORD",
+      "realm": "moh-staff",
+      "role_label": "R-STEW",
+      "full_name": "Demo Data Steward",
+      "description": "Metadata + lineage + DSA workflow. Data plane denied.",
+      "sign_in_at": [
+        "https://admin.127.0.0.1.nip.io/ (admin -> Sources + Compliance)",
+        "https://dbt-docs.127.0.0.1.nip.io/ (dbt-docs)"
+      ]
+    },
+    {
+      "username": "anon",
+      "password": "$SEED_PASSWORD",
+      "realm": "(no auth)",
+      "role_label": "R-PUB-ANON",
+      "full_name": "Anonymous Visitor",
+      "description": "Unauthenticated public visitor. Public landing + catalogue + articles. No PHI.",
+      "sign_in_at": [
+        "https://public.127.0.0.1.nip.io/ (public)"
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "auth-login-as-each-role",
+      "title": "Sign in as every demo role and watch the dashboard adapt",
+      "categories": [
+        "auth-and-identity"
+      ],
+      "affected_dashboards": [
+        "public",
+        "internal-bi",
+        "admin",
+        "workshop"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "root",
+        "solomon.m",
+        "dec.nat",
+        "kebede.oromia",
+        "analyst.ana",
+        "sci.demo",
+        "demo.steward",
+        "anon",
+        "fayda.demo"
+      ],
+      "steps": [
+        "Open the public dashboard at https://public.127.0.0.1.nip.io/ as an anonymous visitor (no sign-in). Note the public widgets only.",
+        "Click 'Sign in' in the top-right; the chooser opens. Pick 'Internal BI' and complete PKCE as dec.nat. Observe the full national-scope BI dashboard.",
+        "Sign out, sign back in as kebede.oromia. The same Internal BI dashboard now shows the Region filter pre-set to Oromia and disabled.",
+        "Sign out, sign in as solomon.m to the admin dashboard. The Roles + Users + SSO sections render. Navigate to Internal BI - you get a 'no dashboard access' page.",
+        "Sign in as sci.demo to workshop. The Workspace + Groups + Artifacts sections render. Try to read a production mart through the API - see the deny-mart-direct-api scenario."
+      ],
+      "expected_result": "Each role sees a strictly different surface. Same code paths; different decisions.",
+      "demo_value": 5,
+      "why_it_matters": "The four axes are the entire UI-shape story. Same React app, five different surfaces from the same code, driven only by role_dashboard / role_widget / role_global_filter.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "auth-fayda-verify",
+      "title": "Citizen Fayda-verifies on an access request",
+      "categories": [
+        "auth-and-identity"
+      ],
+      "affected_dashboards": [
+        "public",
+        "admin"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "anon",
+        "solomon.m"
+      ],
+      "steps": [
+        "Open the public dashboard at https://public.127.0.0.1.nip.io/ and click Request access.",
+        "On the modal, click Verify with Fayda. A popup opens to Fayda Replica at http://localhost:8096/.",
+        "Pick any citizen (e.g. Almaz Hailu) and click Sign in.",
+        "The popup closes; the form is pre-filled with name + Fayda ID; a green Fayda-verified badge appears.",
+        "Complete the form (purpose, dashboards requested) and submit.",
+        "Sign in to admin as solomon.m, open Access Requests, see the new request with a Fayda-verified pill.",
+        "One-click approve - user created in Keycloak with verified_via=fayda + user_linked_identity row."
+      ],
+      "expected_result": "End-to-end Fayda federation handshake working against the mock; admin sees + approves the verified request.",
+      "demo_value": 5,
+      "why_it_matters": "Government-scale identity. Same SPA flow against the real Fayda endpoint just swaps a URL.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "auth-sso-cross-dashboard",
+      "title": "Single sign-on across all five dashboards",
+      "categories": [
+        "auth-and-identity"
+      ],
+      "affected_dashboards": [
+        "public",
+        "internal-bi",
+        "admin",
+        "workshop",
+        "demo"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "root"
+      ],
+      "steps": [
+        "Sign in as root to the demo dashboard (http://localhost:8500/).",
+        "Open a new tab to admin (8086). Sign-in chip says 'root, R-SUPER' - no second login.",
+        "Open BI (8087). Same chip. Same for workshop (8085).",
+        "Open public (8088). Top-right says 'Hi, root (R-SUPER)' instead of 'Sign in'."
+      ],
+      "expected_result": "One sign-in propagates to every dashboard via Keycloak silent-SSO.",
+      "demo_value": 4,
+      "why_it_matters": "Bearer SSO via Keycloak gives the same UX as cookie SSO without the cross-origin headaches.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "auth-google-oidc",
+      "title": "Sign in via Google (social federation)",
+      "categories": [
+        "auth-and-identity"
+      ],
+      "affected_dashboards": [
+        "public"
+      ],
+      "prerequisites": [
+        "Google IdP brokered into the moh-staff realm"
+      ],
+      "credentials_needed": [],
+      "steps": [
+        "Open public dashboard and click Sign in.",
+        "Pick the federated-SSO tab and click Continue with Google.",
+        "Complete Google's OAuth flow.",
+        "Land back at NHDW with a user_linked_identity row of kind=google."
+      ],
+      "expected_result": "Same authenticated-user surface as any other login path.",
+      "demo_value": 3,
+      "why_it_matters": "Same model supports social logins for low-trust surfaces.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "auth-saml-ehia",
+      "title": "Onboard EHIA via SAML federation at runtime",
+      "categories": [
+        "auth-and-identity"
+      ],
+      "affected_dashboards": [
+        "admin",
+        "public"
+      ],
+      "prerequisites": [
+        "EHIA SAML mock running"
+      ],
+      "credentials_needed": [
+        "solomon.m"
+      ],
+      "steps": [
+        "Sign in to admin as solomon.m. Navigate to SSO.",
+        "Click + New IdP, choose SAML 2.0.",
+        "Paste the EHIA mock's metadata URL and save.",
+        "Backend mirrors metadata to ops_identity.identity_source AND calls Keycloak Admin API to register the alias.",
+        "Open public dashboard's Sign in; the IdP picker now lists EHIA.",
+        "Complete SAML login - auto-provisioned in Keycloak + linked identity recorded."
+      ],
+      "expected_result": "New IdP wired end-to-end in under 60 seconds, without restart.",
+      "demo_value": 4,
+      "why_it_matters": "Federation onboarding as an admin-UI form instead of a service ticket.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "perm-create-new-role",
+      "title": "Create a new role end-to-end (R-RHB-AMHARA)",
+      "categories": [
+        "permissions"
+      ],
+      "affected_dashboards": [
+        "admin",
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "root"
+      ],
+      "steps": [
+        "Sign in as root to admin. Navigate to Roles and click + New role.",
+        "Code R-RHB-AMHARA, name RHB Director Amhara, combine_strategy=union.",
+        "Save. The 4-axis grant editor opens.",
+        "Axis A (dashboards): check internal-bi + public.",
+        "Axis B (global filters): for internal-bi/disease, set the region filter to [Amhara].",
+        "Axis C (widgets): on internal-bi/disease, select the same widgets R-DEC has.",
+        "Save. New policy_revision row written; YAML round-trips via dump_seed.py.",
+        "Create a new user kebede.amhara and assign R-RHB-AMHARA.",
+        "Sign in as that user, open BI - Region filter shows Amhara only, maps + KPIs filtered."
+      ],
+      "expected_result": "The new role behaves identically to R-RHB-OROMIA but scoped to Amhara. Zero code change.",
+      "demo_value": 5,
+      "why_it_matters": "Adding a regional director used to require code + redeploy. Now it's an admin-UI form.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "perm-edit-widget-grants-live",
+      "title": "Edit a role's widget grants and see the dashboard adapt",
+      "categories": [
+        "permissions"
+      ],
+      "affected_dashboards": [
+        "admin",
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "root",
+        "dec.nat"
+      ],
+      "steps": [
+        "Two browser tabs. Tab 1: admin as root. Tab 2: BI as dec.nat.",
+        "In tab 2, observe the Disease page - dz-outbreaks-table widget visible.",
+        "In tab 1, Roles, R-DEC, Widgets, internal-bi/disease, uncheck dz-outbreaks-table, save.",
+        "In tab 2, reload. The widget is gone. audit_silent_deny row written.",
+        "Back in tab 1, re-check the widget and save.",
+        "Tab 2 reload - widget is back."
+      ],
+      "expected_result": "Permission changes propagate to a new dashboard render immediately, audited both ways.",
+      "demo_value": 5,
+      "why_it_matters": "Live permission management is rare; usually it's edit-YAML + redeploy + wait 20 min.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "perm-filter-cascade",
+      "title": "Filter-scope cascade - narrow Oromia user can't widen",
+      "categories": [
+        "permissions"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "kebede.oromia"
+      ],
+      "steps": [
+        "Sign in as kebede.oromia to BI.",
+        "On the Disease page, the Region filter shows Oromia only and is disabled.",
+        "In the URL bar, manually append ?region=Tigray. The page rejects the param.",
+        "Open dev tools, rewrite a mart fetch to include region=Tigray. Send.",
+        "Gateway returns 403: filter values not allowed for your role: region=Tigray."
+      ],
+      "expected_result": "Filter scope enforced at both UI render time AND data fetch time.",
+      "demo_value": 5,
+      "why_it_matters": "Defense in depth. UI-only enforcement is trivially bypassed; gateway-side intersection at fetch is the real story.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "perm-audit-trail",
+      "title": "Audit trail for every permission change",
+      "categories": [
+        "permissions",
+        "governance"
+      ],
+      "affected_dashboards": [
+        "admin"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "sec.officer"
+      ],
+      "steps": [
+        "Generate some audit rows by performing role edits in a separate window.",
+        "Sign in as sec.officer to admin, open Audit.",
+        "Chronological list of audit_permission_change rows - who, when, what diff.",
+        "Click a row to see the before/after JSON diff.",
+        "Filter by user, date, table, op."
+      ],
+      "expected_result": "Every write is captured with before/after, attributed to a user.",
+      "demo_value": 4,
+      "why_it_matters": "Auditors require change-attribution; this is the canonical evidence.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "opa-mart-allow-vs-deny",
+      "title": "OPA decides a mart read - allow + deny live",
+      "categories": [
+        "opa",
+        "permissions"
+      ],
+      "affected_dashboards": [
+        "demo"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "root"
+      ],
+      "steps": [
+        "On the demo control room, trigger R-DEC reads HIV cascade aggregate - 200 OK + rows.",
+        "Trigger R-OPS-ADM reads HIV cascade - 403 with reason R-OPS-ADM data-plane deny-all.",
+        "Trigger R-PUB-ANON reads AEFI lineage - 403 with reason from R-PUB-ANON rego.",
+        "Trigger OPA decide direct - inspect the raw OPA decision payload."
+      ],
+      "expected_result": "Same gateway, same endpoint, opposite verdicts - purely from the role.",
+      "demo_value": 5,
+      "why_it_matters": "Concretises the role-to-OPA chain. Auditors trust what they can poke at.",
+      "trigger": {
+        "kind": "mart_read",
+        "args": {
+          "role": "R-DEC",
+          "schema": "bi_idsr",
+          "table": "mart_idsr_disease_weekly"
+        }
+      },
+      "page": "security-and-access"
+    },
+    {
+      "id": "opa-edit-policy-live",
+      "title": "Edit a role's rego policy and see the verdict flip",
+      "categories": [
+        "opa"
+      ],
+      "affected_dashboards": [
+        "demo"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "root"
+      ],
+      "steps": [
+        "On the demo control room, trigger R-DEC reading HIV cascade - 200 OK.",
+        "On the host, edit shared_resource/roles/r-dec.yaml and remove the PRG/aggregate permission.",
+        "Run python3 7_security/opa/scripts/compile.py and docker restart opa.",
+        "Re-trigger the same scenario - 403 with the rego deny reason.",
+        "Restore the perm, recompile, restart. Trigger again - 200."
+      ],
+      "expected_result": "Mart-level enforcement is a config artifact reviewers can edit.",
+      "demo_value": 5,
+      "why_it_matters": "Policy-as-code review and hot reload, central to defensible health data sharing.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "opa-startup-self-test",
+      "title": "Catalog vs policy drift fails the gateway boot",
+      "categories": [
+        "opa",
+        "ops"
+      ],
+      "affected_dashboards": [
+        "demo",
+        "admin"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "root"
+      ],
+      "steps": [
+        "On the host, change bi_programme_hiv_cascade_total mart_attrs to subject=FAC.",
+        "Reseed the DB.",
+        "Restart the gateway.",
+        "The gateway exits with 'OPA self-test failed for N case(s) under OPA_ENFORCE=true; refusing to start.'",
+        "Revert the change, reseed, restart - boot succeeds."
+      ],
+      "expected_result": "Catalog/policy drift is a startup failure, not a silent prod incident.",
+      "demo_value": 4,
+      "why_it_matters": "Prevents the looks-like-its-gating-but-actually-allows-everything class of OPA bug.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "api-issue-pat",
+      "title": "Issue a PAT and use it from a notebook",
+      "categories": [
+        "api-access"
+      ],
+      "affected_dashboards": [
+        "admin",
+        "demo"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "analyst.ana"
+      ],
+      "steps": [
+        "Sign in as analyst.ana to admin, API Tokens, New token (my-notebook, 30 days, no scope override).",
+        "Save. The secret is shown ONCE - copy it. Format nhdw_pat_<prefix>_<48 chars>.",
+        "Open JupyterHub, new notebook.",
+        "Set NHDW_PAT env var, then call the gateway with Authorization: Bearer NHDW_PAT.",
+        "The mart returns rows. Same OPA + 4-axis chain that gates the SPA gates this notebook call."
+      ],
+      "expected_result": "Programmatic mart access works through the standard gateway, no separate API path.",
+      "demo_value": 5,
+      "why_it_matters": "One API for everything - the data-platform story in one demo.",
+      "trigger": {
+        "kind": "pat_issue",
+        "args": {
+          "role": "R-CONS-ANA",
+          "name": "demo-notebook-pat"
+        }
+      },
+      "page": "security-and-access"
+    },
+    {
+      "id": "api-pat-scope-narrows",
+      "title": "PAT scope narrows the owner's permissions",
+      "categories": [
+        "api-access"
+      ],
+      "affected_dashboards": [
+        "admin"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "analyst.ana"
+      ],
+      "steps": [
+        "Issue a PAT with scope=[programs=HIV] for analyst.ana (who has access to all programmes).",
+        "Use the PAT to read bi_programme_hiv_cascade_total with programme=HIV - success.",
+        "Use the PAT to read bi_programme_tb_cohort with programme=TB - 403, scope intersected to HIV.",
+        "Use analyst.ana's Bearer JWT directly - both reads succeed."
+      ],
+      "expected_result": "Token scope = owner perms intersection token override. Token can narrow, never widen.",
+      "demo_value": 5,
+      "why_it_matters": "Export-this-dataset-for-a-partner: issue a tightly-scoped token instead of full credentials.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "api-pat-revoke",
+      "title": "Revoke a PAT and see the next request 401",
+      "categories": [
+        "api-access"
+      ],
+      "affected_dashboards": [
+        "admin"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "analyst.ana"
+      ],
+      "steps": [
+        "With a PAT issued above, make a successful API call.",
+        "Sign in to admin as analyst.ana, API Tokens, revoke that PAT.",
+        "Retry the same API call - 401 PAT revoked.",
+        "View the PAT's audit trail - see the revocation row + every prior call."
+      ],
+      "expected_result": "Revocation is immediate; no token sits in a cache.",
+      "demo_value": 4,
+      "why_it_matters": "Incident response: leaked PAT is one click from inert.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "api-service-account",
+      "title": "System integration via Keycloak service account",
+      "categories": [
+        "api-access"
+      ],
+      "affected_dashboards": [
+        "admin"
+      ],
+      "prerequisites": [
+        "Service-account client created in Keycloak"
+      ],
+      "credentials_needed": [
+        "root"
+      ],
+      "steps": [
+        "In Keycloak admin, create a client nhdw-partner-pepfar, type confidential, service-accounts-enabled.",
+        "Assign the SA the role R-CONS-PRT.",
+        "Request a client_credentials token from Keycloak's token endpoint.",
+        "Use the token to call the gateway - the same JWT path the dashboards use."
+      ],
+      "expected_result": "Machine-to-machine via standard OAuth2 client_credentials; no separate API-key plumbing.",
+      "demo_value": 4,
+      "why_it_matters": "Identity-provider-managed credentials with automatic rotation.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "deny-unauthorized-dashboard",
+      "title": "Role visits a dashboard it can't access",
+      "categories": [
+        "authorization-failures"
+      ],
+      "affected_dashboards": [
+        "internal-bi",
+        "workshop",
+        "admin"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "sci.demo"
+      ],
+      "steps": [
+        "Sign in as sci.demo. Land on workshop - works.",
+        "Navigate to https://admin.127.0.0.1.nip.io/ (admin). /auth/me reports the user; resolver returns no spec - no-access page.",
+        "Try https://internal-bi.127.0.0.1.nip.io/ (BI). Same - dashboard internal-bi not accessible to your role."
+      ],
+      "expected_result": "Wrong-dashboard navigation is gracefully denied with a clear message; no leak.",
+      "demo_value": 4,
+      "why_it_matters": "Denial UX is part of the security story. A generic 403 beats a stack trace.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "deny-mart-direct-api",
+      "title": "Direct API read of a mart you can't see",
+      "categories": [
+        "authorization-failures",
+        "api-access"
+      ],
+      "affected_dashboards": [
+        "demo"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "root"
+      ],
+      "steps": [
+        "On the demo control room, trigger R-PUB-ANON reads bi_safety_aefi_lineage.",
+        "Gateway returns 403 with reason from R-PUB-ANON rego.",
+        "View the audit pane - denial captured to ops_audit.gateway_query with policy_decision=deny."
+      ],
+      "expected_result": "Negative outcome is observable and auditable.",
+      "demo_value": 4,
+      "why_it_matters": "Did-anyone-try-to-read-this is a frequent auditor question; the denial trail answers it.",
+      "trigger": {
+        "kind": "mart_read",
+        "args": {
+          "role": "R-STEW",
+          "schema": "bi_idsr",
+          "table": "mart_idsr_disease_weekly"
+        }
+      },
+      "page": "security-and-access"
+    },
+    {
+      "id": "deny-uncataloged-mart",
+      "title": "Read of an uncataloged mart is refused",
+      "categories": [
+        "authorization-failures",
+        "opa"
+      ],
+      "affected_dashboards": [
+        "demo"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "root"
+      ],
+      "steps": [
+        "Trigger an explicit read of marts.nonexistent_table as R-SUPER.",
+        "Gateway returns 403 - mart not cataloged - refusing to serve under OPA_ENFORCE=true.",
+        "Even R-SUPER can't read what isn't in mart_attrs."
+      ],
+      "expected_result": "Catalog membership is a prerequisite for service, regardless of role.",
+      "demo_value": 4,
+      "why_it_matters": "Even super-users can't accidentally serve a new mart before security review.",
+      "trigger": {
+        "kind": "mart_read",
+        "args": {
+          "role": "R-SUPER",
+          "schema": "bi_service",
+          "table": "nonexistent_table"
+        }
+      },
+      "page": "security-and-access"
+    },
+    {
+      "id": "deny-filter-value-out-of-scope",
+      "title": "Filter value outside the role's allowed set",
+      "categories": [
+        "authorization-failures",
+        "permissions"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "kebede.oromia"
+      ],
+      "steps": [
+        "Sign in as kebede.oromia.",
+        "Use Dev Tools to inject region=Tigray into a widget data fetch.",
+        "Gateway returns 403: filter values not allowed for your role: region=Tigray."
+      ],
+      "expected_result": "UI hides the disallowed value AND the gateway rejects it at fetch.",
+      "demo_value": 5,
+      "why_it_matters": "Most common authz-bypass class: trust the client. NHDW doesn't.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "deny-expired-pat",
+      "title": "Expired PAT denial",
+      "categories": [
+        "authorization-failures",
+        "api-access"
+      ],
+      "affected_dashboards": [
+        "admin"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "analyst.ana"
+      ],
+      "steps": [
+        "Issue a PAT with expires_in_days=1, wait for it to expire.",
+        "Try to use it - 401 PAT expired."
+      ],
+      "expected_result": "Time-bounded credentials; expiry enforced at every request.",
+      "demo_value": 3,
+      "why_it_matters": "Long-lived tokens are a compliance risk; NHDW PATs default 90-day expiry.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "collab-workshop-group-lifecycle",
+      "title": "Community group lifecycle - create, join, contribute",
+      "categories": [
+        "collaboration"
+      ],
+      "affected_dashboards": [
+        "workshop",
+        "admin"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "sci.demo",
+        "root"
+      ],
+      "steps": [
+        "Sign in as sci.demo to workshop, Groups, + New group.",
+        "Name WHO Africa Region Surveillance, visibility open.",
+        "As root, observe the new group in admin Groups (view_audit).",
+        "Back as sci.demo, submit an artifact (notebook) to the group.",
+        "As root (approve_artifact_promotion), promote the artifact from sandbox to community library."
+      ],
+      "expected_result": "End-to-end contribution path with audit at every step.",
+      "demo_value": 4,
+      "why_it_matters": "The community story isn't just open access; it's a governed contribution pipeline.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "ops-break-glass",
+      "title": "Break-glass for raw-PHI access (two-person rule)",
+      "categories": [
+        "governance"
+      ],
+      "affected_dashboards": [
+        "admin"
+      ],
+      "prerequisites": [
+        "OpenBao break-glass policy installed"
+      ],
+      "credentials_needed": [
+        "solomon.m",
+        "sec.officer"
+      ],
+      "steps": [
+        "As solomon.m, request break-glass for raw mart vault_business.enc_patient_visit.",
+        "System issues a pending approval; sec.officer is paged.",
+        "As sec.officer, sign in and approve.",
+        "solomon.m gets a 30-minute scoped token; session fully recorded.",
+        "After 30 min token auto-expires; audit trail shows request, approval, every query made."
+      ],
+      "expected_result": "Privileged access requires two operators, is time-bounded, fully audited.",
+      "demo_value": 5,
+      "why_it_matters": "Auditors specifically ask about break-glass; this lands trust.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "ops-silent-deny-trail",
+      "title": "Silent denies surface in admin audit",
+      "categories": [
+        "governance"
+      ],
+      "affected_dashboards": [
+        "admin"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "sec.officer"
+      ],
+      "steps": [
+        "Have a role with no widget access try to navigate a dashboard.",
+        "Resolver writes a audit_silent_deny row.",
+        "As sec.officer, open admin Audit Silent denies. See the rows.",
+        "Click one to see kc_sub, widget hidden, reason."
+      ],
+      "expected_result": "User-couldn't-see-X investigations have a concrete trail.",
+      "demo_value": 3,
+      "why_it_matters": "'Logged in but dashboard is blank' tickets usually need log archaeology; this is a one-page view.",
+      "page": "security-and-access"
+    },
+    {
+      "id": "chatbot-per-role-suggestions",
+      "title": "Open the chat panel as four different roles; see four different suggestion lists",
+      "categories": [
+        "ai-assistant"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "dec.nat",
+        "analyst.ana",
+        "kebede.oromia",
+        "sci.demo"
+      ],
+      "steps": [
+        "Sign in to Internal BI as dec.nat (R-DEC). Click the chat FAB bottom-right.",
+        "Note the intro suggestions: they're decision-maker prompts about programme outcomes.",
+        "Sign out, sign back in as analyst.ana (R-CONS-ANA). Open the chat. Suggestions are now SQL-leaning.",
+        "Repeat for kebede.oromia (R-RHB-OROMIA): suggestions reference Oromia explicitly.",
+        "Repeat for sci.demo (R-CONS-SCI): suggestions lean toward exploratory analysis."
+      ],
+      "expected_result": "The same chat panel boots from /api/chat/intro with a different per-role suggestion list. The catalogue is computed server-side from chat_configs/internal-bi/intents.yaml; no client logic.",
+      "demo_value": 4,
+      "why_it_matters": "Tool grants AND prompt suggestions are role-driven. Operators see what's relevant to THEM without the bot being told who they are at the prompt layer.",
+      "page": "chatbot"
+    },
+    {
+      "id": "chatbot-hidden-for-ungranted-roles",
+      "title": "Roles without bi-assistant don't see the chat FAB",
+      "categories": [
+        "ai-assistant",
+        "rbac"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "shewaye.a"
+      ],
+      "steps": [
+        "Sign in to Internal BI as shewaye.a (R-CONS-PRT, partner consumer).",
+        "Look at the bottom-right corner. There is NO chat FAB.",
+        "Open dev tools -> Network. The page boots normally; the only chat-related request is /api/chat/intro which returns 403.",
+        "Sign in as dec.nat. The same dashboard, same code path: the FAB renders."
+      ],
+      "expected_result": "ChatbotPanel returns null when /api/chat/intro responds 403. No widget = no UI surface; the access decision is made server-side.",
+      "demo_value": 5,
+      "why_it_matters": "Permissions hide whole capabilities, not just data. The chatbot is a widget (placement=chrome.fab) granted at dashboard level; ungranted users see nothing.",
+      "page": "chatbot"
+    },
+    {
+      "id": "chatbot-read-page-introspection",
+      "title": "Ask the bot 'what's on this page?'; it reads the live DOM",
+      "categories": [
+        "ai-assistant",
+        "introspection"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "dec.nat"
+      ],
+      "steps": [
+        "Sign in to Internal BI as dec.nat. Navigate to the Disease page.",
+        "Open the chat. Ask: 'What widgets are on this page right now?'",
+        "Watch the network tab. The bot calls window.__nhdwDashboard.read_page() via the gateway's tool-call protocol.",
+        "The answer enumerates the visible widget IDs (dz-kpi-strip, dz-region-map, dz-woreda-table, ...)."
+      ],
+      "expected_result": "The bot's tool_call surfaces in the panel as a collapsible row. Clicking expands the JSON it received from read_page, including widget IDs, titles, and current global filter values.",
+      "demo_value": 4,
+      "why_it_matters": "Introspection means the bot doesn't have to be told context; it asks the SPA. Same code on every page; no per-page wiring.",
+      "page": "chatbot"
+    },
+    {
+      "id": "chatbot-navigate-and-filter",
+      "title": "Tell the bot 'show me Oromia outbreaks'; it navigates + filters",
+      "categories": [
+        "ai-assistant",
+        "interact"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "dec.nat"
+      ],
+      "steps": [
+        "Sign in as dec.nat (R-DEC has no region pin -> full national scope).",
+        "From Overview, open the chat. Ask: 'Take me to disease surveillance and filter to Oromia.'",
+        "Watch the page: it switches to Disease, then the region filter sets to 'Oromia'.",
+        "Open the tool_calls drawer: you'll see navigate_to_page + apply_global_filter, both executed SPA-side."
+      ],
+      "expected_result": "Two SPA-executor tool calls in sequence. The bot's answer confirms the new context. The user could have done both clicks manually; the bot just did them faster.",
+      "demo_value": 5,
+      "why_it_matters": "The bot is an OPERATOR, not just a chatbot. It controls the UI within the user's own permission scope.",
+      "page": "chatbot"
+    },
+    {
+      "id": "chatbot-run-sql-allowed",
+      "title": "Analyst asks the bot a data question; it runs SQL within their scope",
+      "categories": [
+        "ai-assistant",
+        "run-sql"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "analyst.ana"
+      ],
+      "steps": [
+        "Sign in as analyst.ana (R-CONS-ANA: has run_sql in their chatbot-tools scope).",
+        "Open the chat. Ask: 'How many active outbreaks are there per region?'",
+        "The bot composes a SELECT against marts.bi_programme_outbreak_signals (within OPA scope) and runs it.",
+        "The collapsible tool_call shows the SQL it wrote AND the row response. The bot's answer paraphrases the data."
+      ],
+      "expected_result": "The gateway delegates run_sql through /api/sql/execute which is gated by per-table OPA + the user's role_widget_filter scope. Rows come back, the bot summarises them in natural language.",
+      "demo_value": 5,
+      "why_it_matters": "SQL is the bot's most powerful tool, and the riskiest. Per-table OPA + user-scope intersection ensures the bot can never exceed what its user would see by running the same query in the SQL Lab.",
+      "page": "chatbot"
+    },
+    {
+      "id": "chatbot-sql-denied-for-no-scope",
+      "title": "RHB director (no run_sql) asks for raw data, bot refuses without leaking schema",
+      "categories": [
+        "ai-assistant",
+        "run-sql",
+        "deny"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "kebede.oromia"
+      ],
+      "steps": [
+        "Sign in as kebede.oromia (R-RHB-OROMIA: chatbot-tools scope is ['read', 'interact'], no run_sql).",
+        "Open the chat. Ask: 'Show me the raw rows from marts.bi_programme_outbreak_signals.'",
+        "The bot's catalogue doesn't include run_sql. Its answer says it can't run SQL but offers to navigate to the outbreaks widget instead."
+      ],
+      "expected_result": "No tool_call -> no leakage. The bot routes to its available tools (read_page, navigate_to_page) and doesn't reveal schemas, table names, or row counts the user couldn't otherwise see.",
+      "demo_value": 5,
+      "why_it_matters": "Defense in depth: the gateway never exposes tools the user can't invoke. The model literally doesn't know run_sql exists for this user; it can't be tricked into using it.",
+      "page": "chatbot"
+    },
+    {
+      "id": "chatbot-cross-role-scope-divergence",
+      "title": "Same prompt, two roles: the bot's available tool catalogue is different",
+      "categories": [
+        "ai-assistant",
+        "rbac"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "analyst.ana",
+        "kebede.oromia"
+      ],
+      "steps": [
+        "Have two browser profiles open: one signed in as analyst.ana, one as kebede.oromia.",
+        "Ask both bots the same question: 'List the top 5 facilities by outbreak count.'",
+        "analyst.ana's bot uses run_sql against the production mart. Catalogue includes read + run_sql + interact.",
+        "kebede.oromia's bot navigates to the hotspot facilities table and points the user at the regional rows already filtered to Oromia. Catalogue = read + interact.",
+        "Inspect /api/chat/start responses: different `executor` paths, different tools per session."
+      ],
+      "expected_result": "Two sessions, two distinct tool catalogues, two answer strategies: driven entirely by the chatbot-tools widget_filter values on each role.",
+      "demo_value": 4,
+      "why_it_matters": "The bot's behaviour (not just its data) is a function of authorisation. Different roles get different products without a product change.",
+      "page": "chatbot"
+    },
+    {
+      "id": "chatbot-progressive-disclosure-rounds",
+      "title": "Open the panel network tab: see the round-trip protocol in action",
+      "categories": [
+        "ai-assistant",
+        "protocol"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "analyst.ana"
+      ],
+      "steps": [
+        "Sign in as analyst.ana. Open dev tools -> Network -> filter 'chat'.",
+        "Ask the bot something that needs multiple SPA tools: 'Go to the disease page and tell me which widgets I'm allowed to see.'",
+        "First request: POST /api/chat/start: returns a tool_call (kind: navigate_to_page).",
+        "SPA executes the tool; second request: POST /api/chat/continue with session_id + tool_result.",
+        "Returns another tool_call (kind: read_page) -> continue again -> finally an `answer`.",
+        "Each round respects MAX_ROUNDS=6 (gateway env). After 6 the bot is forced to answer with whatever it has."
+      ],
+      "expected_result": "Two or three rounds visible. Each round is a small token-spend. The local 3B model never holds the full context; only enough to pick the next action.",
+      "demo_value": 4,
+      "why_it_matters": "Progressive disclosure makes a tiny model usable. The session lives in-process for 5 minutes; no DB write, no privacy trail beyond the audit log.",
+      "page": "chatbot"
+    },
+    {
+      "id": "chatbot-session-only-no-leak-across-users",
+      "title": "Continue endpoint refuses cross-user session re-use",
+      "categories": [
+        "ai-assistant",
+        "security"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "analyst.ana",
+        "dec.nat"
+      ],
+      "steps": [
+        "Sign in as analyst.ana. Ask a question that triggers a tool_call. Copy the session_id from the response in dev tools.",
+        "In a new private window, sign in as dec.nat.",
+        "POST /api/chat/continue with the OTHER user's session_id + any tool_result.",
+        "Gateway returns 403 'session belongs to a different user'."
+      ],
+      "expected_result": "Sessions are per-user. The continue endpoint validates session.user_kc_sub matches the caller's kc_sub. Stealing a session_id buys you nothing.",
+      "demo_value": 4,
+      "why_it_matters": "The session_id is convenience, not authn. Every continue still validates the Bearer against the same kc_sub that started the session.",
+      "page": "chatbot"
+    },
+    {
+      "id": "chatbot-stop-after-budget",
+      "title": "Bot hits MAX_ROUNDS=6: gracefully stops with whatever answer it has",
+      "categories": [
+        "ai-assistant",
+        "protocol",
+        "graceful-fail"
+      ],
+      "affected_dashboards": [
+        "internal-bi"
+      ],
+      "prerequisites": [],
+      "credentials_needed": [
+        "dec.nat"
+      ],
+      "steps": [
+        "Open the chat as dec.nat. Ask a broad question: 'Compare every region across every disease across every period.'",
+        "The bot starts running tools: read_page, possibly run_sql.",
+        "On the 7th attempt the gateway disables tools and forces an answer turn. The bot replies with a partial summary.",
+        "tool_calls drawer shows 6 rounds; the final answer mentions the budget cap."
+      ],
+      "expected_result": "Bounded latency + bounded spend per question. No runaway loops; no hung sessions.",
+      "demo_value": 3,
+      "why_it_matters": "Local LLMs are slow and easy to derail. The round budget is the main safety mechanism; it is why you can deploy a 3B model in front of users.",
+      "page": "chatbot"
+    },
+    {
+      "id": "infra-scale-internal-bi-live",
+      "title": "Scale internal-bi from 1 to 3 replicas live and watch the cluster react",
+      "categories": [
+        "k8s",
+        "infrastructure"
+      ],
+      "affected_dashboards": [
+        "admin",
+        "internal-bi"
+      ],
+      "prerequisites": [
+        "k3d cluster `nhdw` is up + gateway has the in-cluster ServiceAccount (gateway-rbac.yaml)"
+      ],
+      "credentials_needed": [
+        "solomon.m",
+        "hana.d"
+      ],
+      "steps": [
+        "Sign in to the admin dashboard as solomon.m (R-OPS-ADM).",
+        "Navigate to Infrastructure -> Health & topology.",
+        "Click the Trigger button below to scale internal-bi to 3 replicas.",
+        "Run `kubectl -n nhdw get pods -l app=internal-bi -w` in a terminal: 2 new pods appear within seconds.",
+        "Click Trigger again with replicas=1 to scale back down; old pods terminate."
+      ],
+      "expected_result": "The K8s API accepts the scale patch; the deployment's replica count + ready-pod count both reflect the new value in <10s. The gateway's RoleBinding (apps/deployments/scale -> patch) is what makes this work.",
+      "demo_value": 5,
+      "why_it_matters": "Live infrastructure operations are the heart of an admin console. The trigger uses the same gateway endpoint a future HPA + topology widget will consume; proves the K8s control path is wired end-to-end.",
+      "page": "infra-ops",
+      "trigger": {
+        "kind": "k8s_scale",
+        "args": {
+          "deployment": "internal-bi",
+          "replicas": 3,
+          "role": "R-OPS-ADM"
+        }
+      }
+    }
+  ],
+  "pages": [
+    {
+      "id": "security-and-access",
+      "title": "Security & Access",
+      "icon": "shield",
+      "description": "Authentication, identity federation, 4-axis permissions, OPA policy, PATs, and audit. All security-relevant flows live here."
+    },
+    {
+      "id": "chatbot",
+      "title": "AI Assistant Chatbot",
+      "icon": "chat",
+      "description": "Demo scenarios for the AI assistant: intro, guided queries, scoping, hallucination guards, refusal paths."
+    },
+    {
+      "id": "data-pipelines",
+      "title": "Data Pipelines",
+      "icon": "pipe",
+      "description": "Ingestion from each source, vault loads, mart materialisation, lineage rendering, freshness alerts."
+    },
+    {
+      "id": "ml-models",
+      "title": "ML Models",
+      "icon": "brain",
+      "description": "MLflow registration, batch scoring, online inference, drift dashboards, retraining triggers."
+    },
+    {
+      "id": "data-quality",
+      "title": "Data Quality",
+      "icon": "check",
+      "description": "DQ tests, reconciliation, source pulse, completeness/timeliness/validity per region."
+    },
+    {
+      "id": "exports-reports",
+      "title": "Exports & Reports",
+      "icon": "export",
+      "description": "Saved queries, scheduled exports, dataset generators, partner-scoped PAT exports."
+    },
+    {
+      "id": "workshop-community",
+      "title": "Workshop & Community",
+      "icon": "users",
+      "description": "Group lifecycle, artifact submission, sandbox promotion, contribution governance."
+    },
+    {
+      "id": "public-portal",
+      "title": "Public Portal",
+      "icon": "globe",
+      "description": "Citizen self-access, public datasets browser, articles + newsroom flows."
+    },
+    {
+      "id": "infra-ops",
+      "title": "Infrastructure Ops",
+      "icon": "server",
+      "description": "Topology view, container health, backup/restore drills, alert routing, break-glass."
+    }
+  ]
+}

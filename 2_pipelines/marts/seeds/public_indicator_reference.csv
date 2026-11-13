@@ -1,0 +1,12 @@
+indicator_id,programme_id,kpi_label,kpi_order,unit,is_public_kpi,kpi_kind,hsdip_target,target_direction,target_source,definition,source_system
+PENTA3-COV,EPI,Penta3 coverage <1y,1,percent,true,coverage,95,higher_better,HSDIP 2023-2030,"Share of children under one year who received the third dose of pentavalent vaccine.",DHIS2
+ANC4-COV,MNCH,ANC4 coverage,2,percent,true,coverage,81,higher_better,HSDIP 2023-2030,"Share of pregnant women who completed four or more antenatal-care contacts.",DHIS2
+SBA-COV,MNCH,Skilled birth attendance,3,percent,true,coverage,76,higher_better,HSDIP 2023-2030,"Share of deliveries attended by a skilled health provider.",DHIS2
+FP-MCPR,FP,Modern contraceptive prevalence,4,percent,true,coverage,50,higher_better,HSDIP 2023-2030,"Share of women of reproductive age using a modern contraceptive method.",DHIS2
+TB-TX-SUCC,TB,TB treatment success,5,percent,true,outcome,90,higher_better,End TB / HSDIP 2023-2030,"Share of notified TB cases successfully treated (cured or treatment completed).",DHIS2
+HIV-VL-SUPP,HIV,ART viral suppression,6,percent,true,outcome,95,higher_better,95-95-95 / HSDIP 2023-2030,"Share of clients on antiretroviral therapy with a suppressed viral load.",DHIS2
+NUT-STUNT,NUTRITION,Under-5 stunting,7,percent,true,outcome,25,lower_better,SDG 2.2 / HSDIP 2023-2030,"Prevalence of stunting (low height-for-age) among children under five.",DHIS2
+PHEM-COMPL,OTHER,Reporting completeness,8,percent,true,trust,95,higher_better,HSDIP 2023-2030,"Share of expected facility HMIS reports actually received; a data-quality (trust) measure; not a coverage rate.",DHIS2
+NUT-SAM-CURE,NUTRITION,SAM cure rate,20,percent,false,outcome,75,higher_better,Sphere / HSDIP 2023-2030,"Share of severe-acute-malnutrition admissions discharged as cured.",DHIS2
+HTN-CTRL,NCD,Hypertension control,21,percent,false,outcome,,higher_better,,"Share of hypertensive patients on treatment with blood pressure controlled.",DHIS2
+PHEM-TIMELY,OTHER,Surveillance timeliness,22,percent,false,trust,80,higher_better,IDSR / HSDIP 2023-2030,"Share of facility surveillance reports submitted on time.",DHIS2

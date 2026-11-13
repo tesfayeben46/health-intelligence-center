@@ -1,0 +1,27 @@
+# Host-side worker behind the demo console's Switch-profile button.
+# Install:  sudo cp bundle/systemd/nhdw-profile-swap.service /etc/systemd/system/
+#           sudo systemctl daemon-reload && sudo systemctl enable --now nhdw-profile-swap
+# The gateway writes requests into /opt/nhdw-state/swap-requests (its one
+# writable host mount); this service executes the canonical seed scripts and
+# reports stages back through /opt/nhdw-state/swap-status.
+# NHDW_REPO is /opt/nhdw-runtime, a copy of the deployed tree that provisioning
+# and each successful deploy sync. Never the runner work dir: checkout cleans
+# that, and deploy.yml refuses to run while a unit points into it.
+[Unit]
+Description=NHDW profile swap worker (appsec + data layers for the demo console)
+After=network-online.target docker.service
+
+[Service]
+Type=simple
+# User= must be the account that owns /opt/nhdw-runtime (the provisioning user).
+# Ansible (roles/seed) rewrites this line on install; set it by hand otherwise.
+User=nhdw
+Environment=NHDW_REPO=/opt/nhdw-runtime
+Environment=NHDW_PROFILE_STATE_DIR=/opt/nhdw-state
+Environment=NHDW_PROFILE_DIR=/opt/nhdw-profiles
+ExecStart=/usr/bin/env bash ${NHDW_REPO}/bundle/scripts/profile-swap-worker.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

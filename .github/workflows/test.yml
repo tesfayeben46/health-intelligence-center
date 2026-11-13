@@ -1,0 +1,132 @@
+name: Tests (policy · data units · gateway · admin UI)
+
+# Pre-merge regression gate. Runs on GitHub-hosted runners (never the self-hosted
+# deploy runner) for every branch push and pull request, so a defect is caught
+# before it reaches develop and the deploy.
+#   policy      opa test on the committed rego (reveal sets, trust guard, scope)
+#   data-units  MDM matcher, the security-seed loader's provenance contract
+#               (psycopg3 delete-sync), the nhdw_ref vocabulary parity suite,
+#               widget lineage, country and rebuild guards, and the forecast
+#               model contract, against a Postgres 16 service with pg_trgm
+#   gateway     the whole app imports; the masking-primitive contract
+#   mdm         MDM against Postgres 16 and Trino 476 (synthetic fixtures):
+#               workspace reads (gate, counts, comparison, history, no
+#               coordinates or phone outside the steward compare) and
+#               maker-checker (four eyes, check window, apply, capability gate)
+#   admin-ui    tsc and vite build (type errors surface here, not mid-deploy)
+#   scripts     every bundle script parses, the workflows are valid YAML,
+#               ansible-lint passes, and the database initialises from zero
+
+on:
+  push:
+    branches-ignore: [main]     # main only receives already-tested merges
+  pull_request:
+
+jobs:
+  policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: opa test
+        run: |
+          curl -sfL -o opa https://openpolicyagent.org/downloads/v1.5.0/opa_linux_amd64_static
+          chmod +x opa
+          ./opa test 7_security/opa/policies
+
+  data-units:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: test }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install --quiet 'psycopg[binary]' pyyaml
+      - name: MDM matcher regression suite
+        env:
+          TEST_DSN: postgresql://postgres:test@localhost:5432/postgres
+          REPO_ROOT: ${{ github.workspace }}
+        run: cd 2_pipelines/mdm/matcher && python3 test_matcher.py
+      - name: security-seed loader provenance contract
+        env:
+          TEST_DSN: postgresql://postgres:test@localhost:5432/postgres
+          REPO_ROOT: ${{ github.workspace }}
+        run: cd 7_security/scripts && python3 test_column_classification_loader.py
+      - name: nhdw_ref vocabulary suite
+        run: cd bundle/seeds/ref-vocab && python3 test_build_vocab.py
+      - name: widget-binding contract (lineage for every catalog widget)
+        run: python3 bundle/scripts/test_gen_exposures.py
+      - name: country guard (a cold boot must not seed the wrong country)
+        run: bash bundle/scripts/test-country-guard.sh
+      - name: rebuild guards (every deploy-hardening fix is present)
+        run: bash bundle/scripts/test-rebuild-guards.sh
+      - name: PCT forecast model contract (elmis_consumption_forecast)
+        run: |
+          pip install --quiet mlflow==2.18.0 pandas==2.2.3 numpy==1.26.4 pyyaml==6.0.2
+          python3 bundle/seed-pack/app/ml/elmis_consumption_forecast/tests/test_train.py
+
+  gateway:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install --quiet -r 6_access-points/api/nhdw-gateway/requirements.txt
+      - name: app imports clean
+        run: |
+          cd 6_access-points/api/nhdw-gateway
+          cp ../../../2_pipelines/ml/registry/validators.py validators.py
+          python3 -c "import app.main"
+      - name: masking primitives contract
+        run: cd 6_access-points/api/nhdw-gateway && python3 tests/test_masking.py
+
+  mdm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: MDM workspace reads + maker-checker (Postgres 16 + Trino 476)
+        run: bash 6_access-points/api/nhdw-gateway/tests/run_mdm_tests.sh
+
+  admin-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: tsc + vite build
+        run: |
+          cd 6_access-points/dashboards/admin/ui
+          npm ci --silent
+          npm run build
+
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: every bundle script parses
+        run: |
+          rc=0
+          for f in bundle/scripts/*.sh; do bash -n "$f" || rc=1; done
+          exit $rc
+      - name: workflows are valid YAML
+        run: |
+          python3 -c "
+          import glob, yaml
+          for f in glob.glob('.github/workflows/*.yml'):
+              yaml.safe_load(open(f)); print('ok', f)"
+      # The provisioning playbook is the from-bare path and is not otherwise
+      # exercised in CI.
+      - name: ansible-lint the provisioning playbook
+        run: |
+          pip install --quiet ansible-lint
+          cd 1_infrastructure/ansible && ansible-lint .
+      # Postgres init SQL runs on a fresh volume only, so a deploy onto existing
+      # volumes never exercises it. Runs in a container and needs no cluster.
+      - name: database initialises from zero
+        run: bash bundle/scripts/test-coldboot-initdb.sh

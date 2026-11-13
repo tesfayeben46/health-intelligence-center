@@ -1,0 +1,8 @@
+id: dz-woreda-table
+title: Hotspot Action Queue
+kind: table
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

@@ -1,0 +1,162 @@
+# Public-dashboard newsroom (articles CMS) seed.
+#
+# These articles are illustrative sample content written for the demonstration
+# deployment. They are not statements by the organisations, agencies or
+# officials named in them, and they are not official publications.
+#
+# Loaded idempotently into ops_governance.public_article by the security-seed
+# job (load_public_articles.py, managed_by='seed'). The public SPA reads them
+# anonymously via the gateway /api/public/articles route. body is curated HTML.
+# linked_widget optionally ties a card to a bi_public signal.
+
+articles:
+  - id: a-001
+    category: PHEM
+    author: EPHI Surveillance
+    date: 2026-06-14
+    title: "Cholera outbreak response: Somali Region update (Week 24)"
+    tags: [cholera, outbreak, Somali]
+    summary: >-
+      Rapid response teams have been deployed to four woredas in Somali Region.
+      Cumulative case count 247, with 38 new cases in the last 7 days.
+      Vaccination and WASH interventions are ongoing.
+    body: |
+      <p>Following confirmation of cholera cases in <strong>Doolo and Korahe zones</strong>, the Public Health Emergency Management (PHEM) directorate has mobilised four Rapid Response Teams in coordination with the Regional Health Bureau.</p>
+      <p>As of 14 June, the cumulative case count stands at <strong>247</strong>, with 38 cases reported in the last seven days. The case-fatality rate remains under 1.5%. Oral cholera vaccine (OCV) campaigns have launched in three woredas; WASH interventions including chlorinated water points are operational in 21 sites.</p>
+      <p>EPHI continues to coordinate with partners including UNICEF, WHO, and MSF for surge support. The next situation report will publish on 21 June (Week 25).</p>
+
+  - id: a-002
+    category: Press
+    author: FMoH Communications
+    date: 2026-06-11
+    title: FMoH launches HSDIP consultations
+    tags: [HSDIP, policy, consultation]
+    summary: >-
+      The Federal Ministry of Health begins national consultations for the
+      Health Sector Development & Investment Plan (2023/24 to 2030), focusing on
+      quality, equity, and digital health.
+    body: |
+      <p>His Excellency the Minister of Health officially launched the consultation process for the Health Sector Development and Investment Plan (HSDIP) today at the Skylight Hotel in Addis Ababa.</p>
+      <p>HSDIP orients the sector around three pillars: <strong>quality of care</strong>, <strong>equity in coverage</strong>, and <strong>digital transformation</strong>. Regional consultations will run through August 2026.</p>
+      <p>Civil society, professional associations, partners, and citizens are invited to submit input through the FMoH portal. The full draft will be published for public review in November.</p>
+
+  - id: a-003
+    category: Advisory
+    author: EPI Directorate
+    date: 2026-06-08
+    title: "Routine immunization campaign: June 16 to 22"
+    tags: [immunisation, Penta3, pastoralist]
+    linked_widget: pub-region
+    summary: >-
+      The national catch-up immunization campaign targets children under 5 in
+      pastoralist regions. Caregivers are encouraged to visit their nearest
+      health post.
+    body: |
+      <p>The Expanded Programme on Immunization (EPI) is conducting a one-week catch-up campaign across Afar, Somali, Benishangul-Gumuz, and Gambella regions from <strong>16 to 22 June 2026</strong>.</p>
+      <p>Antigens included: BCG, Penta1-3, MCV1, MCV2, IPV, PCV, rotavirus. The campaign uses outreach teams covering 412 sites including health posts, mobile clinics, and school grounds.</p>
+      <p>Caregivers are encouraged to bring their child's immunization card. Lost cards can be reissued at the site.</p>
+
+  - id: a-004
+    category: PHEM
+    author: EPHI Surveillance
+    date: 2026-06-03
+    title: Measles outbreak in Tigray Region declared contained
+    tags: [measles, Tigray, outbreak]
+    summary: >-
+      After 12 weeks of response, the measles outbreak in Tigray has been
+      declared contained. Total cases 1,847 with 11 deaths; vaccination coverage
+      post-response now exceeds 92% across affected woredas.
+    body: |
+      <p>The PHEM weekly bulletin confirms that the measles outbreak that began in central Tigray in March has been declared contained as of Week 22.</p>
+      <p>The outbreak affected 18 woredas with <strong>1,847 confirmed cases</strong> and 11 deaths (CFR 0.6%). The Rapid Response Team conducted three reactive vaccination rounds reaching 280,000 children.</p>
+      <p>Routine surveillance continues; the next risk assessment is scheduled for Week 26.</p>
+
+  - id: a-005
+    category: Press
+    author: FMoH Director-General
+    date: 2026-05-28
+    title: HEARTS programme expands to 142 additional health centres
+    tags: [HEARTS, NCD, HTN]
+    summary: >-
+      The WHO HEARTS technical package for hypertension management is being
+      rolled out to 142 more primary health centres, bringing total coverage to
+      511 facilities across 11 regions.
+    body: |
+      <p>The Federal Ministry of Health announced today the expansion of the HEARTS programme, a WHO-led standardised approach to managing hypertension in primary care, to <strong>142 additional health centres</strong>.</p>
+      <p>The expansion targets areas where HTN screening coverage has been below 30%. Each facility receives a kit including digital BP monitors, validated training, simplified treatment protocols, and a 6-month medication starter package.</p>
+      <p>This brings total HEARTS coverage to 511 health centres across 11 regions, on track for the HSDIP target of 600 centres by end of 2026.</p>
+
+  - id: a-006
+    category: Advisory
+    author: EFDA
+    date: 2026-05-22
+    title: "Cold-chain integrity advisory: BCG lot 2024-LOT-39812"
+    tags: [cold chain, safety, EPI]
+    summary: >-
+      EFDA issued an advisory regarding cold-chain temperature excursions
+      affecting seven facilities. BCG vaccine lot 2024-LOT-39812 has been
+      quarantined pending re-test.
+    body: |
+      <p>The Ethiopian Food and Drug Authority (EFDA), in coordination with EPI, has issued a cold-chain integrity advisory for BCG vaccine lot <strong>2024-LOT-39812</strong>.</p>
+      <p>Temperature monitoring at seven facilities recorded excursions above 8°C for periods longer than 4 hours. Affected doses (estimated 2,118) have been quarantined and will be re-tested for potency.</p>
+      <p>Facilities should follow the standard quarantine protocol and report through the AEFI surveillance system. New stock from a different lot will be redistributed within 5 days.</p>
+
+  - id: a-007
+    category: Research
+    author: Public Health Institute
+    date: 2026-05-14
+    title: EWARS+ climate-driven forecasting model goes live
+    tags: [EWARS+, climate, forecasting]
+    summary: >-
+      EPHI announces the operational deployment of EWARS+, a climate-driven
+      outbreak forecasting model providing weekly woreda-level alarm
+      probabilities for cholera, malaria, and dengue.
+    body: |
+      <p>The Public Health Institute, in partnership with EPHI, has formally deployed <strong>EWARS+</strong>, an extension of the WHO EWARS framework that integrates rainfall, temperature, and humidity data with surveillance reporting.</p>
+      <p>The model produces weekly alarm probabilities at woreda level for cholera, malaria, dengue, and meningitis. Probabilities are published every Monday and feed directly into PHEM's weekly bulletin.</p>
+      <p>Initial validation shows a lead time of 2-3 weeks ahead of outbreak confirmation, with sensitivity 78% and specificity 84% across the 2024-2025 retrospective dataset.</p>
+
+  - id: a-008
+    category: Programme
+    author: MNCH Directorate
+    date: 2026-05-06
+    title: MNCH continuum of care quality improvement collaborative
+    tags: [MNCH, ANC4, PNC1]
+    linked_widget: pub-region
+    summary: >-
+      A new QI collaborative is launching in 12 regions targeting the
+      ANC1->ANC4->SBA->PNC1 continuum. Funded by the global Health Quality
+      Initiative.
+    body: |
+      <p>The MNCH Directorate is launching a quality-improvement collaborative across <strong>12 regions and 280 health centres</strong> to address gaps in the continuum of maternal care.</p>
+      <p>Cohort tracking will follow women from ANC1 through PNC1, with monthly facility-level review meetings. The intervention package includes training, mentoring visits, supply support, and digital tracking via DHIS2.</p>
+      <p>The target outcome: increase ANC4 completion toward the HSDIP target of 81%, and PNC1-within-48h from 48% to 65% by end of 2026.</p>
+
+  - id: a-009
+    category: Press
+    author: FMoH State Minister
+    date: 2026-04-29
+    title: Ethiopia signs renewed HIV programme cooperation with PEPFAR
+    tags: [donors, PEPFAR, HIV]
+    summary: >-
+      The Federal Ministry of Health signed a renewed five-year cooperation
+      agreement with PEPFAR, focused on the 95-95-95 targets and PMTCT.
+    body: |
+      <p>Ethiopia's renewed cooperation with PEPFAR (President's Emergency Plan for AIDS Relief) covers the period 2026-2030, with a programmatic focus on reaching the 95-95-95 targets, eliminating mother-to-child transmission, and integrating HIV services into primary care.</p>
+      <p>The agreement carries technical and financial support for ART scale-up, supply-chain strengthening, and the second-line ART transition.</p>
+      <p>Current cascade indicators: 89% awareness, 78% on ART, 89% virally suppressed.</p>
+
+  - id: a-010
+    category: Advisory
+    author: PHEM
+    date: 2026-04-21
+    title: Pre-rainy-season preparedness advisory
+    tags: [rainy season, flooding, preparedness]
+    summary: >-
+      PHEM has issued the annual pre-rainy-season preparedness advisory covering
+      cholera, malaria, dengue, and post-flood public health risks for Belg
+      (March-May) and Kiremt (June-September) seasons.
+    body: |
+      <p>The Public Health Emergency Management directorate has issued its annual pre-rainy-season preparedness advisory ahead of the <strong>Kiremt season (June-September)</strong>.</p>
+      <p>Anticipated risks: water-borne outbreaks (cholera, AWD), vector-borne diseases (malaria, dengue), and post-flood public-health hazards in lowland regions.</p>
+      <p>Regional Health Bureaus are advised to verify pre-positioned stock of ORS, RDTs, ITNs, and IRS supplies, and to confirm functional incident command structures by 1 June.</p>

@@ -1,0 +1,137 @@
+-- 06_ops_users.sql.template: runs inside `nhdw_ops`.
+--
+-- Three service roles:
+--
+--   ops_writer   Full DDL/DML inside ops_*. Used by the data gateway,
+--                workshop service, alert engine, and the OPS API server.
+--                Has no grants on nhdw_vault (strict isolation).
+--
+--   ops_gateway  Same DML rights as ops_writer on the schemas the gateway
+--                actually touches (export_registry, gateway_log, policy_log,
+--                identity.user, identity.session). Tighter than ops_writer
+--                so the gateway can't accidentally mutate workshop / artifact
+--                rows; those go through the workshop service.
+--                In practice we ship with ops_writer for the demo and add
+--                ops_gateway as a sibling for production hardening.
+--
+--   ops_reader   SELECT on everything. CloudBeaver / Superset / dashboards.
+--
+-- ops_writer is also a SUPERUSER on the ops_audit schema (revoke DELETE on
+-- audit tables, which are append-only, but grant INSERT). The reason we don't make
+-- ops_audit globally writable is to keep `ops_writer` accidentally idempotent
+-- against retention or compaction jobs.
+--
+-- Idempotent (DROP + CREATE so password rotation works on rerun).
+
+DROP USER IF EXISTS ops_writer;
+CREATE USER ops_writer WITH PASSWORD '${OPS_WRITER_PASSWORD}';
+
+DROP USER IF EXISTS ops_gateway;
+CREATE USER ops_gateway WITH PASSWORD '${OPS_GATEWAY_PASSWORD}';
+
+DROP USER IF EXISTS ops_reader;
+CREATE USER ops_reader WITH PASSWORD '${OPS_READER_PASSWORD}';
+
+-- ---------------------------------------------------------------------------
+-- ops_writer: broad DDL/DML on all ops_* schemas.
+-- ---------------------------------------------------------------------------
+GRANT USAGE, CREATE ON SCHEMA
+    ops_identity, ops_workspace, ops_governance, ops_export, ops_artifact, ops_audit
+    TO ops_writer;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA
+    ops_identity, ops_workspace, ops_governance, ops_export, ops_artifact
+    TO ops_writer;
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA
+    ops_identity, ops_workspace, ops_governance, ops_export, ops_artifact, ops_audit
+    TO ops_writer;
+-- ops_audit is append-only: writer can INSERT + SELECT, never DELETE/UPDATE.
+GRANT INSERT, SELECT ON ALL TABLES IN SCHEMA ops_audit TO ops_writer;
+REVOKE UPDATE, DELETE ON ALL TABLES IN SCHEMA ops_audit FROM ops_writer;
+
+-- Default privileges for objects ops_writer creates in the future:
+ALTER DEFAULT PRIVILEGES FOR ROLE ops_writer IN SCHEMA
+    ops_identity, ops_workspace, ops_governance, ops_export, ops_artifact
+    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ops_writer;
+ALTER DEFAULT PRIVILEGES FOR ROLE ops_writer IN SCHEMA ops_audit
+    GRANT INSERT, SELECT ON TABLES TO ops_writer;
+
+-- ---------------------------------------------------------------------------
+-- ops_gateway: narrow grants for the runtime gateway service.
+-- ---------------------------------------------------------------------------
+GRANT USAGE ON SCHEMA
+    ops_identity, ops_export, ops_audit, ops_workspace,
+    ops_artifact, ops_governance
+    TO ops_gateway;
+GRANT SELECT, INSERT, UPDATE ON
+    ops_identity.user,
+    ops_identity.user_scope,
+    ops_identity.session
+    TO ops_gateway;
+-- Access-request provisioning (§4.8) reconciles a provisioned user's data scope
+-- by delete-then-insert, so the gateway (the PEP that owns scope grants) needs
+-- DELETE on user_scope specifically.
+GRANT DELETE ON ops_identity.user_scope TO ops_gateway;
+GRANT SELECT, INSERT, UPDATE ON
+    ops_export.export_registry,
+    ops_export.export_lineage
+    TO ops_gateway;
+GRANT INSERT, SELECT ON
+    ops_audit.gateway_log,
+    ops_audit.policy_log,
+    ops_audit.data_event
+    TO ops_gateway;
+GRANT SELECT ON
+    ops_workspace.pref,
+    ops_workspace.saved_dashboard
+    TO ops_gateway;
+-- saved_query (/api/queries) + subscription (/api/alerts/subscriptions) +
+-- alert_notification (evaluator inserts, /api/alerts/notifications lists/reads):
+-- the gateway owns full CRUD on all three.
+GRANT SELECT, INSERT, UPDATE, DELETE ON
+    ops_workspace.saved_query,
+    ops_workspace.subscription,
+    ops_workspace.alert_notification,
+    ops_workspace.report_template
+    TO ops_gateway;
+-- Graduation pathway: gateway accepts community submissions, runs validators,
+-- records peer review + promotion decisions.
+GRANT SELECT, INSERT, UPDATE ON
+    ops_artifact.artifact,
+    ops_artifact.artifact_version,
+    ops_artifact.artifact_provenance,
+    ops_artifact.artifact_review,
+    ops_artifact.artifact_metric
+    TO ops_gateway;
+-- Like toggle: unliking deletes the caller's own ledger row.
+GRANT SELECT, INSERT, DELETE ON ops_artifact.artifact_like TO ops_gateway;
+GRANT SELECT ON
+    ops_artifact.workshop_group,
+    ops_artifact.workshop_group_member
+    TO ops_gateway;
+-- Self-serve community groups: create (group + owner-member row), join, leave.
+GRANT INSERT ON ops_artifact.workshop_group TO ops_gateway;
+GRANT INSERT, DELETE ON ops_artifact.workshop_group_member TO ops_gateway;
+-- Resource-request flow (workspace dashboard -> admin queue).
+GRANT SELECT, INSERT, UPDATE ON ALL TABLES IN SCHEMA ops_governance TO ops_gateway;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA
+    ops_export, ops_audit, ops_artifact, ops_governance
+    TO ops_gateway;
+-- Future tables created by ops_writer in these schemas inherit the same grants.
+ALTER DEFAULT PRIVILEGES FOR ROLE ops_writer IN SCHEMA ops_artifact
+    GRANT SELECT, INSERT, UPDATE ON TABLES TO ops_gateway;
+ALTER DEFAULT PRIVILEGES FOR ROLE ops_writer IN SCHEMA ops_governance
+    GRANT SELECT, INSERT, UPDATE ON TABLES TO ops_gateway;
+
+-- ---------------------------------------------------------------------------
+-- ops_reader: broad SELECT.
+-- ---------------------------------------------------------------------------
+GRANT USAGE ON SCHEMA
+    ops_identity, ops_workspace, ops_governance, ops_export, ops_artifact, ops_audit
+    TO ops_reader;
+GRANT SELECT ON ALL TABLES IN SCHEMA
+    ops_identity, ops_workspace, ops_governance, ops_export, ops_artifact, ops_audit
+    TO ops_reader;
+ALTER DEFAULT PRIVILEGES FOR ROLE ops_writer IN SCHEMA
+    ops_identity, ops_workspace, ops_governance, ops_export, ops_artifact, ops_audit
+    GRANT SELECT ON TABLES TO ops_reader;

@@ -1,0 +1,8 @@
+id: ov-resource-facilities
+title: Facility coverage gaps
+kind: table
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

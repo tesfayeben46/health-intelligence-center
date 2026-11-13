@@ -1,0 +1,145 @@
+/*
+   MDM Stewardship workspace (admin/mdm): page-specific styles.
+   Built only on the admin tokens (base.css). Reuses .card, .card-hdr, .pill,
+   .btn, .local-controls, the review kit (.rv-layout, .rv-list, .rv-row,
+   .rv-detail, .rv-section-h, .rv-actions, .rv-note) and the table kit.
+   Adds only what those lack: the field comparison, list cards, the record
+   history timeline and a hairline key/value list. Namespace: .mdm-*.
+   */
+
+.mdm-workspace .v { font-weight: 600; color: var(--ink); }
+.mdm-workspace .sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+/* the Decisions / Publish tabs sit in a card: no section gap at its top edge */
+.mdm-workspace .card > .section-hdr:first-child { margin-top: 0; }
+
+.mdm-block { display: block; }
+.mdm-flush { margin: 0 0 0.3rem; }
+.mdm-mono { font-family: var(--font-mono); font-size: 0.78rem; }
+.mdm-nv { color: var(--ink-3); }
+.mdm-section { margin-top: 1.1rem; }
+/* serif display face uses old-style figures by default; names carry codes and numbers */
+.mdm-name { font-variant-numeric: lining-nums; }
+.mdm-q { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.mdm-link {
+  background: none; border: none; padding: 0; cursor: pointer;
+  font: inherit; font-weight: 600; color: var(--navy-700);
+}
+.mdm-link:hover { color: var(--navy-500); }
+.mdm-back { font-size: 0.84rem; }
+.mdm-hdr { margin-top: 0.4rem; }
+.mdm-kbd {
+  font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-3);
+  border: 1px solid var(--border-2); border-radius: 4px; padding: 0 0.3rem;
+}
+.mdm-kv {
+  display: grid; grid-template-columns: minmax(110px, 36%) minmax(0, 1fr);
+  gap: 0 0.8rem; margin: 0.4rem 0 0; font-size: 0.84rem;
+}
+.mdm-kv dt { color: var(--ink-3); padding: 0.35rem 0; border-bottom: 1px solid var(--border); }
+.mdm-kv dd {
+  margin: 0; padding: 0.35rem 0; border-bottom: 1px solid var(--border);
+  color: var(--ink); min-width: 0; overflow-wrap: anywhere;
+}
+
+/* Review matches */
+.mdm-review .rv-list-hdr h4 { flex: 1; font-variant-numeric: lining-nums; }
+.mdm-review .rv-list-body { max-height: 640px; }
+table.dash.mdm-compare td, table.dash.mdm-compare th { vertical-align: top; }
+table.dash.mdm-compare td:first-child { font-weight: 700; color: var(--ink-2); white-space: nowrap; }
+.mdm-src { display: block; font-size: 0.82rem; text-transform: none; letter-spacing: 0; color: var(--ink); }
+.mdm-src-sub {
+  display: block; text-transform: none; letter-spacing: 0;
+  font-weight: 500; color: var(--ink-3);
+}
+.mdm-summary {
+  background: var(--bg-2); border-radius: var(--radius);
+  padding: 0.75rem 0.95rem; font-size: 0.85rem; color: var(--ink-2);
+}
+.mdm-summary ul { margin: 0; padding-left: 1.1rem; }
+.mdm-confirm { margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid var(--border); }
+.mdm-confirm .rv-actions { margin-top: 0.6rem; }
+.mdm-disclosure { border-top: 1px solid var(--border); margin-top: 1.2rem; padding-top: 0.7rem; font-size: 0.85rem; }
+.mdm-disclosure summary { cursor: pointer; font-weight: 600; color: var(--navy-700); }
+
+/* Explore: list cards */
+.mdm-lists { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+.mdm-list-card {
+  display: flex; flex-direction: column; gap: 0.3rem; text-align: left;
+  font: inherit; color: var(--ink); border: none;
+}
+.mdm-list-card .card-hdr { margin-bottom: 0.2rem; }
+.mdm-list-open { cursor: pointer; }
+.mdm-list-open:hover { transform: translateY(-2px); }
+.mdm-list-open:focus-visible { outline: 2px solid var(--navy-500); outline-offset: 2px; }
+.mdm-count { font-size: 0.8rem; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.mdm-count.muted { color: var(--ink-3); }
+
+/* Record: history timeline + golden record */
+.mdm-record-hdr { margin: 0.4rem 0 1rem; }
+.mdm-record {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+  gap: 1.2rem; align-items: start;
+}
+.mdm-tl-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.6rem; }
+.mdm-tl-box { margin-top: 0.7rem; border: 1px solid var(--border); border-radius: var(--radius); }
+.mdm-tl { display: grid; min-width: 520px; }
+.mdm-tl-name {
+  padding: 0.6rem 0.7rem; font-size: 0.8rem; font-weight: 700; color: var(--ink-2);
+  border-bottom: 1px solid var(--border); border-right: 1px solid var(--border);
+  background: var(--paper-2);
+}
+.mdm-tl-cell {
+  position: relative; min-height: 46px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+.mdm-tl-cell.on::after {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  height: 3px; margin-top: -1.5px; background: var(--navy-500); opacity: 0.5;
+}
+.mdm-tl-cell.on.start::after { left: 50%; }
+.mdm-tl-cell.asof { background: var(--navy-50); box-shadow: inset 2px 0 0 var(--navy-700); }
+.mdm-tl-cell.later { opacity: 0.4; }
+.mdm-tl-dot {
+  position: relative; z-index: 1; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; padding: 0; cursor: pointer;
+  font: inherit; font-size: 0.7rem; font-weight: 700;
+  color: var(--navy-700); background: var(--paper); border: 2px solid var(--navy-700);
+}
+.mdm-tl-dot.sel { background: var(--navy-800); color: #fff; border-color: var(--navy-800); }
+.mdm-tl-dot:focus-visible { outline: 2px solid var(--navy-500); outline-offset: 2px; }
+.mdm-events { display: flex; flex-direction: column; margin-top: 0.9rem; }
+.mdm-event {
+  display: grid; grid-template-columns: 28px minmax(130px, 170px) minmax(0, 1fr);
+  gap: 0.6rem; align-items: start; text-align: left; cursor: pointer;
+  padding: 0.55rem 0.6rem; border: none; border-bottom: 1px solid var(--border);
+  background: transparent; font: inherit; color: inherit;
+}
+.mdm-event:hover { background: var(--navy-50); }
+.mdm-event.sel { background: var(--navy-50); box-shadow: inset 3px 0 0 var(--navy-700); }
+.mdm-event-n {
+  width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 0.7rem; font-weight: 700; color: var(--navy-700); border: 1.5px solid var(--navy-700);
+}
+.mdm-member {
+  display: flex; justify-content: space-between; align-items: center; gap: 0.6rem;
+  padding: 0.45rem 0; border-bottom: 1px solid var(--border);
+}
+
+/* Maker-checker: proposals, approvals */
+.mdm-seg { margin-bottom: 1rem; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .mdm-record { grid-template-columns: 1fr; }
+  /* single column: keep the selected match close under the queue */
+  .mdm-review .rv-list-body { max-height: 240px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mdm-list-open:hover { transform: none; }
+}
+
+/* Setup (S2): dates and version labels stay on one line */
+.mdm-nowrap { white-space: nowrap; }

@@ -1,0 +1,307 @@
+---
+# Provision a k3s node on a near-bare Ubuntu 22.04/24.04 host, plus the host-level
+# dependencies the NHDW deploy needs. Unlike the k3d path it installs everything on the
+# host: docker (for the external source replicas), k3s, kubectl, helm, kustomize, kernel
+# modules and sysctls. Idempotent, so a redeploy re-runs cleanly. Requires become/sudo.
+
+# base OS prerequisites
+- name: Ensure apt keyrings dir exists
+  become: true
+  ansible.builtin.file: { path: /etc/apt/keyrings, state: directory, mode: "0755" }
+
+# Clear any pre-existing Docker apt source before the first apt operation. A host with
+# Docker configured by hand carries an entry signed by /etc/apt/keyrings/docker.gpg; the
+# entry this role writes below is signed by docker.asc, and apt refuses to read any source
+# while the two disagree ("Conflicting values set for option Signed-By"), so even
+# `apt install curl` fails. Removing both here and writing one owned entry later converges
+# either state. No-op on a bare host.
+- name: Clear pre-existing Docker apt sources (this role writes its own below)
+  become: true
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/docker.list
+    - /etc/apt/sources.list.d/docker.sources
+
+- name: Install base OS packages
+  become: true
+  ansible.builtin.apt:
+    name:
+      - curl
+      - ca-certificates
+      - gnupg
+      - jq
+      - rsync
+      - python3
+      - python3-yaml        # select-external-config.py + cache-images.sh sanitize need PyYAML
+      - python3-pip
+      - apt-transport-https
+    state: present
+    update_cache: true
+
+# kernel modules and sysctls (k8s and Cilium datapath; host-level on k3s, not inside
+# k3d node containers)
+- name: Persist required kernel modules
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/nhdw-k8s.conf
+    content: "overlay\nbr_netfilter\n"
+    mode: "0644"
+
+- name: Load kernel modules now
+  become: true
+  community.general.modprobe: { name: "{{ item }}", state: present }
+  loop: [overlay, br_netfilter]
+  failed_when: false
+
+- name: Networking + pod-density sysctls
+  become: true
+  ansible.posix.sysctl:
+    name: "{{ item.k }}"
+    value: "{{ item.v }}"
+    sysctl_set: true
+    reload: true
+  loop:
+    - { k: net.ipv4.ip_forward, v: "1" }
+    - { k: net.bridge.bridge-nf-call-iptables, v: "1" }
+    - { k: net.bridge.bridge-nf-call-ip6tables, v: "1" }
+    - { k: fs.inotify.max_user_instances, v: "1024" }     # many pods = many inotify watchers
+    - { k: fs.inotify.max_user_watches, v: "1048576" }
+
+# Docker engine (the source replicas, Fayda and Ollama run as host docker-compose
+# stacks outside k8s; see sources-up.sh)
+- name: Docker apt GPG key
+  become: true
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: "0644"
+
+# Own the source file rather than appending to it. apt_repository adds a line and leaves
+# any existing one alone, so a host that already had Docker's repo (set up by hand with the
+# older /etc/apt/keyrings/docker.gpg convention) would end up with two entries for the same
+# source and different Signed-By values, and apt then refuses to read any source. Writing
+# the file keeps from-bare provisioning safe on a machine that is not bare.
+- name: Docker apt repository (single owned entry)
+  become: true
+  vars:
+    # An apt source must be one line, so the parts are variables rather than a
+    # wrapped line.
+    provision_docker_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+    provision_docker_opts: "arch={{ provision_docker_arch }} signed-by=/etc/apt/keyrings/docker.asc"
+    provision_docker_repo: https://download.docker.com/linux/ubuntu
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/docker.list
+    mode: "0644"
+    content: |
+      deb [{{ provision_docker_opts }}] {{ provision_docker_repo }} {{ ansible_distribution_release }} stable
+
+- name: Install Docker engine + compose plugin
+  become: true
+  ansible.builtin.apt:
+    name: [docker-ce, docker-ce-cli, containerd.io, docker-compose-plugin]
+    state: present
+    update_cache: true
+
+- name: Enable + start Docker
+  become: true
+  ansible.builtin.systemd: { name: docker, enabled: true, state: started }
+
+- name: Add the deploy user to the docker group (compose without sudo)
+  become: true
+  ansible.builtin.user: { name: "{{ ansible_user_id }}", groups: docker, append: true }
+
+# k3s (server on control_plane; agent on workers)
+# A control-plane host installs the k3s server; a worker host installs the k3s agent and
+# joins the server by URL and node-token. A single-node inventory has an empty `workers`
+# group, so only the server and control-plane tooling below run. The agent tasks run only
+# when the inventory defines worker hosts.
+- name: Is k3s already installed + active? (server or agent)  # noqa: command-instead-of-module
+  ansible.builtin.command: systemctl is-active k3s k3s-agent
+  register: provision_k3s_active
+  changed_when: false
+  failed_when: false
+
+# server: control-plane nodes ------------------------------------------------------
+- name: Install k3s server (flannel off -> Cilium is the CNI; keep traefik+servicelb+metrics-server+local-path)  # noqa: command-instead-of-module
+  become: true
+  ansible.builtin.shell:
+    cmd: >-
+      set -o pipefail;
+      curl -sfL https://get.k3s.io |
+      INSTALL_K3S_VERSION={{ nhdw_k3s_version }} sh -s - server
+      --flannel-backend=none --disable-network-policy
+      --write-kubeconfig-mode=644
+      --node-ip {{ nhdw_node_ip | default(ansible_default_ipv4.address) }}
+    executable: /bin/bash
+  when:
+    - inventory_hostname in groups['control_plane']
+    - "'active' not in provision_k3s_active.stdout"
+  changed_when: true
+
+- name: Wait for the k3s API to be ready (server)
+  ansible.builtin.command: k3s kubectl get --raw=/readyz
+  register: provision_k3s_ready
+  until: provision_k3s_ready.rc == 0
+  retries: 40
+  delay: 5
+  changed_when: false
+  when: inventory_hostname in groups['control_plane']
+
+# agent: worker nodes join the server by URL and node-token (fleet only) ------------
+- name: Read the k3s node-token from the first server (for the agents to join)
+  become: true
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: provision_k3s_token
+  delegate_to: "{{ groups['control_plane'][0] }}"
+  run_once: true
+  when: groups['workers'] | default([]) | length > 0
+
+- name: Install k3s agent + join the server  # noqa: command-instead-of-module
+  become: true
+  ansible.builtin.shell:
+    cmd: >-
+      set -o pipefail;
+      curl -sfL https://get.k3s.io |
+      INSTALL_K3S_VERSION={{ nhdw_k3s_version }}
+      K3S_URL=https://{{ hostvars[groups['control_plane'][0]].nhdw_node_ip
+                        | default(hostvars[groups['control_plane'][0]].ansible_host)
+                        | default(hostvars[groups['control_plane'][0]].ansible_default_ipv4.address) }}:6443
+      K3S_TOKEN={{ provision_k3s_token.content | b64decode | trim }}
+      sh -s - agent
+      --node-ip {{ nhdw_node_ip | default(ansible_default_ipv4.address) }}
+    executable: /bin/bash
+  when:
+    - inventory_hostname in groups['workers']
+    - "'active' not in provision_k3s_active.stdout"
+  changed_when: true
+
+# kubeconfig, kubectl, helm and kustomize for the deploy user (control plane only: the
+# deploy, seed and verify roles and the CoreDNS edit run once from here)
+- name: Ensure ~/.kube exists
+  ansible.builtin.file: { path: "{{ ansible_user_dir }}/.kube", state: directory, mode: "0700" }
+  when: inventory_hostname in groups['control_plane']
+
+- name: User kubeconfig from k3s
+  become: true
+  ansible.builtin.copy:
+    remote_src: true
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "{{ ansible_user_dir }}/.kube/config"
+    owner: "{{ ansible_user_id }}"
+    mode: "0600"
+  when: inventory_hostname in groups['control_plane']
+
+- name: Kubectl symlink (k3s bundles kubectl)
+  become: true
+  ansible.builtin.file: { src: /usr/local/bin/k3s, dest: /usr/local/bin/kubectl, state: link, force: true }
+  when: inventory_hostname in groups['control_plane']
+
+- name: Install helm
+  become: true
+  ansible.builtin.shell:
+    cmd: set -o pipefail; curl -sfL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+    executable: /bin/bash
+    creates: /usr/local/bin/helm
+  when: inventory_hostname in groups['control_plane']
+
+# `nhdw_helm` defaults to the bundled binary (bundle/bin/helm), which is how an airgapped
+# deploy gets helm without network. bundle/bin/ is gitignored, so a fresh checkout has no
+# such file. Resolve it at run time: prefer the bundled binary when present, else the one
+# installed above. This runs in `provision`, before cni and deploy, and set_fact outranks
+# the group_var for the rest of the play.
+- name: Check whether the bundle carries its own helm
+  ansible.builtin.stat:
+    path: "{{ nhdw_repo_root }}/bundle/bin/helm"
+  register: provision_helm_bundled
+  when: inventory_hostname in groups['control_plane']
+
+# noqa: var-naming[no-role-prefix]
+# `nhdw_helm` keeps the nhdw_ prefix because it is declared in group_vars/all
+# and read by the cni and deploy roles too, so a provision_ prefix would rename a
+# cross-role contract to satisfy a rule about role-local variables.
+- name: Resolve the helm binary (bundled if shipped, else the system install)  # noqa: var-naming[no-role-prefix]
+  ansible.builtin.set_fact:
+    nhdw_helm: >-
+      {{ (nhdw_repo_root ~ '/bundle/bin/helm')
+         if (provision_helm_bundled.stat.exists | default(false))
+         else '/usr/local/bin/helm' }}
+  when: inventory_hostname in groups['control_plane']
+
+- name: Install kustomize
+  become: true
+  ansible.builtin.shell:
+    cmd: set -o pipefail; curl -sfL https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh | bash -s -- /usr/local/bin
+    executable: /bin/bash
+    creates: /usr/local/bin/kustomize
+  when: inventory_hostname in groups['control_plane']
+
+# host.k3d.internal -> node IP (k3d injects this alias; k3s does not). Every ingestor Job,
+#    the gateway (for Ollama) and Fayda reach host-published ports by this name; see the
+#    seed-role preflight and ingestor-jobs.yaml. Applied through k3s's coredns-custom ConfigMap. ─
+- name: Map host.k3d.internal -> node IP in CoreDNS (host-published sources/ollama/fayda)
+  ansible.builtin.shell:
+    cmd: |
+      set -eo pipefail
+      cat <<EOF | kubectl apply -f -
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: coredns-custom
+        namespace: kube-system
+      data:
+        nhdw-host.server: |
+          host.k3d.internal:53 {
+              hosts {
+                  {{ nhdw_node_ip | default(ansible_default_ipv4.address) }} host.k3d.internal
+                  fallthrough
+              }
+          }
+      EOF
+      kubectl -n kube-system rollout restart deploy/coredns >/dev/null 2>&1 || true
+    executable: /bin/bash
+  environment: { KUBECONFIG: "{{ ansible_user_dir }}/.kube/config" }
+  when: inventory_hostname in groups['control_plane']
+  changed_when: true
+
+# GPU (optional, gated by nhdw_gpu). Azure Trusted Launch enables Secure Boot, so the
+#    kernel rejects the unsigned DKMS nvidia module. Install the Canonical pre-signed module
+#    for the running kernel and the container toolkit, so nvidia-smi works and the external
+# Ollama can run the 14b model on the GPU (tested on a Tesla T4).
+- name: GPU host setup (signed nvidia module + container toolkit)
+  when: nhdw_gpu | default(false) | bool
+  become: true
+  block:
+    - name: Install the Canonical-signed nvidia module for the running kernel (Secure-Boot-safe)
+      ansible.builtin.apt:
+        name: "linux-modules-nvidia-{{ nhdw_gpu_driver_branch }}-{{ ansible_kernel }}"
+        state: present
+        update_cache: true
+      register: provision_gpu_signed_mod
+      failed_when: false
+
+    - name: Nvidia-container-toolkit repo + install
+      ansible.builtin.shell:
+        cmd: |
+          set -eo pipefail
+          curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+            | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+          curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+            | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+            > /etc/apt/sources.list.d/nvidia-container-toolkit.list
+          apt-get update -qq && apt-get install -y -qq nvidia-container-toolkit
+          nvidia-ctk runtime configure --runtime=docker && systemctl restart docker
+        executable: /bin/bash
+      changed_when: true
+
+    - name: Load nvidia + verify
+      ansible.builtin.shell: "modprobe nvidia && nvidia-smi -L"
+      register: provision_gpu_smi
+      changed_when: false
+      failed_when: false
+
+    - name: GPU status
+      ansible.builtin.debug:
+        msg: "GPU: {{ provision_gpu_smi.stdout_lines | default(['nvidia-smi not ready: check Secure Boot / signed module for ' ~ ansible_kernel]) }}"

@@ -1,0 +1,8 @@
+id: dz-kpi-strip
+title: Disease · KPI strip (6 tiles)
+kind: kpi
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

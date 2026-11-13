@@ -1,0 +1,54 @@
+# feature_spec.yaml: the data the model consumes.
+#
+# The ml-runner executes input.query against the warehouse (Postgres
+# nhdw_vault, the bi_* mart schemas) and passes the resulting DataFrame to
+# train(df, params) at train time and to predict(df) at every scheduled
+# batch run. A package never opens a database connection and never sees
+# credentials; the query result is its only input.
+#
+# At train time the runner also logs this file to the MLflow run
+# (package/feature_spec.yaml), so predict-batch is self-contained: it pulls
+# the query from the @champion version, not from the package source.
+
+input:
+  # SQL against the warehouse marts. Read marts, not raw vault.
+  #
+  # Disease-family forecasters read the densified ML input mart
+  # bi_idsr.mart_ml_disease_input: the full (woreda x disease x week) grid with
+  # zero-filled cases/deaths, region-broadcast climate columns and a
+  # nullable population denominator. Scope with a WHERE disease_code IN
+  # (...) if your model targets specific diseases.
+  #
+  # population is NULL where the DHIS2 population dataSet has no value;
+  # models must tolerate that (document the behaviour in model_card.md).
+  query: |
+    SELECT woreda_uid,
+           disease_code,
+           year,
+           week,
+           week_start,
+           cases,
+           rainfall_mm,
+           temp_celsius,
+           humidity_pct,
+           population
+    FROM bi_idsr.mart_ml_disease_input
+    -- WHERE disease_code IN ('AFP', 'MEAS')   -- optional scoping
+    ORDER BY woreda_uid, disease_code, year, week
+
+  # Declared column contract for the query above: the runner validates the
+  # fetched frame against this list (a missing column fails the run before
+  # package code runs) and coerces each column to the declared dtype.
+  # dtypes: string | int | float | bool | date | datetime
+  signature:
+    - { name: woreda_uid,   dtype: string }
+    - { name: disease_code, dtype: string }
+    - { name: year,         dtype: int }
+    - { name: week,         dtype: int }
+    - { name: week_start,   dtype: date }
+    - { name: cases,        dtype: int }
+    - { name: rainfall_mm,  dtype: float }
+    - { name: temp_celsius, dtype: float }
+    - { name: humidity_pct, dtype: float }
+    # population is nullable, so it is declared float (pandas ints cannot hold NULL).
+    - { name: population,   dtype: float }

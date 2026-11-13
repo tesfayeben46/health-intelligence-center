@@ -1,0 +1,4 @@
+# Stockout-forecast default hyperparameters (scalar keys overridable at predict time).
+horizon_days: 30     # projection horizon (days); the alarm half-life is horizon/2
+min_months: 4        # need >= this many monthly points to fit Holt-Winters (else mean)
+trend: add           # additive trend; seasonal disabled (monthly grain, short history)

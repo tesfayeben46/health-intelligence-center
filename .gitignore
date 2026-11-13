@@ -1,0 +1,112 @@
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+# The Fayda replica's SMTP template is committed; its real .env is not.
+!0_external/fayda/.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+client_secret_*.json
+*-service-account*.json
+*.apps.googleusercontent.com.json
+_workspace/
+secrets/
+**/secrets.yaml
+**/secrets.yml
+.ssh/
+standalone_admin_password.txt
+# dhis.conf can hold database and encryption secrets. The DHIS2 replica's demo
+# config is the exception: it must exist as a file before the first container
+# start, otherwise Docker creates a directory in its place.
+dhis.conf
+!0_external/sources/DHIS2/config/dhis.conf
+# Airflow config can embed connection secrets.
+airflow.cfg
+config/airflow.cfg
+config/webserver_config.py
+# Per-host PKI material.
+7_security/pki/certs/
+# Local TLS CA and wildcard certificate (gen-tls.sh).
+bundle/tls/
+
+# --- Dependencies, build output, caches ---
+node_modules/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+.python-version
+.ipynb_checkpoints/
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# npm is the package manager of record for the SPAs.
+6_access-points/dashboards/*/ui/bun.lock
+2_pipelines/*/target/
+2_pipelines/*/dbt_packages/
+**/logs/*.log
+**/logs/*.log.*
+2_pipelines/*/logs/
+
+# --- Runtime state ---
+*.pid
+*.seed
+airflow-webserver.pid
+airflow.db
+
+# --- Editors and OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Large or regenerable artifacts ---
+# Unpacked DHIS2 WAR (downloadable).
+0_external/sources/DHIS2/war/
+# LLM weights for the external Ollama (fetched by 0_external/llm/image/fetch-weights.sh).
+0_external/llm/models/
+# Packaging outputs: image tars (cache-images.sh), static tooling, exported state (pack.sh).
+bundle/seeds/_cache/
+bundle/images/
+bundle/bin/
+bundle/state/
+# Staged copy of the graduation validator (canonical: 2_pipelines/ml/registry/validators.py).
+6_access-points/api/nhdw-gateway/validators.py
+# Local tooling and archives.
+_archive/
+_tools/
+
+# --- Source-system seed data (supplied separately) ---
+# Database dumps and seed CSVs for the source replicas are not distributed with
+# the repository. Without them the affected replicas start empty; see
+# docs/data-provenance.md and each 0_external/sources/*/sample-data notice.
+0_external/sources/*/sample-data/*.sql
+0_external/sources/*/sample-data/*.bak
+0_external/sources/*/sample-data/*.pgdump
+0_external/sources/*/sample-data/*.dump
+0_external/sources/*/sample-data/*.sql.gz
+0_external/sources/*/sample-data/*.gz
+bundle/seeds/sources/**/*.csv
+bundle/seeds/sources/*.csv
+# Entity-model inputs are fetched locally; the Zambian facility registry used by
+# the eLMIS synthesizer is the one committed exception.
+bundle/seeds/entity-model/sample-data/*
+!bundle/seeds/entity-model/sample-data/facilities_zm_elmis.json

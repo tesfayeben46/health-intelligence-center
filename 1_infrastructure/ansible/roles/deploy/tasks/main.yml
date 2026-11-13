@@ -1,0 +1,179 @@
+---
+# Deploy the app tier with Helm, its deploy-role dependencies (namespace, external-file
+# ConfigMaps, Secrets) and the kube-system metrics-server; then wait for the infrastructure to be
+# ready and run the cold-boot init reconciles. Follows bundle/scripts/bootstrap.sh steps 4-5.
+# Seeding and the pipeline run in the seed role.
+
+# Cold boot from empty volumes (opt-in, DESTRUCTIVE)
+# Re-provisioning an existing host keeps its PersistentVolumeClaims, so the databases
+# survive and postgres' /docker-entrypoint-initdb.d never runs: init SQL executes on a
+# fresh volume only, and a broken init file can go unnoticed while every provision
+# passes. nhdw_fresh_volumes=true removes the namespace's PVCs so the next bring-up
+# initialises from zero and exercises that path.
+#
+# This destroys all persisted data, so it is off by default, and it refuses to run
+# without seeding rather than leave an empty warehouse behind.
+- name: Refuse a fresh-volume boot without seeding (it would leave an empty warehouse)
+  ansible.builtin.fail:
+    msg: >-
+      nhdw_fresh_volumes=true removes every PVC in {{ nhdw_namespace }}, so the
+      run must also seed. Re-run with run_seed=true.
+  when:
+    - nhdw_fresh_volumes | default(false) | bool
+    - not (nhdw_run_seed | default(true) | bool)
+
+- name: Scale stateful workloads to zero before releasing their volumes
+  ansible.builtin.command: >-
+    kubectl -n {{ nhdw_namespace }} scale statefulset,deployment --all --replicas=0
+  when: nhdw_fresh_volumes | default(false) | bool
+  changed_when: true
+  failed_when: false          # a bare host has nothing deployed yet
+
+- name: Release every PersistentVolumeClaim in the namespace (DESTRUCTIVE, fresh cold boot)
+  ansible.builtin.command: >-
+    kubectl -n {{ nhdw_namespace }} delete pvc --all --wait=true --timeout=180s
+  when: nhdw_fresh_volumes | default(false) | bool
+  changed_when: true
+  failed_when: false
+
+# The namespace is a deploy-role dependency (like the ConfigMaps and Secrets), not a chart
+# resource, so Helm never contends with `kubectl` over its ownership. Create it first.
+- name: Ensure the target namespace exists
+  ansible.builtin.shell:
+    cmd: >-
+      set -o pipefail;
+      kubectl create namespace {{ nhdw_namespace }} --dry-run=client -o yaml | kubectl apply -f -
+    executable: /bin/bash
+  register: deploy_ns
+  changed_when: "'created' in deploy_ns.stdout"
+
+- name: Render committed secrets.yaml (random per-deploy; never clobbers an existing file)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/gen-secrets.sh"
+  args:
+    chdir: "{{ nhdw_repo_root }}"
+  changed_when: true
+
+- name: Generate the locally-trusted wildcard TLS (nhdw-wildcard-tls); dev falls back to self-signed
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/gen-tls.sh"
+  environment:
+    HOST_BASE: "{{ nhdw_host_base }}"
+  args:
+    chdir: "{{ nhdw_repo_root }}"
+  register: deploy_tls
+  failed_when: false
+  changed_when: true
+
+# The chart renders every workload, Service, RBAC object and Ingress plus the inline ConfigMaps.
+# It delegates the external-file ConfigMaps and the Secrets to this role (see the chart README).
+# Generate them from the dev overlay (no duplicated file list) and apply only those: the selector
+# drops the chart-owned inline ConfigMaps so Helm and kubectl never manage the same object.
+- name: Apply the deploy-role configMaps + secrets (external-file generators the chart delegates)
+  ansible.builtin.shell:
+    cmd: >-
+      set -o pipefail;
+      kustomize build --load-restrictor=LoadRestrictionsNone {{ nhdw_overlay_dir }}
+      | python3 {{ role_path }}/files/select-external-config.py '{{ nhdw_chart_owned_configmaps | join(",") }}'
+      | kubectl apply -f -
+    executable: /bin/bash
+  register: deploy_config_apply
+  changed_when: "'created' in deploy_config_apply.stdout or 'configured' in deploy_config_apply.stdout"
+
+# A Job's spec is immutable, so `helm upgrade` cannot patch one that already ran; it aborts
+# the release with `cannot patch "keycloak-seed" with kind Job`. The chart's Jobs are
+# run-to-completion seeds, so deleting the finished object first is safe and lets Helm
+# recreate it. The Job list comes from rendering the chart, so a new Job is covered.
+- name: Delete finished chart Jobs (immutable, helm cannot patch them)
+  ansible.builtin.shell:
+    # Literal block, not folded: a folded scalar keeps the newlines of
+    # more-indented lines, which would split this pipeline into separate
+    # commands ("-n: command not found").
+    cmd: |
+      set -o pipefail
+      {{ nhdw_helm }} template {{ nhdw_release | default('nhdw') }} {{ nhdw_chart_dir }} \
+          -n {{ nhdw_namespace }} -f {{ nhdw_values_file }} \
+          --set hostBase={{ nhdw_host_base }} \
+        | python3 -c 'import sys,yaml; [print(d["metadata"]["name"]) for d in yaml.safe_load_all(sys.stdin) if d and d.get("kind")=="Job"]' \
+        | xargs -r -n1 kubectl -n {{ nhdw_namespace }} delete job --ignore-not-found
+    executable: /bin/bash
+  register: deploy_job_clear
+  changed_when: "'deleted' in deploy_job_clear.stdout"
+
+# Adopt any chart-owned object that an earlier non-Helm apply left behind (a kustomize
+# deploy or a manual hotfix) into the Helm release. helm upgrade refuses to import an
+# object it does not own and aborts the deploy; this stamps the managed-by and release
+# annotations onto colliding objects first so the upgrade adopts them. Idempotent.
+- name: Adopt pre-existing chart objects into the Helm release
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/adopt-into-helm.sh"
+  environment:
+    NS: "{{ nhdw_namespace }}"
+    RELEASE: nhdw
+    NHDW_HOSTBASE: "{{ nhdw_host_base }}"
+  changed_when: false
+
+# No --wait: the gateway (and any workload whose readiness depends on seeded data)
+# crash-loops until the seed role runs, so waiting for the whole release would time out.
+# The infrastructure waits below gate the seed step; the seed role restarts the gateway.
+- name: Deploy / upgrade the NHDW Helm chart for topology {{ nhdw_topology }}
+  ansible.builtin.command: >-
+    {{ nhdw_helm }} upgrade --install nhdw {{ nhdw_chart_dir }}
+    -n {{ nhdw_namespace }}
+    -f {{ nhdw_values_file }}
+    --set hostBase={{ nhdw_host_base }}
+  register: deploy_helm_apply
+  changed_when: "'has been' in deploy_helm_apply.stdout"
+
+- name: Point the gateway at the host's assistant model (GPU=14b / CPU=3b); best-effort
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/gpu-detect.sh {{ nhdw_namespace }}"
+  args:
+    chdir: "{{ nhdw_repo_root }}"
+  failed_when: false
+  changed_when: false
+
+# metrics-server lives in kube-system, so it is applied directly: the overlay and the chart pin
+# namespace=nhdw and would move it. It backs `kubectl top` and the gateway HPA.
+- name: Apply metrics-server (kube-system; the chart does not own it)
+  ansible.builtin.command: "kubectl apply -f {{ nhdw_repo_root }}/1_infrastructure/k8s/base/metrics-server.yaml"
+  register: deploy_metrics
+  changed_when: "'created' in deploy_metrics.stdout or 'configured' in deploy_metrics.stdout"
+
+# step 5: wait for the infrastructure to be ready and run the cold-boot init reconciles
+- name: Wait for postgres-vault to be Ready (must be up before seeding)
+  ansible.builtin.command: "kubectl -n {{ nhdw_namespace }} rollout status statefulset/postgres-vault --timeout=300s"
+  changed_when: false
+
+- name: Wait for the keycloak-seed Job to complete
+  ansible.builtin.command: "kubectl -n {{ nhdw_namespace }} wait --for=condition=complete job/keycloak-seed --timeout=420s"
+  changed_when: false
+
+  failed_when: false
+
+# 31_superset_db.sh provisions the Superset metadata role during postgres-vault's one-time
+# initdb, which races the superset-secrets Secret, so on a cold boot the role can be missing.
+# Re-run the idempotent provisioning now that postgres and the Secret both exist, then restart
+# Superset.
+- name: Reconcile the Superset metadata DB/role (initdb secret-race guard; non-blocking)
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      SS_PW=$(kubectl -n {{ nhdw_namespace }} get secret superset-secrets -o jsonpath='{.data.DB_PASSWORD}' 2>/dev/null | base64 -d)
+      PGU=$(kubectl -n {{ nhdw_namespace }} exec postgres-vault-0 -- printenv POSTGRES_USER 2>/dev/null)
+      if [ -n "$SS_PW" ] && [ -n "$PGU" ]; then
+        cat {{ nhdw_repo_root }}/3_storage/postgres/init/31_superset_db.sh \
+          | kubectl -n {{ nhdw_namespace }} exec -i postgres-vault-0 -- \
+              env SUPERSET_DB_PASSWORD="$SS_PW" POSTGRES_USER="$PGU" bash -s
+        kubectl -n {{ nhdw_namespace }} rollout restart deploy/superset || true
+        echo reconciled
+      else
+        echo skipped
+      fi
+    executable: /bin/bash
+  register: deploy_superset_db
+  changed_when: "'reconciled' in deploy_superset_db.stdout"
+  failed_when: false
+
+- name: Restore packed runtime state if present (factory bundles have none, no-op)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/restore-state.sh"
+  args:
+    chdir: "{{ nhdw_repo_root }}"
+  changed_when: true
+  failed_when: false

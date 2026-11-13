@@ -1,0 +1,245 @@
+# Airflow: the scheduler for the pipeline, ML batch inference, drift, alerting,
+# data-quality and metadata-ingestion DAGs.
+#
+# One Deployment with two containers (scheduler and webserver) on the
+# LocalExecutor. The scheduler runs the light task load itself; heavy work runs
+# in KubernetesPodOperator pods (ingestors, dbt, nhdw/ml-runner), not in Airflow.
+#
+# Metadata DB : postgres-vault / nhdw_airflow (writer = airflow_writer,
+#               provisioned by 3_storage/postgres/init/21_airflow_db.sh)
+# DAGs        : baked into the nhdw/airflow image (5_orchestrator/Dockerfile);
+#               changing a DAG means rebuilding the image.
+# Secrets     : airflow-secrets (admin user, Fernet key, webserver key, DB
+#               password); dev values come from overlays/dev/secrets.yaml.
+# UI          : Service :8080, exposed at airflow.{{ .Values.hostBase }}
+#               (operator-facing).
+#
+# ServiceAccount/Role: the scheduler creates and watches pods in this
+# namespace for KubernetesPodOperator (same pattern as gateway-rbac.yaml).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: airflow
+  namespace: {{ .Values.namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: airflow
+  namespace: {{ .Values.namespace }}
+rules:
+  - apiGroups: [ "" ]
+    resources: [ pods ]
+    verbs:     [ create, get, list, watch, delete, patch ]
+  - apiGroups: [ "" ]
+    resources: [ pods/log ]
+    verbs:     [ get ]
+  # pods/exec: KubernetesPodOperator reads a task's XCom result by exec-ing into the
+  # xcom sidecar (connect_get_namespaced_pod_exec). Without it every do_xcom_push task is
+  # marked failed after its pod exits 0 (403 on the exec handshake).
+  - apiGroups: [ "" ]
+    resources: [ pods/exec ]
+    verbs: [ get, create ]
+  - apiGroups: [ "" ]
+    resources: [ events ]
+    verbs:     [ get, list, watch ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: airflow
+  namespace: {{ .Values.namespace }}
+subjects:
+  - { kind: ServiceAccount, name: airflow, namespace: {{ .Values.namespace }} }
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind:     Role
+  name:     airflow
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow
+  namespace: {{ .Values.namespace }}
+  labels: { app: airflow, tier: orchestrator }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }   # LocalExecutor: never two schedulers on one metadata DB
+  selector: { matchLabels: { app: airflow } }
+  template:
+    metadata:
+      labels: { app: airflow, tier: orchestrator }
+    spec:
+      serviceAccountName: airflow
+      initContainers:
+        # One-shot db migrate and admin user creation (the official image's
+        # entrypoint honours the _AIRFLOW_* envs, then runs `airflow version`).
+        # Idempotent: rerunning migrate and user-create on a live DB is a no-op.
+        - name: airflow-init
+          image: {{ include "nhdw.image" (dict "name" "airflow" "ctx" .) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: [ "version" ]
+          env:
+            - { name: AIRFLOW__CORE__EXECUTOR, value: "LocalExecutor" }
+            - name: AIRFLOW_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: airflow-secrets, key: AIRFLOW_DB_PASSWORD } }
+            - { name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN, value: "postgresql+psycopg2://airflow_writer:$(AIRFLOW_DB_PASSWORD)@postgres-vault.{{ .Values.namespace }}.svc.cluster.local:5432/nhdw_airflow" }
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom: { secretKeyRef: { name: airflow-secrets, key: FERNET_KEY } }
+            - { name: _AIRFLOW_DB_MIGRATE,     value: "true" }
+            - { name: _AIRFLOW_WWW_USER_CREATE, value: "true" }
+            - name: _AIRFLOW_WWW_USER_USERNAME
+              valueFrom: { secretKeyRef: { name: airflow-secrets, key: ADMIN_USERNAME } }
+            - name: _AIRFLOW_WWW_USER_PASSWORD
+              valueFrom: { secretKeyRef: { name: airflow-secrets, key: ADMIN_PASSWORD } }
+      containers:
+        # The env block is duplicated across containers because YAML anchors do not
+        # survive kustomize; keep the two blocks identical when editing.
+        - name: scheduler
+          image: {{ include "nhdw.image" (dict "name" "airflow" "ctx" .) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: [ "scheduler" ]
+          env:
+            # Runner image launched by ml_batch_predict (KubernetesPodOperator).
+            # kustomize image remaps cannot reach into the DAG's Python, so the dev
+            # overlay patches this env var (the strategic merge puts the patched var
+            # at the front of the env list).
+            - { name: ML_RUNNER_IMAGE, value: {{ include "nhdw.image" (dict "name" "ml-runner" "ctx" .) | quote }} }
+            # Ingestor and dbt images spawned by pipeline_refresh's KubernetesPodOperator
+            # tasks. As with ML_RUNNER_IMAGE, an image remap cannot reach the DAG's
+            # Python, so the chart must carry them or the ingest and transform pods get
+            # no image ref. Keep in step with the dev overlay's image-env patch and keep
+            # the two blocks identical.
+            - { name: INGESTOR_DHIS2_IMAGE,    value: {{ include "nhdw.image" (dict "name" "dhis2-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_CLIMATE_IMAGE,  value: {{ include "nhdw.image" (dict "name" "climate-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_ETHIOEMR_IMAGE, value: {{ include "nhdw.image" (dict "name" "ethioemr-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_HCMISWDM_IMAGE, value: {{ include "nhdw.image" (dict "name" "hcmiswdm-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_MBRANA_IMAGE,   value: {{ include "nhdw.image" (dict "name" "mbrana-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_MFR_IMAGE,      value: {{ include "nhdw.image" (dict "name" "mfr-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_OPENLMIS_IMAGE, value: {{ include "nhdw.image" (dict "name" "openlmis-ingestor" "ctx" .) | quote }} }
+            - { name: STAGING_DBT_IMAGE,       value: {{ include "nhdw.image" (dict "name" "staging-dbt" "ctx" .) | quote }} }
+            - { name: VAULT_BRIDGE_IMAGE,      value: {{ include "nhdw.image" (dict "name" "vault-bridge" "ctx" .) | quote }} }
+            - { name: VAULT_DBT_IMAGE,         value: {{ include "nhdw.image" (dict "name" "vault-dbt" "ctx" .) | quote }} }
+            - { name: MARTS_DBT_IMAGE,         value: {{ include "nhdw.image" (dict "name" "marts-dbt" "ctx" .) | quote }} }
+            # Matches base/airflow.yaml: the ingestor, dbt and runner pods this
+            # scheduler spawns read NHDW_S3_ENDPOINT to reach the lake; without it
+            # they have no object store.
+            - { name: NHDW_S3_ENDPOINT, value: "http://seaweedfs-s3.{{ .Values.namespace }}.svc.cluster.local:8333" }
+            - { name: AIRFLOW__CORE__EXECUTOR, value: "LocalExecutor" }
+            - name: AIRFLOW_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: airflow-secrets, key: AIRFLOW_DB_PASSWORD } }
+            - { name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN, value: "postgresql+psycopg2://airflow_writer:$(AIRFLOW_DB_PASSWORD)@postgres-vault.{{ .Values.namespace }}.svc.cluster.local:5432/nhdw_airflow" }
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom: { secretKeyRef: { name: airflow-secrets, key: FERNET_KEY } }
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom: { secretKeyRef: { name: airflow-secrets, key: WEBSERVER_SECRET_KEY } }
+            - { name: AIRFLOW__CORE__LOAD_EXAMPLES,             value: "False" }
+            - { name: AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION, value: "False" }
+            - { name: AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX,     value: "True" }
+            # Read-only credentials for the model_deployment listing task.
+            - { name: OPS_PG_HOST, value: "postgres-vault.{{ .Values.namespace }}.svc.cluster.local" }
+            - { name: OPS_PG_PORT, value: "5432" }
+            - { name: OPS_PG_DB,   value: "nhdw_ops" }
+            - { name: OPS_PG_USER, value: "ops_reader" }
+            - name: OPS_PG_PASSWORD
+              valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: OPS_READER_PASSWORD } }
+            # The alert_evaluation DAG calls gateway POST /api/alerts/evaluate.
+            - { name: NHDW_GATEWAY_URL, value: "http://nhdw-gateway.{{ .Values.namespace }}.svc.cluster.local:8000" }
+            - { name: ALERT_EVAL_TOKEN, valueFrom: { secretKeyRef: { name: alert-eval-secrets, key: TOKEN } } }
+            - { name: DQ_DETECT_TOKEN, valueFrom: { secretKeyRef: { name: dq-detect-secrets, key: TOKEN, optional: true } } }
+          volumeMounts:
+            - { name: logs, mountPath: /opt/airflow/logs }
+          livenessProbe:
+            exec:
+              command: [ "sh", "-c", "airflow jobs check --job-type SchedulerJob --hostname \"$(hostname)\"" ]
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 20
+        - name: webserver
+          image: {{ include "nhdw.image" (dict "name" "airflow" "ctx" .) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: [ "webserver" ]
+          ports: [ { containerPort: 8080, name: http } ]
+          env:
+            # Runner image launched by ml_batch_predict (KubernetesPodOperator).
+            # kustomize image remaps cannot reach into the DAG's Python, so the dev
+            # overlay patches this env var (the strategic merge puts the patched var
+            # at the front of the env list).
+            - { name: ML_RUNNER_IMAGE, value: {{ include "nhdw.image" (dict "name" "ml-runner" "ctx" .) | quote }} }
+            # Ingestor and dbt images spawned by pipeline_refresh's KubernetesPodOperator
+            # tasks. As with ML_RUNNER_IMAGE, an image remap cannot reach the DAG's
+            # Python, so the chart must carry them or the ingest and transform pods get
+            # no image ref. Keep in step with the dev overlay's image-env patch and keep
+            # the two blocks identical.
+            - { name: INGESTOR_DHIS2_IMAGE,    value: {{ include "nhdw.image" (dict "name" "dhis2-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_CLIMATE_IMAGE,  value: {{ include "nhdw.image" (dict "name" "climate-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_ETHIOEMR_IMAGE, value: {{ include "nhdw.image" (dict "name" "ethioemr-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_HCMISWDM_IMAGE, value: {{ include "nhdw.image" (dict "name" "hcmiswdm-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_MBRANA_IMAGE,   value: {{ include "nhdw.image" (dict "name" "mbrana-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_MFR_IMAGE,      value: {{ include "nhdw.image" (dict "name" "mfr-ingestor" "ctx" .) | quote }} }
+            - { name: INGESTOR_OPENLMIS_IMAGE, value: {{ include "nhdw.image" (dict "name" "openlmis-ingestor" "ctx" .) | quote }} }
+            - { name: STAGING_DBT_IMAGE,       value: {{ include "nhdw.image" (dict "name" "staging-dbt" "ctx" .) | quote }} }
+            - { name: VAULT_BRIDGE_IMAGE,      value: {{ include "nhdw.image" (dict "name" "vault-bridge" "ctx" .) | quote }} }
+            - { name: VAULT_DBT_IMAGE,         value: {{ include "nhdw.image" (dict "name" "vault-dbt" "ctx" .) | quote }} }
+            - { name: MARTS_DBT_IMAGE,         value: {{ include "nhdw.image" (dict "name" "marts-dbt" "ctx" .) | quote }} }
+            # Matches base/airflow.yaml: the ingestor, dbt and runner pods this
+            # scheduler spawns read NHDW_S3_ENDPOINT to reach the lake; without it
+            # they have no object store.
+            - { name: NHDW_S3_ENDPOINT, value: "http://seaweedfs-s3.{{ .Values.namespace }}.svc.cluster.local:8333" }
+            - { name: AIRFLOW__CORE__EXECUTOR, value: "LocalExecutor" }
+            - name: AIRFLOW_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: airflow-secrets, key: AIRFLOW_DB_PASSWORD } }
+            - { name: AIRFLOW__DATABASE__SQL_ALCHEMY_CONN, value: "postgresql+psycopg2://airflow_writer:$(AIRFLOW_DB_PASSWORD)@postgres-vault.{{ .Values.namespace }}.svc.cluster.local:5432/nhdw_airflow" }
+            - name: AIRFLOW__CORE__FERNET_KEY
+              valueFrom: { secretKeyRef: { name: airflow-secrets, key: FERNET_KEY } }
+            - name: AIRFLOW__WEBSERVER__SECRET_KEY
+              valueFrom: { secretKeyRef: { name: airflow-secrets, key: WEBSERVER_SECRET_KEY } }
+            - { name: AIRFLOW__CORE__LOAD_EXAMPLES,             value: "False" }
+            - { name: AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION, value: "False" }
+            - { name: AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX,     value: "True" }
+            # Read-only credentials for the model_deployment listing task.
+            - { name: OPS_PG_HOST, value: "postgres-vault.{{ .Values.namespace }}.svc.cluster.local" }
+            - { name: OPS_PG_PORT, value: "5432" }
+            - { name: OPS_PG_DB,   value: "nhdw_ops" }
+            - { name: OPS_PG_USER, value: "ops_reader" }
+            - name: OPS_PG_PASSWORD
+              valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: OPS_READER_PASSWORD } }
+            # Native Keycloak OIDC, read by webserver_config.py. Split URLs: the
+            # browser authorizes on the public host; the pod exchanges the code,
+            # fetches JWKS and reads userinfo on internal Service DNS (the public
+            # nip.io host resolves to the pod itself). BASE_URL makes FAB build the
+            # https redirect_uri behind Traefik. The secret is optional: when absent
+            # webserver_config falls back to AUTH_DB (break-glass login).
+            - { name: AIRFLOW__WEBSERVER__BASE_URL, value: "https://airflow.{{ .Values.hostBase }}" }
+            - { name: AIRFLOW_OIDC_CLIENT_ID,       value: "airflow" }
+            - name: AIRFLOW_OIDC_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: airflow-oidc-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+            - { name: AIRFLOW_OIDC_ISSUER_PUBLIC,   value: "https://keycloak.{{ .Values.hostBase }}/realms/privileged-ops" }
+            - { name: AIRFLOW_OIDC_ISSUER_INTERNAL, value: "http://keycloak.{{ .Values.namespace }}.svc.cluster.local:8080/realms/privileged-ops" }
+          volumeMounts:
+            # Shared with the scheduler so the UI can serve task logs
+            # (LocalExecutor writes them in the scheduler container).
+            - { name: logs, mountPath: /opt/airflow/logs }
+          readinessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /health, port: http }
+            initialDelaySeconds: 120
+            periodSeconds: 30
+      volumes:
+        - name: logs
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: airflow
+  namespace: {{ .Values.namespace }}
+  labels: { app: airflow, tier: orchestrator }
+spec:
+  type: ClusterIP
+  selector: { app: airflow }
+  ports:
+    - { port: 8080, targetPort: http, name: http }

@@ -1,0 +1,30 @@
+# Feature query for the EARS detector. The runner executes input.query against
+# the warehouse (bi_* marts) and validates/coerces the frame against
+# input.signature before handing it to train()/predict(). The package never
+# opens a DB connection. Full per-week history is required so the endemic
+# baseline can be built; do not filter by date.
+input:
+  query: |
+    SELECT woreda_uid,
+           disease_code,
+           year,
+           week,
+           week_start,
+           cases,
+           rainfall_mm,
+           temp_celsius,
+           humidity_pct,
+           population
+    FROM bi_idsr.mart_ml_disease_input
+    ORDER BY woreda_uid, disease_code, year, week
+  signature:
+    - { name: woreda_uid,   dtype: string }
+    - { name: disease_code, dtype: string }
+    - { name: year,         dtype: int }
+    - { name: week,         dtype: int }
+    - { name: week_start,   dtype: date }
+    - { name: cases,        dtype: int }
+    - { name: rainfall_mm,  dtype: float }
+    - { name: temp_celsius, dtype: float }
+    - { name: humidity_pct, dtype: float }
+    - { name: population,   dtype: float }

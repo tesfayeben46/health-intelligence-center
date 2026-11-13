@@ -1,0 +1,105 @@
+# Headlamp: the Kubernetes ops console, served at /k8s/ on the admin host next to
+# the admin dashboard. Runs as a ServiceAccount with cluster-wide read and edit
+# on the nhdw namespace.
+#
+# Auth: Headlamp runs in in-cluster mode; the headlamp-gate injects the SA token
+# from the headlamp-token Secret as the bearer, so the UI opens without a
+# token-paste screen.
+#
+# Access: ClusterIP Service behind the Traefik ingress path /k8s/. Headlamp's
+# --base-url=/k8s strips the prefix internally so static asset paths resolve.
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: headlamp, namespace: {{ .Values.namespace }} }
+---
+# Cluster-wide read access. Headlamp's home view lists all namespaces; a
+# namespace-scoped SA would show "0 namespaces".
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: headlamp-read }
+subjects:
+  - { kind: ServiceAccount, name: headlamp, namespace: {{ .Values.namespace }} }
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind:     ClusterRole
+  name:     view              # built-in: read-only across all common resources
+---
+# Long-lived SA token (Kubernetes populates .data.token). The headlamp-gate
+# (nhdw/tool-gate) mounts this secret and injects it as the Authorization bearer
+# on every proxied request (INJECT_BEARER_FILE), so the console opens ready
+# instead of showing its token-paste screen. Access control is the gate's
+# per-role OIDC; this bearer only carries the SA's view and nhdw-edit rights.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: headlamp-token
+  namespace: {{ .Values.namespace }}
+  annotations: { kubernetes.io/service-account.name: headlamp }
+type: kubernetes.io/service-account-token
+---
+# `edit` on the nhdw namespace only: restart, scale and edit app workloads from
+# the console while the rest of the cluster stays read-only. The route is
+# SSO-gated (headlamp-gate per-role OIDC on the ingress), so this sits behind an
+# ops login.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: headlamp-edit, namespace: {{ .Values.namespace }} }
+subjects:
+  - { kind: ServiceAccount, name: headlamp, namespace: {{ .Values.namespace }} }
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind:     ClusterRole
+  name:     edit              # built-in: write on common namespaced resources
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headlamp
+  namespace: {{ .Values.namespace }}
+  labels: { app: headlamp, tier: ops }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: headlamp } }
+  template:
+    metadata:
+      labels: { app: headlamp, tier: ops }
+    spec:
+      serviceAccountName: headlamp
+      containers:
+        - name: headlamp
+          image: ghcr.io/headlamp-k8s/headlamp:v0.31.1
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "-in-cluster"
+            - "-plugins-dir=/headlamp/plugins"
+            - "-base-url=/k8s"
+            - "-port=4466"
+          ports:
+            - { containerPort: 4466, name: http }
+          readinessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket: { port: http }
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests: { cpu: "50m", memory: "128Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: headlamp
+  namespace: {{ .Values.namespace }}
+  labels: { app: headlamp, tier: ops }
+spec:
+  type: ClusterIP
+  selector: { app: headlamp }
+  ports: [ { name: http, port: 80, targetPort: http } ]
+---
+# No Ingress here: ingress.yaml binds /k8s on the admin host over TLS to the
+# headlamp-gate (nhdw/tool-gate), which does per-role OIDC and SA-bearer
+# injection. Headlamp itself is never exposed directly.

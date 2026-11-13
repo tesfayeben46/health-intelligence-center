@@ -1,0 +1,14 @@
+id: sv-rr-timeliness
+title: Reporting timeliness
+kind: chart
+description: >-
+  Share of facility requisitions that arrived within the governed reporting
+  deadline, by month. Only meaningful where the source carries a per-report
+  arrival time: profiles whose sources land as bulk snapshots disable it.
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default
+reacts_to:
+  - period

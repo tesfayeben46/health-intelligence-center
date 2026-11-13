@@ -1,0 +1,217 @@
+# Role catalog. Loaded into ops_perm.role, ops_perm.role_capability and
+# ops_perm.role_scope. The widget and page grants are in role_grants.yaml.
+#
+# The 13 base roles match the 13 role_r_*.rego files in 7_security/opa/policies/
+# by code. A few scoped roles (R-RHB-OROMIA and its Zambian counterpart
+# R-PHO-LUSAKA, R-PD-HIV, R-PD-MNCH) serve the sample users.
+#
+# Optional per-role blocks (both loaded by 7_security/scripts/load_security_seed.py):
+#   capabilities:  app-level powers -> ops_perm.role_capability. The assistant
+#                  tool gate is `assistant:read` / `assistant:run_sql` /
+#                  `assistant:interact` (see chat.py).
+#   scope:         role-level default data scope -> ops_perm.role_scope,
+#                  { dimension: [values] }, dimension ∈ geography/programme/
+#                  facility/mart/artifact_tier/workshop_group. The resolver
+#                  derives each filter's allowed values from role_scope ∩
+#                  user_scope (app/permissions.py).
+
+- code: R-DEC
+  name: Decision Maker
+  description: >
+    FMoH leadership. National scope, aggregate data only, exports allowed.
+  combine_strategy: union
+  capabilities: [assistant:read, assistant:interact]
+
+- code: R-PROD-SUBMIT
+  name: Data Producer (Submission)
+  description: >
+    Facility-level data producers. Submission portal access; raw write to
+    their own facility's submission queue.
+  combine_strategy: union
+  capabilities: []
+
+- code: R-PROD-CLIN
+  name: Clinician
+  description: >
+    Practising clinicians (RHB / facility). Read own-patient data; submit
+    care events.
+  combine_strategy: union
+  capabilities: []
+
+- code: R-CONS-ANA
+  name: Analyst (Consumer)
+  description: >
+    M&E and policy analysts. Full Internal-BI build; ad-hoc SQL on
+    pre-authorised marts.
+  combine_strategy: union
+  capabilities: [edit_saved_query, assistant:read, assistant:run_sql, assistant:interact]
+
+- code: R-CONS-SCI
+  name: Data Scientist
+  description: >
+    Research scientists. Workshop access; can fork and contribute artifacts.
+  combine_strategy: union
+  capabilities: [create_group, submit_artifact]
+
+- code: R-CONS-RES
+  name: Researcher (External)
+  description: >
+    External researchers. k-anon public marts only; workshop access for
+    own group's shared artifacts.
+  combine_strategy: union
+  capabilities: [submit_artifact]
+  # artifact_tier scope for the workshop artifact grid (a UI facet, not a
+  # geographic data scope).
+  scope:
+    artifact_tier: [public, shared]
+
+- code: R-CONS-PRT
+  name: Partner (Donor)
+  description: >
+    Donor / partner agencies. Their programme's aggregate views only;
+    export allowed for cited donor reports.
+  combine_strategy: union
+  capabilities: []
+
+- code: R-STEW
+  name: Data Steward
+  description: >
+    Catalog stewards. Metadata / lineage; artifact peer-review.
+  combine_strategy: union
+  capabilities: [approve_grad, approve_artifact_promotion, assistant:read, manage_classification]
+
+- code: R-OPS-ENG
+  name: Operations Engineer
+  description: >
+    Pipeline / infra engineers. Read-only on operational dashboards;
+    rerun pipelines; no data export.
+  combine_strategy: union
+  capabilities: [trigger_pipeline, view_ops_console]
+
+- code: R-OPS-ADM
+  name: System Admin
+  description: >
+    Full admin. Manage users, roles, identity sources. Edits the
+    permission model itself via the admin UI.
+  combine_strategy: union
+  capabilities: [edit_roles, manage_users, manage_identity_sources, approve_access_request, view_ops_console, manage_catalog, manage_classification]
+
+- code: R-OPS-SEC
+  name: Security Officer
+  description: >
+    Audit, policy review, key rotation. Read-only on everything;
+    approves privileged actions.
+  combine_strategy: union
+  capabilities: [approve_privileged_action, view_audit, view_ops_console, manage_classification]
+
+- code: R-PUB-ANON
+  name: Anonymous Public
+  description: >
+    The unauthenticated public dashboard visitor. Public landing,
+    open-data catalogue, articles. No PHI.
+  combine_strategy: union
+  capabilities: []
+
+# Scoped roles used by the sample users
+- code: R-RHB-OROMIA
+  name: RHB Director · Oromia
+  description: >
+    Regional Health Bureau director, Oromia. Same widget catalogue as
+    R-DEC but with region filter constrained to Oromia.
+  combine_strategy: union
+  capabilities: [assistant:read, assistant:interact]
+  # role_scope: the role-level data-scope cap. The resolver derives every
+  # filter's allowed values from role_scope ∩ user_scope (users.yaml scope: adds
+  # the per-user row enforcement via OPA).
+  scope:
+    geography: [OR]
+
+- code: R-PHO-LUSAKA
+  name: PHO Director · Lusaka
+  description: >
+    Provincial Health Office director, Lusaka. The Zambian counterpart of
+    R-RHB-OROMIA: the same widget catalogue as R-DEC with the geography filter
+    constrained to one province. Both exist because a geographic role is a
+    property of the COUNTRY, not of the platform: zm-v1's cast references this
+    one, et-v3's references the other, and neither profile's users can name a
+    role that means nothing where they work.
+  combine_strategy: union
+  capabilities: [assistant:read, assistant:interact]
+  # role_scope: the role-level cap. '50' is Lusaka in the eLMIS province coding
+  # the zm-v1 profile is built from, not a two-letter Ethiopian id, which would
+  # intersect to nothing against the Zambian marts.
+  scope:
+    geography: ['50']
+
+- code: R-PD-HIV
+  name: Programme Director · HIV
+  description: >
+    FMoH PD for HIV programme. Same widgets as R-DEC but programme
+    filter constrained to HIV.
+  combine_strategy: union
+  capabilities: [assistant:read, assistant:interact]
+  # role_scope: programme cap resolved as role_scope ∩ user_scope.
+  scope:
+    programme: [HIV]
+
+# Super-user (universal access)
+- code: R-SUPER
+  name: Super-User
+  description: >
+    Wildcard access across every dashboard, widget, filter, and mart.
+    Reserved for the deployment owner; every action audited at
+    privileged-class.
+  combine_strategy: union
+  capabilities:
+    - manage_users
+    - manage_identity_sources
+    - edit_roles
+    - approve_access_request
+    - approve_privileged_action
+    - view_audit
+    - manage_groups
+    - approve_grad
+    - approve_artifact_promotion
+    - create_group
+    - submit_artifact
+    - edit_saved_query
+    - trigger_pipeline
+    - manage_api_tokens
+    - issue_api_token_for_others
+    - view_ops_console
+    - act_as_owner
+    - manage_catalog
+    # Full assistant toolset.
+    - assistant:read
+    - assistant:run_sql
+    - assistant:interact
+
+# Platform service account (act-as-owner)
+- code: R-SERVICE
+  name: Platform Service Account
+  description: >
+    Internal service identity for background jobs (scheduled reports,
+    provisioning, batch evaluation). Holds only the act_as_owner capability:
+    it never acts on its own broad role; it exists to call the gateway on
+    behalf of a NAMED owner (X-Act-As-Owner) so the operation is authorized
+    and data-scoped exactly as that owner. Never granted to a human; carried
+    by the seeded service PAT (nhdw-service-token secret).
+  combine_strategy: union
+  capabilities:
+    - act_as_owner
+
+# MDM workspace (append-only section)
+# The checker half of MDM maker-checker (init 44, gateway mdm_approvals.py):
+# a steward proposes a match decision, a different person holding this role
+# approves or declines it, and only an approval writes the decision log.
+# The gateway gates approval on the mdm_approve capability, so granting this
+# role to an existing person in the console (perm-admin user roles) is
+# enough; no Keycloak realm role or users.yaml change is needed.
+# Governance-only: no mart reads, so no OPA policy file (default-deny).
+- code: R-STEW-APR
+  name: MDM Approver
+  description: >
+    Approves or declines stewards' master-data match proposals. Never the
+    proposer of the change it approves (enforced on the person, server-side).
+  combine_strategy: union
+  capabilities: [mdm_approve]

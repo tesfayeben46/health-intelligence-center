@@ -1,0 +1,62 @@
+# column_classification.yaml: per-column sensitivity and masking policy
+# (ops_perm.column_classification; loaded by load_security_seed.py).
+#
+# Keyed on the deployed dbt relation names (what Trino/information_schema and
+# the fetchers see), never mart_attrs' on-the-wire aliases. No row means
+# 'default' (visible): this is a denylist of columns needing protection.
+# Do not classify dimension or join columns (region_name, woreda_name,
+# programme_name, product_name, …): masking those breaks every dashboard.
+#
+# mask_class semantics (applied by the gateway masking layer):
+#   drop        remove the column entirely
+#   hash        salted SHA-256 (irreversible, unlinkable across responses)
+#   partial     reveal the tail only (e.g. •••1234 for phone numbers)
+#   generalize  reduce precision (GPS -> region-level; numbers -> buckets)
+#   tokenize    deterministic pseudonym (joins within a response still work)
+#
+# Rows here load as managed_by='seed'. Steward-console edits ('steward') and
+# the OpenMetadata classification sync ('openmetadata') own their rows; the
+# seed reconciliation never touches them.
+
+# live facility coordinates on the Supply Control Tower feed
+# /api/ct/plan serves facility GPS. Coordinates generalise to region level for
+# roles without a reveal grant.
+- {schema_name: bi_supply, table_name: mart_ct_nodes, column_name: lat,
+   sensitivity: restricted, mask_class: generalize, pii: false,
+   note: "facility GPS latitude: generalize to region centroid for unprivileged roles"}
+- {schema_name: bi_supply, table_name: mart_ct_nodes, column_name: lng,
+   sensitivity: restricted, mask_class: generalize, pii: false,
+   note: "facility GPS longitude: generalize to region centroid for unprivileged roles"}
+- {schema_name: bi_supply, table_name: mart_pct_facility_geo, column_name: lat,
+   sensitivity: restricted, mask_class: generalize, pii: false,
+   note: "PCT facility GPS latitude (Zambia eLMIS): classified before data lands, same policy as mart_ct_nodes"}
+- {schema_name: bi_supply, table_name: mart_pct_facility_geo, column_name: lng,
+   sensitivity: restricted, mask_class: generalize, pii: false,
+   note: "PCT facility GPS longitude (Zambia eLMIS): classified before data lands, same policy as mart_ct_nodes"}
+
+# facility capacity: GPS + contact (classified whether or not the columns
+# hold data, so nothing is ever served unprotected)
+- {schema_name: bi_facility, table_name: mart_facility_capacity, column_name: latitude,
+   sensitivity: restricted, mask_class: generalize, pii: false,
+   note: "facility GPS: schema present, values NULL today; protected ahead of data"}
+- {schema_name: bi_facility, table_name: mart_facility_capacity, column_name: longitude,
+   sensitivity: restricted, mask_class: generalize, pii: false,
+   note: "facility GPS: schema present, values NULL today; protected ahead of data"}
+- {schema_name: bi_facility, table_name: mart_facility_capacity, column_name: telecom,
+   sensitivity: restricted, mask_class: partial, pii: true,
+   note: "facility contact phone: partial-reveal (last 4) for unprivileged roles"}
+
+# patient-grain sample observations (uncatalogued marts already return 403
+# on direct reads; this guards the columns wherever they surface)
+- {schema_name: bi_staging, table_name: bi_demo_patient_observations, column_name: patient_id,
+   sensitivity: privileged, mask_class: tokenize, pii: true,
+   note: "patient identifier: deterministic pseudonym so within-response joins survive"}
+- {schema_name: bi_staging, table_name: bi_demo_patient_observations, column_name: observation,
+   sensitivity: privileged, mask_class: drop, pii: true,
+   note: "clinical observation text: dropped for anyone without a privileged reveal grant"}
+- {schema_name: bi_supply, table_name: mart_pct_plan_decisions, column_name: decided_by,
+   sensitivity: restricted, mask_class: tokenize, pii: true,
+   note: "planner identity on a plan decision, pseudonym unless the caller may see restricted fields"}
+- {schema_name: bi_supply, table_name: mart_pct_plan_decisions, column_name: note,
+   sensitivity: restricted, mask_class: drop, pii: true,
+   note: "free-text planner note: dropped unless the caller may see restricted fields"}

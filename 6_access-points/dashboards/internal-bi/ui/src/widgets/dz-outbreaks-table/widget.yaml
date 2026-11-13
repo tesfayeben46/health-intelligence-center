@@ -1,0 +1,8 @@
+id: dz-outbreaks-table
+title: Active Outbreaks
+kind: table
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

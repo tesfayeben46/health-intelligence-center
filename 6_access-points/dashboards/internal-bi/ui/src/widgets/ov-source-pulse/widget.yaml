@@ -1,0 +1,8 @@
+id: ov-source-pulse
+title: Source Pulse
+kind: kpi
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

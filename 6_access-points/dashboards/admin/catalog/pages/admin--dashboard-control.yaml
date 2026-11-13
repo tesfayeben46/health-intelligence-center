@@ -1,0 +1,8 @@
+id: admin/dashboard-control
+title: Dashboard Control
+ordering: 15
+widgets:
+- id: adm-dashboard-control
+  col_span: 12
+  row_span: 1
+  ordering: 0

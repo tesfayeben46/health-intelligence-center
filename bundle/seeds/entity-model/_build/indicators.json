@@ -1,0 +1,368 @@
+[
+  {
+    "id": "HIV-TEST",
+    "programme": "HIV",
+    "name": "HIV tests performed",
+    "calc": "count",
+    "unit": "tests"
+  },
+  {
+    "id": "HIV-POS",
+    "programme": "HIV",
+    "name": "HIV positive identified",
+    "calc": "count",
+    "unit": "persons"
+  },
+  {
+    "id": "HIV-ART-NEW",
+    "programme": "HIV",
+    "name": "ART new initiation",
+    "calc": "count",
+    "unit": "persons"
+  },
+  {
+    "id": "HIV-ART-CURR",
+    "programme": "HIV",
+    "name": "ART currently active",
+    "calc": "count",
+    "unit": "persons"
+  },
+  {
+    "id": "HIV-VL-SUPP",
+    "programme": "HIV",
+    "name": "Viral load suppressed",
+    "calc": "pct_of",
+    "denom": "HIV-ART-CURR",
+    "unit": "percent"
+  },
+  {
+    "id": "TB-NOTIF",
+    "programme": "TB",
+    "name": "TB cases notified",
+    "calc": "count",
+    "unit": "cases"
+  },
+  {
+    "id": "TB-BACT",
+    "programme": "TB",
+    "name": "TB bacteriologically confirmed",
+    "calc": "count",
+    "unit": "cases"
+  },
+  {
+    "id": "TB-TX-NEW",
+    "programme": "TB",
+    "name": "TB treatment initiated",
+    "calc": "count",
+    "unit": "cases"
+  },
+  {
+    "id": "TB-TX-SUCC",
+    "programme": "TB",
+    "name": "TB treatment success",
+    "calc": "pct_of",
+    "denom": "TB-TX-NEW",
+    "unit": "percent"
+  },
+  {
+    "id": "TB-LTFU",
+    "programme": "TB",
+    "name": "TB lost-to-follow-up",
+    "calc": "count",
+    "unit": "cases"
+  },
+  {
+    "id": "BCG",
+    "programme": "EPI",
+    "name": "BCG dose given",
+    "calc": "count",
+    "unit": "doses"
+  },
+  {
+    "id": "PENTA1",
+    "programme": "EPI",
+    "name": "Penta-1 dose given",
+    "calc": "count",
+    "unit": "doses"
+  },
+  {
+    "id": "PENTA3",
+    "programme": "EPI",
+    "name": "Penta-3 dose given",
+    "calc": "count",
+    "unit": "doses"
+  },
+  {
+    "id": "MR1",
+    "programme": "EPI",
+    "name": "Measles-Rubella 1st dose",
+    "calc": "count",
+    "unit": "doses"
+  },
+  {
+    "id": "MR2",
+    "programme": "EPI",
+    "name": "Measles-Rubella 2nd dose",
+    "calc": "count",
+    "unit": "doses"
+  },
+  {
+    "id": "PENTA3-COV",
+    "programme": "EPI",
+    "name": "Penta-3 coverage under 1y",
+    "calc": "coverage",
+    "denom": "live_births",
+    "unit": "percent"
+  },
+  {
+    "id": "CC-EXCURSION",
+    "programme": "EPI",
+    "name": "Cold-chain temperature excursions",
+    "calc": "count",
+    "unit": "events"
+  },
+  {
+    "id": "AEFI-MILD",
+    "programme": "EPI",
+    "name": "AEFI · mild reactions",
+    "calc": "count",
+    "unit": "cases"
+  },
+  {
+    "id": "AEFI-SERIOUS",
+    "programme": "EPI",
+    "name": "AEFI · serious reactions",
+    "calc": "count",
+    "unit": "cases"
+  },
+  {
+    "id": "ANC1",
+    "programme": "MNCH",
+    "name": "ANC1 visits",
+    "calc": "count",
+    "unit": "visits"
+  },
+  {
+    "id": "ANC4",
+    "programme": "MNCH",
+    "name": "ANC4 visits",
+    "calc": "count",
+    "unit": "visits"
+  },
+  {
+    "id": "SBA",
+    "programme": "MNCH",
+    "name": "Skilled birth attendance",
+    "calc": "count",
+    "unit": "deliveries"
+  },
+  {
+    "id": "PNC1",
+    "programme": "MNCH",
+    "name": "PNC within 48h",
+    "calc": "count",
+    "unit": "visits"
+  },
+  {
+    "id": "ANC4-COV",
+    "programme": "MNCH",
+    "name": "ANC4 coverage",
+    "calc": "coverage",
+    "denom": "expected_pregnancies",
+    "unit": "percent"
+  },
+  {
+    "id": "SBA-COV",
+    "programme": "MNCH",
+    "name": "Skilled birth attendance coverage",
+    "calc": "coverage",
+    "denom": "expected_deliveries",
+    "unit": "percent"
+  },
+  {
+    "id": "MMR",
+    "programme": "MNCH",
+    "name": "Maternal mortality ratio",
+    "calc": "rate_per_100k",
+    "denom": "live_births",
+    "unit": "per_100k"
+  },
+  {
+    "id": "HTN-SCRN",
+    "programme": "NCD",
+    "name": "HTN screened (HEARTS)",
+    "calc": "count",
+    "unit": "persons"
+  },
+  {
+    "id": "HTN-DX",
+    "programme": "NCD",
+    "name": "HTN newly diagnosed",
+    "calc": "count",
+    "unit": "persons"
+  },
+  {
+    "id": "HTN-TX",
+    "programme": "NCD",
+    "name": "HTN on treatment",
+    "calc": "count",
+    "unit": "persons"
+  },
+  {
+    "id": "HTN-CTRL",
+    "programme": "NCD",
+    "name": "HTN blood-pressure controlled",
+    "calc": "pct_of",
+    "denom": "HTN-TX",
+    "unit": "percent"
+  },
+  {
+    "id": "MAL-SUSP",
+    "programme": "MALARIA",
+    "name": "Malaria suspected cases",
+    "calc": "count",
+    "unit": "cases"
+  },
+  {
+    "id": "MAL-MICRO",
+    "programme": "MALARIA",
+    "name": "Malaria tested by microscopy",
+    "calc": "count",
+    "unit": "tests"
+  },
+  {
+    "id": "MAL-CONF",
+    "programme": "MALARIA",
+    "name": "Malaria confirmed cases",
+    "calc": "count",
+    "unit": "cases"
+  },
+  {
+    "id": "MAL-RDT",
+    "programme": "MALARIA",
+    "name": "Malaria RDTs performed",
+    "calc": "count",
+    "unit": "tests"
+  },
+  {
+    "id": "MAL-TX-AL",
+    "programme": "MALARIA",
+    "name": "AL treatment courses given",
+    "calc": "count",
+    "unit": "courses"
+  },
+  {
+    "id": "MAL-DEATH",
+    "programme": "MALARIA",
+    "name": "Inpatient malaria deaths",
+    "calc": "count",
+    "unit": "deaths"
+  },
+  {
+    "id": "MAL-INC",
+    "programme": "MALARIA",
+    "name": "Malaria incidence per 1",
+    "0": null,
+    "calc": "rate_per_1k",
+    "denom": "population_at_risk",
+    "unit": "per_1k"
+  },
+  {
+    "id": "MAL-ITN-COV",
+    "programme": "MALARIA",
+    "name": "ITN coverage",
+    "calc": "coverage",
+    "denom": "population_at_risk",
+    "unit": "percent"
+  },
+  {
+    "id": "MAL-IRS-COV",
+    "programme": "MALARIA",
+    "name": "IRS coverage (last 12 months)",
+    "calc": "coverage",
+    "denom": "households_targeted",
+    "unit": "percent"
+  },
+  {
+    "id": "FP-NEW",
+    "programme": "FP",
+    "name": "FP new acceptors",
+    "calc": "count",
+    "unit": "persons"
+  },
+  {
+    "id": "FP-IMPL",
+    "programme": "FP",
+    "name": "Implanon NXT inserted",
+    "calc": "count",
+    "unit": "insertions"
+  },
+  {
+    "id": "FP-DEPO",
+    "programme": "FP",
+    "name": "Depo-Provera dispensed",
+    "calc": "count",
+    "unit": "doses"
+  },
+  {
+    "id": "FP-CYP",
+    "programme": "FP",
+    "name": "Couple Years of Protection",
+    "calc": "weighted_sum",
+    "unit": "cyp"
+  },
+  {
+    "id": "FP-MCPR",
+    "programme": "FP",
+    "name": "Modern contraceptive prevalence rate",
+    "calc": "coverage",
+    "denom": "women_reproductive_age",
+    "unit": "percent"
+  },
+  {
+    "id": "NUT-SAM",
+    "programme": "NUTRITION",
+    "name": "SAM admissions",
+    "calc": "count",
+    "unit": "cases"
+  },
+  {
+    "id": "NUT-SAM-CURE",
+    "programme": "NUTRITION",
+    "name": "SAM cure rate",
+    "calc": "pct_of",
+    "denom": "NUT-SAM",
+    "unit": "percent"
+  },
+  {
+    "id": "NUT-STUNT",
+    "programme": "NUTRITION",
+    "name": "U5 stunting prevalence",
+    "calc": "pct_of",
+    "denom": "children_u5_measured",
+    "unit": "percent"
+  },
+  {
+    "id": "NUT-RUTF",
+    "programme": "NUTRITION",
+    "name": "RUTF dispensed",
+    "calc": "count",
+    "unit": "sachets"
+  },
+  {
+    "id": "PHEM-TIMELY",
+    "programme": "HIV",
+    "name": "IDSR timeliness",
+    "calc": "pct_of",
+    "denom": "facility_reports_due",
+    "unit": "percent"
+  },
+  {
+    "id": "PHEM-COMPL",
+    "programme": "HIV",
+    "name": "Reporting completeness",
+    "calc": "pct_of",
+    "denom": "facility_reports_due",
+    "unit": "percent"
+  }
+]

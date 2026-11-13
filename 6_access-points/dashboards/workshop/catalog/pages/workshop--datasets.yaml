@@ -1,0 +1,6 @@
+id: workshop/datasets
+title: Datasets
+ordering: 20
+sections:
+- workshop/datasets/builder
+- workshop/datasets/catalog

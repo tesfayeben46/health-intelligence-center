@@ -1,0 +1,217 @@
+# Sample users (fictional) and their initial role assignments for Zambia (zm-v1).
+#
+# The Ethiopian cast, mirrored one person at a time, so both profiles exercise
+# the same paths: the same realms, the same roles, the same shape of scope.
+# Only the identities and the geography change. `kc_sub` UUIDs are kept
+# the same as in users.yaml, so the DEV_AUTH defaults keep resolving across a
+# profile swap.
+#
+# Geography scopes use eLMIS province codes from the zm-v1 reference
+# (10 Central · 20 Copperbelt · 30 Eastern · 40 Luapula · 50 Lusaka ·
+#  60 Northern · 70 North Western · 80 Southern · 90 Western · 91 Muchinga),
+# not Ethiopia's two-letter region ids: a scope the marts cannot match silently
+# returns nothing.
+#
+# R-RHB-OROMIA has no meaning here; the scoped provincial role is
+# R-PHO-LUSAKA (see roles.yaml).
+#
+# Realm reference:
+#   moh-staff       ministry staff (BI, admin, workshop)
+#   privileged-ops  privileged actions (admin, security)
+
+- kc_sub: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+  username: chanda.m
+  email: chanda.m@moh.gov.zm
+  full_name: Chanda Mwansa
+  realm: privileged-ops
+  role_label: R-OPS-ADM
+  roles:
+  - R-OPS-ADM
+- kc_sub: 11111111-2222-3333-4444-555555555555
+  username: natasha.b
+  email: natasha.b@moh.gov.zm
+  full_name: Natasha Banda
+  realm: privileged-ops
+  role_label: R-OPS-ADM
+  roles:
+  - R-OPS-ADM
+- kc_sub: 22222222-3333-4444-5555-666666666666
+  username: chipo.m
+  email: chipo.m@moh.gov.zm
+  full_name: Chipo Mwale
+  realm: moh-staff
+  role_label: R-CONS-ANA
+  roles:
+  - R-CONS-ANA
+- kc_sub: 33333333-4444-5555-6666-777777777777
+  username: mutale.p
+  email: mutale.p@moh.gov.zm
+  full_name: Mutale Phiri
+  realm: moh-staff
+  role_label: R-PD-HIV
+  roles:
+  - R-PD-HIV
+  scope:
+    programme:
+    - HIV
+- kc_sub: 44444444-5555-6666-7777-888888888888
+  username: gilbert.t
+  email: gilbert.t@moh.gov.zm
+  full_name: Gilbert Tembo
+  realm: moh-staff
+  role_label: R-DEC
+  roles:
+  - R-DEC
+- kc_sub: 55555555-6666-7777-8888-999999999999
+  username: lubinda.s
+  email: lubinda.s@moh.gov.zm
+  full_name: Lubinda Sakala
+  realm: moh-staff
+  role_label: R-PHO-LUSAKA
+  roles:
+  - R-PHO-LUSAKA
+  scope:
+    geography:
+    - '50'
+- kc_sub: 66666666-7777-8888-9999-aaaaaaaaaaaa
+  username: kunda.n
+  email: kunda.n@moh.gov.zm
+  full_name: Kunda Ngoma
+  realm: moh-staff
+  role_label: R-OPS-ENG
+  roles:
+  - R-OPS-ENG
+- kc_sub: 77777777-8888-9999-aaaa-bbbbbbbbbbbb
+  username: chileshe.m
+  email: chileshe.m@moh.gov.zm
+  full_name: Chileshe Mulenga
+  realm: moh-staff
+  role_label: R-CONS-SCI
+  roles:
+  - R-CONS-SCI
+- kc_sub: 88888888-9999-aaaa-bbbb-cccccccccccc
+  username: mwaka.z
+  email: mwaka.z@moh.gov.zm
+  full_name: Mwaka Zulu
+  realm: moh-staff
+  role_label: R-CONS-RES
+  roles:
+  - R-CONS-RES
+- kc_sub: 99999999-aaaa-bbbb-cccc-dddddddddddd
+  username: thandiwe.d
+  email: thandiwe.d@moh.gov.zm
+  full_name: Thandiwe Daka
+  realm: moh-staff
+  role_label: R-CONS-PRT
+  roles:
+  - R-CONS-PRT
+- kc_sub: aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+  username: bupe.k
+  email: bupe.k@moh.gov.zm
+  full_name: Bupe Kabwe
+  realm: moh-staff
+  role_label: R-DEC
+  roles:
+  - R-DEC
+- kc_sub: bbbbbbbb-cccc-dddd-eeee-ffffffffffff
+  username: demo.steward
+  email: demo.steward@moh.gov.zm
+  full_name: Musonda Bwalya
+  realm: moh-staff
+  role_label: R-STEW
+  roles:
+  - R-STEW
+- kc_sub: bbbbbbbb-cccc-dddd-eeee-000000000001
+  username: steward.ops
+  email: steward.ops@moh.gov.zm
+  full_name: Steward Ops
+  realm: privileged-ops
+  role_label: R-STEW
+  roles:
+  - R-STEW
+- kc_sub: cccccccc-dddd-eeee-ffff-000000000000
+  username: sec.officer
+  email: sec.officer@moh.gov.zm
+  full_name: Security Officer
+  realm: privileged-ops
+  role_label: R-OPS-SEC
+  roles:
+  - R-OPS-SEC
+- kc_sub: dddddddd-eeee-ffff-0000-111111111111
+  username: root
+  email: root@moh.gov.zm
+  full_name: Root
+  realm: privileged-ops
+  role_label: R-SUPER
+  roles:
+  - R-SUPER
+- kc_sub: 55555555-5555-5555-5555-555555555555
+  username: superadmin
+  email: superadmin@moh.gov.zm
+  full_name: Super Admin
+  realm: moh-staff
+  role_label: R-SUPER
+  roles:
+  - R-SUPER
+- kc_sub: 66666666-6666-6666-6666-666666666666
+  username: superadmin
+  email: superadmin@moh.gov.zm
+  full_name: Super Admin
+  realm: privileged-ops
+  role_label: R-SUPER
+  roles:
+  - R-SUPER
+# Root login (admin): the same account as in users.yaml
+#    (identical kc_sub and password), so the root login is stable across a
+#    profile switch. R-SUPER in both realms, so every access point.
+- kc_sub: aaaaaaaa-0000-0000-0000-000000000001
+  username: admin
+  email: admin@nhdw.local
+  full_name: NHDW Admin
+  realm: moh-staff
+  role_label: R-SUPER
+  roles:
+  - R-SUPER
+- kc_sub: aaaaaaaa-0000-0000-0000-000000000002
+  username: admin
+  email: admin@nhdw.local
+  full_name: NHDW Admin
+  realm: privileged-ops
+  role_label: R-SUPER
+  roles:
+  - R-SUPER
+- kc_sub: 11111111-aaaa-bbbb-cccc-dddddddddddd
+  username: dec.nat
+  email: dec.nat@moh.gov.zm
+  full_name: National Decision Maker
+  realm: moh-staff
+  role_label: R-DEC
+  roles:
+  - R-DEC
+- kc_sub: 22222222-aaaa-bbbb-cccc-dddddddddddd
+  username: lubinda.lusaka
+  email: lubinda.lusaka@moh.gov.zm
+  full_name: Lubinda Sakala
+  realm: moh-staff
+  role_label: R-PHO-LUSAKA
+  roles:
+  - R-PHO-LUSAKA
+  scope:
+    geography:
+    - '50'
+- kc_sub: 33333333-aaaa-bbbb-cccc-dddddddddddd
+  username: analyst.ana
+  email: analyst.ana@moh.gov.zm
+  full_name: Analyst
+  realm: moh-staff
+  role_label: R-CONS-ANA
+  roles:
+  - R-CONS-ANA
+- kc_sub: 44444444-aaaa-bbbb-cccc-dddddddddddd
+  username: sci.demo
+  email: sci.demo@moh.gov.zm
+  full_name: Scientist
+  realm: moh-staff
+  role_label: R-CONS-SCI
+  roles:
+  - R-CONS-SCI

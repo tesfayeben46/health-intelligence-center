@@ -1,0 +1,35 @@
+commodity_id,commodity_name,programme_id,enables_indicator
+VAC-BCG,BCG vaccine,EPI,BCG
+VAC-OPV,OPV trivalent,EPI,
+VAC-IPV,IPV (inactivated polio),EPI,
+VAC-PENTA,Pentavalent DTwP-HepB-Hib,EPI,PENTA1
+VAC-PCV13,PCV-13,EPI,
+VAC-ROTA,Rotavirus vaccine,EPI,
+VAC-MR,Measles-Rubella,EPI,MR1
+VAC-HPV,HPV vaccine,EPI,
+VAC-COVID,COVID-19 vaccine,EPI,
+VAC-TT,Tetanus toxoid,EPI,
+MN-OXYTOCIN,Oxytocin 10 IU/ml,MNCH,SBA
+MN-MGSO4,Magnesium sulphate 50%,MNCH,
+MN-IRON-FOL,Iron-folate,MNCH,ANC1
+HIV-TLD,TLD · adult ART,HIV,HIV-ART-CURR
+HIV-PAED,Pediatric ART,HIV,
+HIV-RDT,HIV RDT kit,HIV,HIV-TEST
+TB-RHZE,RHZE fixed-dose combo,TB,TB-TX-NEW
+TB-GENEXPERT,GeneXpert cartridge,TB,TB-BACT
+TB-ISO,Isoniazid 300mg,TB,
+MAL-AL,Artemether-Lumefantrine,MALARIA,MAL-TX-AL
+MAL-RDT,Malaria RDT pf/pv,MALARIA,MAL-RDT
+MAL-LLIN,LLIN bed net,MALARIA,
+FP-IMPLANON,Implanon NXT,FP,FP-IMPL
+FP-DEPO,Depo-Provera,FP,FP-DEPO
+FP-COC,Combined oral contracept.,FP,
+NCD-AMLOD,Amlodipine 5mg,NCD,HTN-TX
+NCD-INSULIN,Insulin · regular 100 IU,NCD,
+NCD-METFORMIN,Metformin 500mg,NCD,
+NCD-LOSARTAN,Losartan 50mg,NCD,HTN-TX
+NT-RUTF,RUTF (ready-to-use),NUTRITION,NUT-RUTF
+NT-FBF,Fortified blended food,NUTRITION,
+NT-ORS,ORS sachet,NUTRITION,
+GEN-AMOX,Amoxicillin 250 DT,GENERAL,
+GEN-PARA,Paracetamol 500mg,GENERAL,

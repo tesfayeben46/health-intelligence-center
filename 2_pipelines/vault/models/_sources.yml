@@ -1,0 +1,149 @@
+# dbt sources: one entry per nhdw_landing.stg_* table mirrored from
+# ClickHouse staging by the bridge job. Vault models reference these via
+# `{{ source('landing', '<stg_name>') }}`.
+#
+# Freshness contract:
+#   loaded_at_field = `load_ts` (every stg_* table carries it from
+#   staging dbt's now64(); see 2_pipelines/staging/models/).
+#   warn_after / error_after match the ingestor cadences (the k8s ingestor
+#   Jobs in 1_infrastructure/k8s/base/ingestor-jobs.yaml, or in dev the
+#   bridge job's manual cadence).
+#   Run `dbt source freshness` in CI to catch a stalled pipeline before it
+#   pollutes the vault.
+
+version: 2
+
+sources:
+  - name: landing
+    description: "Landing zone: PG copies of nhdw_staging.stg_* refreshed by the bridge job on each vault run."
+    # No `database:` override: landing always lives in the database dbt is
+    # connected to (PG_DATABASE), which also lets out-of-band verification
+    # runs target a scratch database without editing this file.
+    schema: nhdw_landing
+    loaded_at_field: load_ts
+    freshness:
+      warn_after:  { count: 12, period: hour }
+      error_after: { count: 36, period: hour }
+    tables:
+      # DHIS2 (daily aggregate refresh; HMIS data is monthly upstream) ─
+      - name: stg_dhis2__data_value_sets
+        description: "HMIS data values: the fact grain. (data_element by org_unit by period by cat_opt by attr_opt by data_set)."
+      - name: stg_dhis2__organisation_units
+        description: "Facilities + admin hierarchy (woreda/zone/region/federal)."
+      - name: stg_dhis2__data_elements
+        description: "Indicator dictionary (data element codes + value types)."
+      - name: stg_dhis2__data_sets
+        description: "DHIS2 data set definitions."
+      - name: stg_dhis2__category_combos
+        description: "Category combination dimensions."
+      - name: stg_dhis2__category_option_combos
+        description: "Category option combinations."
+
+      # EthioEMR (FHIR-shaped clinical records) ─
+      - name: stg_ethioemr__patient
+        description: "FHIR Patient resources (deidentified by upstream ingestor when needed)."
+      - name: stg_ethioemr__encounter
+        description: "FHIR Encounter resources: visits/admissions."
+      - name: stg_ethioemr__observation
+        description: "FHIR Observation resources: clinical results + vitals."
+
+      # HCMIS WDM (vaccine + commodity stock; refreshed nightly) ─
+      - name: stg_hcmiswdm__fact_dailyrecord
+        description: "Stock movement fact at daily grain."
+      # stg_hcmiswdm__fact_inventory is bridged into nhdw_landing but has no
+      # vault consumer. Declare it here if an inventory-snapshot vault path is built.
+      - name: stg_hcmiswdm__vaccine_dailyrecord
+        description: "Vaccine-specific daily movement fact."
+      - name: stg_hcmiswdm__vaccine_institution
+        description: "Vaccine-handling facility dimension."
+      - name: stg_hcmiswdm__commodity_product
+        description: "Commodity / product dictionary."
+      - name: stg_hcmiswdm__dim_date
+        description: "Calendar dimension."
+      - name: stg_hcmiswdm__dim_environment
+        description: "Stocking-environment (EPSS hub) dimension; carries region_id."
+      - name: stg_hcmiswdm__dim_item
+        description: "Item / SKU dimension."
+      - name: stg_hcmiswdm__vaccine_purchaseorder
+        description: "Vaccine procurement pipeline: open + recently-closed purchase orders."
+      - name: stg_hcmiswdm__dim_dispatchhub
+        description: "EPSS dispatch-plan hubs (warehouses): coords + fleet (Supply Control Tower)."
+      - name: stg_hcmiswdm__dim_dispatchfacility
+        description: "EPSS dispatch-plan delivery facilities (nodes): the supply facility dimension."
+      - name: stg_hcmiswdm__dim_dispatchperiod
+        description: "EPSS dispatch-plan planning periods + plan-level KPI/savings summary."
+      - name: stg_hcmiswdm__fact_dispatch
+        description: "EPSS dispatch-plan movement lines (hub->facility by commodity per period)."
+      - name: stg_hcmiswdm__fact_dispatchrun
+        description: "EPSS dispatch-plan vehicle runs (stops + road path as JSON)."
+
+      # mBrana (mFlow USSD reports -> daily)
+      - name: stg_mbrana__mflowussd_sohlogs
+        description: "USSD-reported stock-on-hand logs."
+      - name: stg_mbrana__mflowussd_institutions
+        description: "USSD-known reporting facilities."
+      - name: stg_mbrana__mflowussd_commodities
+        description: "USSD commodity dictionary."
+      - name: stg_mbrana__dbo_institution
+      - name: stg_mbrana__dbo_region
+      - name: stg_mbrana__dbo_woreda
+      - name: stg_mbrana__dbo_zone
+
+      # MFR (FHIR Master Facility Registry; weekly cadence)
+      - name: stg_mfr__facilities
+        description: "FHIR Location: one row per health facility."
+        freshness:
+          warn_after:  { count: 7,  period: day }
+          error_after: { count: 14, period: day }
+      - name: stg_mfr__organizations
+        description: "FHIR Organization: owners + admin-tree levels."
+        freshness:
+          warn_after:  { count: 7,  period: day }
+          error_after: { count: 14, period: day }
+      - name: stg_mfr__devices
+        description: "FHIR Device: facility equipment inventory (owner_facility_id -> FAC-…)."
+        freshness:
+          warn_after:  { count: 7,  period: day }
+          error_after: { count: 14, period: day }
+
+      # Climate (weekly meteorological drivers; bridged from ClickHouse)
+      - name: stg_climate__weekly
+        description: "Weekly rainfall / temperature / humidity per region."
+      # eLMIS v2 history (OpenLMIS source family; 7 landing tables)
+      - name: stg_elmis_hist__reference_facility
+      - name: stg_elmis_hist__reference_geographic_zone
+      - name: stg_elmis_hist__reference_product
+      - name: stg_elmis_hist__reference_programme
+      - name: stg_elmis_hist__reference_reporting_period
+      - name: stg_elmis_hist__reference_facility_type
+      - name: stg_elmis_hist__reference_product_group
+      - name: stg_elmis_hist__reference_product_category
+      - name: stg_elmis_hist__reference_programme_product
+      - name: stg_elmis_hist__reference_facility_programme_schedule
+      - name: stg_elmis_hist__history_requisition
+      - name: stg_elmis_hist__history_requisition_line
+        description: "Historical R&R lines (pattern-preserving Zambia extract)."
+
+  # nhdw_ref: the governed reference vocabulary (OMOP-style)
+  # DDL: 3_storage/postgres/init/34_ref_vocab.sql · data: bundle/scripts/
+  # seed-ref-vocab.sh (run at bootstrap before the dbt-vault build, because the
+  # resolution views join the crosswalk at build time). Steward-editable,
+  # bitemporal; parity rule documented in the DDL.
+  - name: ref_vocab
+    schema: nhdw_ref
+    tables:
+      - name: concept
+        description: "Canonical concepts (programmes, commodities, regions, tiers, diseases, indicators)."
+      - name: source_to_concept_map
+        description: "Source-code -> canonical-concept crosswalk (replaces regex/dict/CASE mappings)."
+
+  # nhdw_vault_governance: steward MDM decisions (read-only seam)
+  # postgres_fdw foreign table over nhdw_ops ops_governance.mdm_match_decision
+  # (DDL: 36_mdm_decisions_read.sql; written only by the steward console via
+  # the gateway). v_facility_resolution LEFT JOINs the current accepted
+  # decisions; an empty log leaves every conformed key byte-identical.
+  - name: vault_governance
+    schema: nhdw_vault_governance
+    tables:
+      - name: mdm_match_decision
+        description: "Append-only bitemporal steward verdicts mapping a source record to its master conformed_bk."

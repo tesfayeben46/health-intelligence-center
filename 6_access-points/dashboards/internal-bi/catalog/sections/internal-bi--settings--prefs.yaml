@@ -1,0 +1,23 @@
+id: internal-bi/settings/prefs
+page_id: internal-bi/settings
+title: Profile & preferences
+ordering: 10
+columns: 12
+dense: true
+widgets:
+- id: st-profile
+  col_span: 6
+  row_span: 1
+  ordering: 0
+- id: st-display
+  col_span: 6
+  row_span: 1
+  ordering: 1
+- id: st-alert-subs
+  col_span: 6
+  row_span: 1
+  ordering: 2
+- id: st-security
+  col_span: 6
+  row_span: 1
+  ordering: 3

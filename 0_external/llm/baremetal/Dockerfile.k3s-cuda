@@ -1,0 +1,63 @@
+# nhdw/k3s-cuda: a k3s node image with the NVIDIA Container Toolkit baked in, so
+# a k3d cluster can schedule GPU workloads. The stock rancher/k3s node has no
+# toolkit, so containerd has no `nvidia` runtime, the k8s device plugin reports
+# "No devices found" and nvidia.com/gpu is never advertised.
+#
+# Why a custom node image: where the NVIDIA runtime is provided inside Docker
+# Desktop there are no toolkit binaries on the host filesystem to bind-mount into
+# the node. Baking the toolkit into the node image is reproducible and can be
+# bundled for offline use.
+#
+# How it works:
+#   1. `k3d cluster create --gpus all --image nhdw/k3s-cuda:dev` makes Docker
+#      (its `nvidia` runtime) inject the GPU into the node container. On WSL2 that
+#      is /dev/dxg plus the driver libs from /usr/lib/wsl/lib (there is no
+#      /dev/nvidia0 under WSL2; the toolkit detects WSL mode).
+#   2. Inside the node, k3s detects the nvidia-container-runtime baked here and
+#      adds an `nvidia` runtime to its containerd config on startup.
+#   3. The NVIDIA k8s device-plugin DaemonSet (runtimeClassName: nvidia)
+#      enumerates the GPU and advertises `nvidia.com/gpu` for the LLM pod.
+#
+# The GPU driver and CUDA libraries are not baked here: they come from the host
+# at runtime, and the ollama pod ships its own CUDA userspace. This keeps the
+# node image small and independent of the driver version.
+#
+# Build (needs network once; then cache-images.sh saves it into bundle/images):
+#   docker build -f 0_external/llm/baremetal/Dockerfile.k3s-cuda -t nhdw/k3s-cuda:dev 0_external/llm/baremetal
+ARG K3S_TAG=v1.35.5-k3s1
+
+FROM rancher/k3s:${K3S_TAG} AS k3s
+
+FROM ubuntu:24.04
+
+# NVIDIA Container Toolkit (nvidia-container-runtime + hook + libnvidia-container).
+# libnvidia-container detects WSL2 (via /dev/dxg) and mounts the WSL driver libs
+# into each GPU pod, so no CUDA base image is needed here.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl gnupg2 ca-certificates \
+ && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+      | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+ && curl -fsSL https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+      | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+      > /etc/apt/sources.list.d/nvidia-container-toolkit.list \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends nvidia-container-toolkit \
+ && rm -rf /var/lib/apt/lists/*
+
+# Overlay the k3s runtime (binaries, /bin busybox, manifests) on top, after the
+# toolkit install so the toolkit's /usr/bin/nvidia-container-* survive.
+COPY --from=k3s / /
+
+VOLUME /var/lib/kubelet
+VOLUME /var/lib/rancher/k3s
+VOLUME /var/lib/cni
+VOLUME /var/log
+
+# PATH must match the stock rancher/k3s image, not ubuntu's default. It needs
+# /bin/aux (k3s's bundled iptables-save/iptables-restore, used by k3d's DNS-fix
+# entrypoint) and the CNI dir; without them the node crash-loops at boot with
+# "iptables-save: not found" and empty logs, because the failure is in
+# k3d-entrypoint-dns.sh before k3s starts.
+ENV PATH="/var/lib/rancher/k3s/data/cni:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/bin/aux"
+ENTRYPOINT ["/bin/k3s"]
+CMD ["agent"]

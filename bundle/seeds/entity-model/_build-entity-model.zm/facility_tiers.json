@@ -1,0 +1,158 @@
+[
+  {
+    "id": "CHAZ2",
+    "name": "CHAZ level 2",
+    "ownership_mix": {
+      "public": 0.02,
+      "private": 0.05,
+      "ngo": 0.93,
+      "military": 0.0
+    },
+    "count": 1,
+    "weight_per_district": 0.01
+  },
+  {
+    "id": "DATF",
+    "name": "District AIDS Task Force",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 15,
+    "weight_per_district": 0.14
+  },
+  {
+    "id": "DHO",
+    "name": "District Health Office",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 105,
+    "weight_per_district": 0.97
+  },
+  {
+    "id": "HC",
+    "name": "Health Center",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 1737,
+    "weight_per_district": 16.08
+  },
+  {
+    "id": "HP",
+    "name": "Health Post",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 765,
+    "weight_per_district": 7.08
+  },
+  {
+    "id": "HBC",
+    "name": "Home Based Care",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 12,
+    "weight_per_district": 0.11
+  },
+  {
+    "id": "LVL1",
+    "name": "Level 1 Hospital",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 105,
+    "weight_per_district": 0.97
+  },
+  {
+    "id": "LVL2",
+    "name": "Level 2 Hospital",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 36,
+    "weight_per_district": 0.33
+  },
+  {
+    "id": "LVL3",
+    "name": "Level 3 Hospital",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 17,
+    "weight_per_district": 0.16
+  },
+  {
+    "id": "MILHOS",
+    "name": "Military Hospital",
+    "ownership_mix": {
+      "public": 0.1,
+      "private": 0.0,
+      "ngo": 0.0,
+      "military": 0.9
+    },
+    "count": 3,
+    "weight_per_district": 0.03
+  },
+  {
+    "id": "MSL",
+    "name": "Non ELMIP DCMO",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 5,
+    "weight_per_district": 0.05
+  },
+  {
+    "id": "Prog",
+    "name": "Program",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 1,
+    "weight_per_district": 0.01
+  },
+  {
+    "id": "VCT",
+    "name": "Voluntary Counseling & Testing",
+    "ownership_mix": {
+      "public": 0.93,
+      "private": 0.03,
+      "ngo": 0.03,
+      "military": 0.01
+    },
+    "count": 5,
+    "weight_per_district": 0.05
+  }
+]

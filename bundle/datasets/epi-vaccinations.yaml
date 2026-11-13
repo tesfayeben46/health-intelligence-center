@@ -1,0 +1,28 @@
+dataset:
+  slug: epi-vaccinations
+  title: EPI Vaccinations
+  family: producer-payload
+
+  source_system: submitted
+  schema: null
+  table: null
+
+  data_classes: [DC.ENC, DC.OBS]
+  sensitivity: default
+  subjects: [PT, HP, FAC]
+  contains_phi: true                 # FHIR Immunization includes patient identifiers
+  pii_fields: [patient_id, immunization_id]
+
+  owner_role: R-STEW
+  visible_to: [R-STEW]
+  writable_by: [R-PROD-SUBMIT]
+  k_anon_min: null
+  retention_days: 3650
+
+  format: fhir-bundle
+  description: >
+    FHIR Immunization resources, one Bundle per facility-week. Submitted
+    via the Submission Portal. PHI: patient_id (Fayda-FIN).
+
+  last_reviewed_at: 2026-06-07
+  last_reviewer: R-STEW

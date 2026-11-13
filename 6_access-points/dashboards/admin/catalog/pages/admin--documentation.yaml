@@ -1,0 +1,8 @@
+id: admin/documentation
+title: Documentation
+ordering: 110
+widgets:
+- id: adm-documentation
+  col_span: 6
+  row_span: 1
+  ordering: 31

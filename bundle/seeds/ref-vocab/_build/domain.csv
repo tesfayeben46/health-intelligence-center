@@ -1,0 +1,8 @@
+domain_id,domain_name
+programme,Health programme
+indicator,HMIS indicator
+commodity,Health commodity
+geography,Administrative geography
+facility_type,Facility tier/type
+ownership,Facility ownership
+disease,IDSR disease

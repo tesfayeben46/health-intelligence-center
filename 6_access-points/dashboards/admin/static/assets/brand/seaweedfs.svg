@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- stylized seaweed frond over water: stand-in mark for the SeaweedFS lake console -->
+  <g fill="none" stroke="#2e7d52" stroke-width="2.2" stroke-linecap="round">
+    <path d="M16 27 C 15 21, 17 18, 15.5 12 C 14.5 8.5, 16.5 6, 16 3.5"/>
+    <path d="M16 22 C 12.5 21, 11 18.5, 10.5 15.5"/>
+    <path d="M15.5 16 C 19 15, 20.5 12.5, 21 9.5"/>
+  </g>
+  <path d="M5 27.5 C 8 26, 11 29, 14 27.5 C 17 26, 20 29, 23 27.5 C 25 26.6, 26.5 27.4, 27.5 27.8"
+        fill="none" stroke="#3b82c4" stroke-width="2" stroke-linecap="round"/>
+</svg>

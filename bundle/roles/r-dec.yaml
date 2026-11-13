@@ -1,0 +1,111 @@
+# R-DEC: Decision-Maker / Oversight
+#
+# A single role parameterised by scope (Regional Health Bureau head,
+# National Program Manager, Executive): capabilities are the same, and the
+# visible data differs by `param:user.*` claims.
+role:
+  id: R-DEC
+  name: "Decision-Maker"
+  group: DecisionMaker
+  identity_provider: MoH-Keycloak
+  mfa_required: true
+  mfa_factor: TOTP   # WebAuthn for executives (raised per assignment)
+  phase_activated: 1
+  audit_class: standard
+  notes: |
+    Administrators, Policy Makers, Program Managers, Executive Leadership.
+    Never builds dashboards; consumes curated ones. May schedule digests.
+    Sensitive sub-classes (HIV/mental/GBV/...) denied: aggregates yes,
+    individual records no.
+
+    Sub-tiering by scope (set at assignment time):
+      - Executives (national + all programs):  granularity = aggregate
+      - Program managers (assigned programs):  granularity = deidentified rows
+      - Regional admins (assigned geography):  granularity = aggregate
+  # Column-grain reveal: decision makers (incl. the R-PD-*/R-RHB-* scoped
+  # aliases OPA routes here) see restricted columns (facility GPS) unmasked
+  # within their row-level scope. privileged stays masked.
+  column_access:
+    reveal: [restricted]
+  permissions:
+
+    - subject: PRG
+      data_class: [DC.CAT]
+      members: all
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [public-health]
+    # Patients: de-identified, scoped by the user's geography and programme.
+    - subject: PT
+      data_class: [DC.ENC, DC.CND, DC.OBS]
+      members: scoped
+      scope:
+        geography:
+          level: 'param:user.assigned_geography.level'
+          values: ['param:user.assigned_geography.values']
+        programmatic: ['param:user.assigned_program']
+      granularity: deidentified
+      sensitivity: []
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health]
+
+    # Health Professionals: aggregate over geography.
+    - subject: HP
+      data_class: [DC.PRO, DC.PRF]
+      members: scoped
+      scope:
+        geography:
+          level: 'param:user.assigned_geography.level'
+          values: ['param:user.assigned_geography.values']
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read, export, schedule]
+      purpose_of_use: [public-health]
+
+    # Facilities: raw profile + performance over geography.
+    - subject: FAC
+      data_class: [DC.PRO, DC.PRF]
+      members: scoped
+      scope:
+        geography:
+          level: 'param:user.assigned_geography.level'
+          values: ['param:user.assigned_geography.values']
+      granularity: raw
+      sensitivity: []
+      verbs: [read, export, schedule]
+      purpose_of_use: [public-health]
+
+    # Products: aggregate stock over geography and programme.
+    - subject: PRD
+      data_class: [DC.STK]
+      members: scoped
+      scope:
+        geography:
+          level: 'param:user.assigned_geography.level'
+          values: ['param:user.assigned_geography.values']
+        programmatic: ['param:user.assigned_program']
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read, export, schedule, alert]
+      purpose_of_use: [public-health]
+
+    # Programs: raw on the user's assigned programs.
+    - subject: PRG
+      data_class: []
+      members: scoped
+      scope:
+        programmatic: ['param:user.assigned_program']
+      granularity: raw
+      sensitivity: []
+      verbs: [read, export, schedule, alert, annotate]
+      purpose_of_use: [public-health]
+
+    # Programs (aggregate): national/regional roll-ups for executive dashboards.
+    - subject: PRG
+      data_class: []
+      members: scoped
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read, export, schedule, alert]
+      purpose_of_use: [public-health]

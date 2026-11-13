@@ -1,0 +1,8 @@
+id: public/articles
+title: Articles
+ordering: 30
+widgets:
+- id: pub-articles-list
+  col_span: 6
+  row_span: 1
+  ordering: 6

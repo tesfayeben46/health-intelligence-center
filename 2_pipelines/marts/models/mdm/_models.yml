@@ -1,0 +1,19 @@
+version: 2
+
+models:
+  - name: mdm_commodity_match_candidates
+    description: "MDM discovered-relationship table: eLMIS v2 products <-> entity-model commodities, top-3 trigram candidates per product (score ≥ 0.35), review_status pending. Never a same-as link until a steward accepts."
+    columns:
+      - name: elmis_product_code
+        tests: [not_null]
+      - name: commodity_id
+        tests: [not_null]
+      - name: score
+        tests: [not_null]
+  - name: mart_mdm_commodity_golden
+    description: "Golden commodity record: entity-model commodity with per-source coverage (HCMIS, mBrana resolved; eLMIS candidates)."
+    columns:
+      - name: commodity_id
+        tests: [not_null, unique]
+  - name: mart_mdm_commodity_match_review
+    description: "Steward review queue over the discovered candidates."

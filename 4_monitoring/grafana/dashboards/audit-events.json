@@ -1,0 +1,93 @@
+{
+  "title": "Audit Events: FHIR AuditEvent stream",
+  "uid": "nhdw-audit-events",
+  "tags": ["nhdw", "audit", "phase-2"],
+  "schemaVersion": 39,
+  "version": 1,
+  "timezone": "UTC",
+  "time": {"from": "now-6h", "to": "now"},
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "AuditEvents per minute (by app)",
+      "datasource": {"type": "loki", "uid": "loki"},
+      "gridPos": {"h": 9, "w": 24, "x": 0, "y": 0},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (app) (count_over_time({app=~\".+\"}[1m]))",
+          "datasource": {"type": "loki", "uid": "loki"}
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "events/min"}, "overrides": []}
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Events in window",
+      "datasource": {"type": "loki", "uid": "loki"},
+      "gridPos": {"h": 5, "w": 8, "x": 0, "y": 9},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum(count_over_time({app=~\".+\"}[$__range]))",
+          "datasource": {"type": "loki", "uid": "loki"}
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Distinct users",
+      "datasource": {"type": "loki", "uid": "loki"},
+      "gridPos": {"h": 5, "w": 8, "x": 8, "y": 9},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(count by (user) ({user=~\".+\"}))",
+          "datasource": {"type": "loki", "uid": "loki"}
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Apps emitting",
+      "datasource": {"type": "loki", "uid": "loki"},
+      "gridPos": {"h": 5, "w": 8, "x": 16, "y": 9},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "count(count by (app) ({app=~\".+\"}))",
+          "datasource": {"type": "loki", "uid": "loki"}
+        }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []}
+    },
+    {
+      "id": 5,
+      "type": "logs",
+      "title": "Recent audit events (raw)",
+      "datasource": {"type": "loki", "uid": "loki"},
+      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 14},
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{app=~\".+\"}",
+          "datasource": {"type": "loki", "uid": "loki"}
+        }
+      ],
+      "options": {
+        "showLabels": true,
+        "showCommonLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      }
+    }
+  ]
+}

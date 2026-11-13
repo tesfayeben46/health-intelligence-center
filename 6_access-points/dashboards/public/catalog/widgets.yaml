@@ -1,0 +1,15 @@
+- id: pub-region
+  title: Coverage by region (equity bar)
+  kind: chart
+- id: pub-supply
+  title: Public service readiness (supply)
+  kind: kpi
+- id: pub-articles-list
+  title: Articles list (filterable)
+  kind: custom
+- id: pub-zm-kpi
+  title: Zambia supply KPIs (national by month)
+  kind: chart
+- id: pub-zm-province
+  title: Zambia on-shelf availability by province
+  kind: chart

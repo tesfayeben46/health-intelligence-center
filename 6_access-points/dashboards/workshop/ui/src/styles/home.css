@@ -1,0 +1,256 @@
+  /*
+     Workshop shell · sidebar + topbar-inside-main · mirrors BI dashboard.
+  */
+  .ws-shell { display: grid; grid-template-columns: 250px 1fr; align-items: stretch; min-height: 100vh; }
+  .ws-side {
+    /* Navy mountain overlay in the same navy as the public hero and gov-bar
+       (#0a1734 to #050b20), so every sidebar reads as one surface. */
+    background:
+      linear-gradient(180deg,
+        rgba(3,7,18,0.995) 0%,
+        rgba(6,13,32,0.96) 35%,
+        rgba(8,18,44,0.88) 65%,
+        rgba(4,10,26,0.97) 100%),
+      url('/static/assets/bg-mountains.jpg');
+    background-size: auto, cover;
+    background-position: top, center bottom;
+    background-repeat: no-repeat, no-repeat;
+    background-color: #050b20;
+    color: rgba(255,255,255,0.82);
+    position: sticky; top: 0;
+    min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+    padding: 0;
+    border-right: 1px solid rgba(0,0,0,0.4);
+  }
+  .ws-side::-webkit-scrollbar { width: 4px; }
+  .ws-side::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
+  /* Sidehead · FMoH logo + title · mirrors .bi-sidehead / .admin-sidehead */
+  .ws-sidehead {
+    position: relative;
+    padding: 1.7rem 1.3rem 1.55rem;
+    margin-bottom: 0.4rem;
+    background:
+      radial-gradient(ellipse 70% 60% at 22% 50%, rgba(255,255,255,0.06) 0%, transparent 65%);
+  }
+  .ws-sidehead::after {
+    content: '';
+    position: absolute;
+    left: 1.3rem; right: 1.3rem; bottom: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 25%, rgba(255,255,255,0.18) 75%, transparent 100%);
+  }
+  .ws-sidehead a {
+    display: flex; gap: 0.7rem; align-items: stretch;
+    color: #fff; text-decoration: none;
+  }
+  .ws-sidehead a:hover { color: #fff; }
+  .ws-sidehead .sidehead-logo {
+    width: 40px; height: 40px;
+    flex-shrink: 0;
+    object-fit: contain;
+    display: block;
+    align-self: center;
+    filter: brightness(0) invert(1) drop-shadow(0 2px 10px rgba(255,255,255,0.18));
+    transition: filter .25s ease, transform .25s ease;
+  }
+  .ws-sidehead a:hover .sidehead-logo {
+    filter: brightness(0) invert(1) drop-shadow(0 2px 14px rgba(255,255,255,0.32));
+    transform: scale(1.04);
+  }
+  .ws-sidehead .sidehead-text { display: flex; flex-direction: column; justify-content: center; line-height: 1; min-width: 0; }
+  .ws-sidehead .title { font-family: var(--font-serif); font-size: 1.22rem; font-weight: 600; color: #fff; letter-spacing: -0.005em; line-height: 1; }
+  .ws-sidehead .subtitle { font-size: 0.7rem; color: rgba(255,255,255,0.52); margin-top: 0.42rem; letter-spacing: 0.015em; line-height: 1; }
+
+  .ws-side h6 {
+    font-size: 0.62rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: rgba(255,255,255,0.38);
+    padding: 0 1.6rem;
+    margin: 1.4rem 0 0.45rem;
+  }
+  .ws-side a:not(.ws-sidehead a) {
+    display: flex; align-items: center; gap: 0.65rem;
+    padding: 0.62rem 0.85rem;
+    margin: 0 0.45rem;
+    border-radius: 10px;
+    color: rgba(255,255,255,0.7);
+    font-size: 0.86rem; font-weight: 500;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer; position: relative;
+    transition: background .18s ease, color .18s ease, box-shadow .18s ease;
+    text-decoration: none;
+  }
+  .ws-side a:not(.ws-sidehead a):hover { background: rgba(255,255,255,0.05); color: #fff; }
+  .ws-side a.active {
+    background: rgba(255,255,255,0.085);
+    color: #fff; font-weight: 600;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.07),
+      0 6px 18px -8px rgba(0,0,0,0.55);
+  }
+  .ws-side a svg.ico { opacity: 0.78; width: 17px; height: 17px; flex-shrink: 0; }
+  .ws-side a:hover svg.ico,
+  .ws-side a.active svg.ico { opacity: 1; }
+  .ws-side a .badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+    font-size: 0.66rem; font-weight: 700;
+    padding: 0.1rem 0.45rem; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .ws-side a.active .badge { background: rgba(255,255,255,0.22); }
+  .ws-side-spacer { flex: 1; }
+
+  /* Main column · same texture as BI dashboard */
+  .ws-main {
+    min-width: 0;
+    display: flex; flex-direction: column;
+    background-image:
+      linear-gradient(180deg,
+        rgba(255,255,255,0.86) 0%,
+        rgba(255,255,255,0.90) 35%,
+        rgba(255,255,255,0.95) 70%,
+        rgba(255,255,255,0.98) 100%),
+      url('/static/assets/bg-content.avif');
+    background-size: 100% 100%, cover;
+    background-position: top left, center center;
+    background-repeat: no-repeat, no-repeat;
+    background-attachment: scroll, fixed;
+  }
+
+  /* Topbar inside the main column · breadcrumb + title + Open JupyterLab CTA + user chip */
+  .ws-topbar {
+    /* Must match .ws-pageframe's 5.5rem so the masthead is flush with content */
+    padding: 1.3rem 5.5rem 1.1rem 5.5rem;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 1.2rem;
+  }
+  .ws-topbar .tb-title .breadcrumb {
+    font-size: 0.7rem; color: var(--ink-3);
+    font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .ws-topbar .tb-title h2 {
+    font-family: var(--font-sans);
+    font-size: 1.6rem; font-weight: 800;
+    color: var(--ink); margin: 0;
+    line-height: 1.1;
+  }
+  .ws-topbar .tb-actions {
+    display: flex; align-items: center; gap: 0.55rem;
+  }
+
+  .ws-topbar .tb-jupyter {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: var(--ink, #0f172a);
+    color: #fff;
+    padding: 0.5rem 1.05rem;
+    border-radius: 999px;
+    border: 1px solid var(--ink, #0f172a);
+    text-decoration: none;
+    font-size: 0.84rem; font-weight: 600;
+    transition: background .15s ease, transform .1s ease;
+  }
+  .ws-topbar .tb-jupyter:hover { background: var(--navy-800, #0a1734); border-color: var(--navy-800, #0a1734); }
+  .ws-topbar .tb-jupyter:active { transform: translateY(1px); }
+  .ws-topbar .tb-jupyter .ico { width: 14px; height: 14px; }
+  /* Request-compute pill: light companion to the dark JupyterLab pill. */
+  .ws-topbar .tb-compute {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: #fff;
+    color: var(--ink-2);
+    padding: 0.5rem 1.05rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    font-family: inherit;
+    font-size: 0.84rem; font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .1s ease;
+  }
+  .ws-topbar .tb-compute:hover { border-color: var(--navy-700); color: var(--navy-700); box-shadow: var(--shadow-1); }
+  .ws-topbar .tb-compute:active { transform: translateY(1px); }
+  .ws-topbar .tb-compute .ico { width: 14px; height: 14px; }
+  .ws-topbar .tb-user {
+    display: flex; align-items: center; gap: 0.55rem;
+    background: #fff;
+    padding: 0.42rem 0.85rem 0.42rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--ink-2);
+    font-size: 0.84rem;
+    cursor: pointer;
+    transition: border-color .15s ease, box-shadow .15s ease;
+    font-family: inherit;
+  }
+  .ws-topbar .tb-user:hover { border-color: var(--navy-700); box-shadow: var(--shadow-1); }
+  .ws-topbar .tb-user .avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--navy-700), var(--navy-500));
+    color: #fff; display: grid; place-items: center;
+    font-size: 0.78rem; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .ws-topbar .tb-user .meta { line-height: 1.1; text-align: left; }
+  .ws-topbar .tb-user .meta .nm { font-weight: 600; color: var(--ink); font-size: 0.86rem; }
+  .ws-topbar .tb-user .meta .rl { font-size: 0.7rem; color: var(--ink-3); }
+
+  /* Page frame · each section flows below the topbar */
+  .ws-pageframe {
+    /* shared 5.5rem left/right content margin (the same on every dashboard);
+       the topbar uses the same inset so the masthead is flush with content */
+    padding: 0.4rem 5.5rem 2.5rem;
+    min-width: 0;
+    width: 100%;
+    flex: 1;                                  /* fill the column so coc-strip + footer sink to the bottom */
+  }
+  .page-lede {
+    color: var(--ink-3);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin: 0 0 1.4rem;
+    max-width: 72ch;
+  }
+
+  /* Workshop footer · light override · community-friendly tone */
+  .ws-main .foot {
+    background: #fdfdfb;
+    color: var(--ink-2);
+    border-top: 1px solid rgba(15,23,41,0.08);
+  }
+  .ws-main .foot strong { color: var(--ink); }
+  .ws-main .foot a { color: var(--ink-2); transition: color .15s; }
+  .ws-main .foot a:hover { color: var(--navy-700); }
+  .ws-main .foot .foot-byline { font-size: 0.8rem; color: var(--ink-3); }
+  /* Compact code-of-conduct row inside the footer. */
+  .ws-main .foot .foot-coc {
+    max-width: 1480px; margin: 1rem auto 0; padding-top: 0.9rem;
+    border-top: 1px solid rgba(15,23,41,0.06);
+    display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 1.2rem;
+    font-size: 0.78rem; color: var(--ink-3);
+  }
+  .ws-main .foot .foot-coc > span { flex: 1; min-width: 240px; line-height: 1.45; }
+  .ws-main .foot .foot-coc > .ico { width: 15px; height: 15px; color: var(--ink-3); flex-shrink: 0; }
+  .ws-main .foot .foot-coc a {
+    display: inline-flex; align-items: center; gap: 0.3rem;
+    font-weight: 500; white-space: nowrap; color: var(--ink-2);
+  }
+  .ws-main .foot .foot-coc a:hover { color: var(--navy-700); }
+  .ws-main .foot .foot-coc a .ico { width: 13px; height: 13px; }
+
+/* ws-topbar page description under the title */
+.ws-topbar .tb-title .tb-desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--ink-3, #64748b);
+  max-width: 70ch;
+  line-height: 1.45;
+}

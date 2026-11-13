@@ -1,0 +1,136 @@
+version: 2
+
+models:
+  - name: mart_idsr_disease_weekly
+    description: |
+      PHEM/IDSR (Integrated Disease Surveillance & Response) weekly case + death
+      counts per (region by woreda by disease by ISO-week). The fact table the
+      EARS/outbreak anomaly models + the disease-surveillance widgets read from.
+    columns:
+      - name: iso_week
+        description: "ISO 8601 yearweek string (YYYY-Www)."
+        tests: [not_null]
+      - name: week_start
+        description: "Monday of the ISO week."
+        tests: [not_null]
+      - name: region_id
+        description: "2-letter Ethiopian region code."
+        tests: [not_null]
+      - name: woreda_uid
+        description: "Surveillance woreda id."
+        tests: [not_null]
+      - name: programme_id
+        tests: [not_null]
+      - name: disease_code
+        tests: [not_null]
+      - name: disease_label
+        tests: [not_null]
+      - name: new_cases
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: deaths
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [region_id, woreda_uid, disease_code, iso_week]
+
+  - name: mart_ml_disease_input
+    description: |
+      Densified woreda by disease by epi-week ML input frame for the disease
+      forecast model family (ears/outbreak/seasonal/ewars_lite). Full grid of
+      (surveillance woredas by priority diseases by every ISO week of the
+      observed span) with cases/deaths 0-filled, region-grain climate
+      broadcast onto each woreda ('ET-' org-unit prefix stripped at the join),
+      and annual POP-TOTAL population LEFT JOINed by (woreda by year);
+      population is NULL where the DHIS2 ingest carries no seeded value.
+    columns:
+      - name: woreda_uid
+        description: "Surveillance woreda id (DHIS2 org-unit code WOR-XX-…)."
+        tests: [not_null]
+      - name: woreda_name
+        tests: [not_null]
+      - name: region_id
+        description: "2-letter Ethiopian region code (path-derived, ET- stripped)."
+        tests: [not_null]
+      - name: disease_code
+        tests: [not_null]
+      - name: disease_label
+        tests: [not_null]
+      - name: year
+        description: "ISO year of the target week."
+        tests: [not_null]
+      - name: week
+        description: "ISO week number of the target week."
+        tests: [not_null]
+      - name: week_start
+        description: "Monday of the ISO week."
+        tests: [not_null]
+      - name: cases
+        description: "Confirmed cases; 0 when the week carried no report."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: deaths
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      - name: population
+        description: "Annual woreda population (POP-TOTAL). Nullable; models must tolerate NULL."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [woreda_uid, disease_code, year, week]
+      # Densification sanity: row_count == woredas by diseases by weeks lives in
+      # tests/ml_disease_input_densification.sql (needs cross-aggregate compare).
+
+  - name: mart_idsr_climate_drivers
+    description: |
+      Weekly disease signal cross-tabbed against rainfall/temperature anomalies
+      (z-scores within region) with the strongest lagged cases<->rainfall
+      correlation per region by disease. Populated from the climate source.
+    columns:
+      - name: region_id
+        tests: [not_null]
+      - name: disease_label
+        tests: [not_null]
+      - name: iso_week
+        tests: [not_null]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [region_id, disease_label, iso_week]
+
+  - name: mart_idsr_outbreaks
+    description: |
+      Outbreak episodes per (region by disease), derived from the weekly IDSR
+      fact with an EARS-style threshold (mean + 2·SD of the preceding 8 weeks,
+      per-disease minimum-case floor; consecutive flagged weeks collapse into
+      one episode). Carries declared/last week, totals, CFR%, peak, and an
+      active/contained status. The spine dz-outbreaks-table binds to; ML
+      trajectory enrichment from ops_ml.ml_predictions can attach to it.
+    columns:
+      - name: outbreak_id
+        tests: [not_null, unique]
+      - name: region_id
+        tests: [not_null]
+      - name: disease_code
+        tests: [not_null]
+      - name: declared_date
+        tests: [not_null]
+      - name: cases_total
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+      - name: cfr_pct
+        description: "Case-fatality ratio over the episode, percent."
+      - name: status
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['active', 'contained']

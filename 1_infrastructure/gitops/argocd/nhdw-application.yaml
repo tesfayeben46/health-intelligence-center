@@ -1,0 +1,55 @@
+# Argo CD Application for the NHDW app tier (optional day-2 GitOps).
+#
+# Argo CD reconciles the same Helm chart the Ansible deploy role installs
+# (1_infrastructure/helm/nhdw), so a git push becomes a declarative, self-healing upgrade.
+# It owns only the chart (workloads, Services, RBAC, Ingress, inline configMaps).
+#
+# It does not own:
+#   * the external-file configMaps and the Secrets: bootstrap prerequisites created by the
+#     deploy role or a secret store. The chart does not render them, so Argo CD never
+#     touches them.
+#   * the seed pack: a one-time data load, not a git-reconciled resource.
+# Ansible bootstraps once (cluster, CNI, configMaps, secrets, first seed), then Argo CD
+# reconciles the chart continuously. See ../README.md.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: nhdw
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: nhdw
+  source:
+    # Set to your repo (must match the AppProject's sourceRepos).
+    repoURL: https://github.com/YOUR-ORG/nhdw.git
+    # main tracks the latest commit; a production install should pin an immutable tag or
+    # commit (matching the versioned image refs) so each sync is an explicit, reviewable bump.
+    targetRevision: main
+    path: 1_infrastructure/helm/nhdw
+    helm:
+      # Topology is a values choice, same as the Ansible path. Fleet: values-fleet.yaml.
+      valueFiles:
+        - values-single.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: nhdw
+  syncPolicy:
+    # Day-2 self-healing: Argo CD corrects drift back to git, and prune removes objects deleted
+    # from the chart. CreateNamespace creates nhdw if the deploy role has not.
+    automated:
+      selfHeal: true
+      prune: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    retry:
+      limit: 5
+      backoff: { duration: 15s, factor: 2, maxDuration: 5m }
+  # Don't fight the gateway HPA: it owns the workload replica count, not git.
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: nhdw-gateway
+      jsonPointers:
+        - /spec/replicas

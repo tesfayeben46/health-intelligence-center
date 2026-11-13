@@ -1,0 +1,25 @@
+# dbt profile pointing at the staging ClickHouse engine.
+#
+# Connection details and password come from the Job environment.
+# Never commit secrets here.
+
+nhdw_staging:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      host: "{{ env_var('CH_HOST', 'clickhouse') }}"
+      port: "{{ env_var('CH_PORT', '8123') | int }}"
+      user: "{{ env_var('CH_USER', 'staging_writer') }}"
+      password: "{{ env_var('CH_PASSWORD') }}"
+      schema: "{{ env_var('CH_SCHEMA', 'nhdw_staging') }}"
+      secure: false
+      verify: false
+      connect_timeout: 10
+      send_receive_timeout: 1800
+      sync_request_timeout: 10
+      # CH-specific tuning. cluster mode is not used (single node).
+      cluster_mode: false
+      # check_exchange tries to CREATE/DROP a sentinel DB to test EXCHANGE
+      # privileges. staging_writer is scoped to nhdw_staging only, so the check is off.
+      check_exchange: false

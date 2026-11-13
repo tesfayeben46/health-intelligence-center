@@ -1,0 +1,30 @@
+dataset:
+  slug: submission-inbox
+  title: Producer submissions inbox
+  family: producer-inbox
+
+  source_system: submitted
+  schema: nhdw_landing
+  table: submission_inbox
+
+  data_classes: [DC.DOC]
+  sensitivity: default
+  subjects: [FAC]
+  contains_phi: false              # the *record* is non-PHI; the file bytes
+  pii_fields: [submitted_by]       # producer username (organisational, not personal)
+
+  owner_role: R-STEW
+  visible_to: [R-PROD-SUBMIT, R-DEC, R-STEW]    # producers see their own rows; steward sees all
+  writable_by: [R-PROD-SUBMIT]
+  k_anon_min: null
+  retention_days: 2555
+
+  format: sql-table
+  description: >
+    Persistent registry of every file submitted via the Submission Portal.
+    The portal INSERTs at upload time; consumers (R-DEC, R-STEW) SELECT.
+    The file bytes are not stored here; this table is the
+    authoritative record of "what was submitted, by whom, when".
+
+  last_reviewed_at: 2026-06-07
+  last_reviewer: R-STEW

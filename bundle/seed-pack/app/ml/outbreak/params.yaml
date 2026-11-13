@@ -1,0 +1,5 @@
+# Outbreak default hyperparameters (scalar keys overridable at predict time).
+z: 2.0                 # threshold = mean + z * spread
+week_window: 2         # same ISO-week +/- this many weeks form the baseline pool
+min_history_years: 2   # >= this many ISO-years per series activates the multi-year branch
+fallback_window: 8     # rolling preceding-N-week baseline when < min_history_years

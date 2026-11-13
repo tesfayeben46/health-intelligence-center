@@ -1,0 +1,15 @@
+region_id,region_name,population_mn
+OR,Oromia,38.0
+AM,Amhara,22.5
+AA,Addis Ababa,3.9
+SO,Somali,6.4
+SE,South Ethiopia,4.8
+CE,Central Ethiopia,4.2
+SW,South West Ethiopia,3.0
+TI,Tigray,5.7
+SI,Sidama,4.6
+BG,Benishangul-Gumuz,1.2
+AF,Afar,2.1
+GA,Gambella,0.5
+DD,Dire Dawa,0.5
+HA,Harari,0.3

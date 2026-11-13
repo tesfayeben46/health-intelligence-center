@@ -1,0 +1,182 @@
+{
+  "_note": "Zambia copy deck. Figures are published national indicators with their source named on each line: a demo that invents coverage numbers for a real country is worse than one that shows none.",
+  "govbar": {
+    "skip": "Skip to content",
+    "mark_text": "{platform.abbr}",
+    "mark_tag": "{ministry.name} · {country.name}",
+    "nav": {
+      "home": "Home",
+      "data": "Open data",
+      "articles": "Articles"
+    },
+    "request_access": "Request access",
+    "dashboards": "Dashboards"
+  },
+  "hero": {
+    "strip_volume": "Vol. 01",
+    "strip_series": "Public Series",
+    "strip_owner": "{ministry.name} · {country.name}",
+    "eyebrow": "Public health information service",
+    "headline_lead": "{country.name}'s health data,",
+    "headline_accent": "in one place.",
+    "headline_native": "",
+    "lede": "A single trusted entrance to dashboards, open data, and the analytic consoles that power public-health decisions, from a national bulletin down to a single {geography.admin2.singular_lower} in any of the {geography.admin1.count} {geography.admin1.plural_lower}.",
+    "trust": "Privacy-protected national health data",
+    "trust_title": "Aggregate and privacy-protected, k-anonymity at least 5, sourced from national health systems",
+    "cta_primary": "Open the data catalogue",
+    "cta_secondary": "Read the latest bulletins"
+  },
+  "footer": {
+    "brand_line": "{platform.name} · {platform.abbr}",
+    "owner_line": "{ministry.name} · {country.official_name}",
+    "columns": [
+      {
+        "title": "About",
+        "links": [
+          "Methodology",
+          "Governance",
+          "Contact"
+        ]
+      },
+      {
+        "title": "Open",
+        "links": [
+          "API docs",
+          "dbt docs",
+          "Code repository"
+        ]
+      },
+      {
+        "title": "Legal",
+        "links": [
+          "Privacy notice",
+          "Terms of use",
+          "Data licence"
+        ]
+      }
+    ]
+  },
+  "insights": {
+    "_note": "Published national figures for Zambia, each carrying its source. Used only when the gateway returns nothing; never fabricated deltas.",
+    "section_sub": "National coverage figures for {country.name} from the 2018 Demographic and Health Survey and WHO/UNICEF estimates, with programme indicators from the warehouse marts.",
+    "fallback_kpis": [
+      {
+        "key": "PENTA3-COV",
+        "kind": "coverage",
+        "order": 1,
+        "tone": "good",
+        "lbl": "Penta3 coverage",
+        "val": "90%",
+        "deltaTrend": "flat",
+        "deltaText": "WHO/UNICEF 2018",
+        "target": "GVAP target 90%"
+      },
+      {
+        "key": "ANC4-COV",
+        "kind": "coverage",
+        "order": 2,
+        "tone": "watch",
+        "lbl": "ANC4 coverage",
+        "val": "63%",
+        "deltaTrend": "up",
+        "deltaText": "ZDHS 2018, up from 55% in 2007",
+        "target": "national target 80%"
+      },
+      {
+        "key": "SBA-COV",
+        "kind": "coverage",
+        "order": 3,
+        "tone": "watch",
+        "lbl": "Skilled birth attendance",
+        "val": "80%",
+        "deltaTrend": "up",
+        "deltaText": "ZDHS 2018",
+        "target": "national target 90%"
+      },
+      {
+        "key": "FP-MCPR",
+        "kind": "coverage",
+        "order": 4,
+        "tone": "watch",
+        "lbl": "Modern contraceptive use",
+        "val": "48%",
+        "deltaTrend": "up",
+        "deltaText": "ZDHS 2018",
+        "target": "FP2030 commitment"
+      },
+      {
+        "key": "TB-TX-SUCC",
+        "kind": "outcome",
+        "order": 5,
+        "tone": "watch",
+        "lbl": "TB treatment success",
+        "val": "85%",
+        "deltaTrend": "flat",
+        "deltaText": "facility reports, Lusaka 2018",
+        "target": "WHO target 90%"
+      },
+      {
+        "key": "NUT-STUNT",
+        "kind": "outcome",
+        "order": 6,
+        "tone": "alert",
+        "lbl": "Under-5 stunting",
+        "val": "35%",
+        "deltaTrend": "up",
+        "deltaText": "ZDHS 2018, down from 40% in 2013-14",
+        "target": "SDG target <=25%"
+      },
+      {
+        "key": "ELMIS-AVAIL",
+        "kind": "trust",
+        "order": 7,
+        "tone": "info",
+        "lbl": "Tracer availability",
+        "val": "n/a",
+        "deltaTrend": "flat",
+        "deltaText": "computed from eLMIS",
+        "target": "Global Fund target 90%"
+      },
+      {
+        "key": "ELMIS-TIMELY",
+        "kind": "trust",
+        "order": 8,
+        "tone": "info",
+        "lbl": "R&R timeliness",
+        "val": "80%",
+        "deltaTrend": "up",
+        "deltaText": "eLMIS 2017-18, measured",
+        "target": "15 days after period close"
+      }
+    ]
+  },
+  "newsroom": {
+    "eyebrow": "Latest · News & bulletins",
+    "title": "What's happening",
+    "sub": "Weekly surveillance bulletins, official press releases from the {ministry.name}, and public-health advisories, most recent first."
+  },
+  "articles_page": {
+    "_note": "Masthead for the Articles page. {country.adjective} resolves to Zambian. The list itself is empty (see articles below) until a live Zambian newsroom is published.",
+    "eyebrow": "Newsroom",
+    "title": "News and health bulletins",
+    "sub": "Surveillance bulletins, official press releases and public-health advisories from {country.adjective} health institutions, most recent first."
+  },
+  "access": {
+    "_note": "Access-request modal. Zambia ships no profile.identity block, so the modal drops the identity-verification card entirely. Placeholders are illustrative Zambian examples.",
+    "title": "Request {platform.abbr} access",
+    "review_org": "{ministry.name} data governance",
+    "ph_name": "Dr Mwansa Phiri",
+    "ph_email": "mwansa.phiri@moh.gov.zm",
+    "ph_phone": "+260 97 000 0000",
+    "ph_org": "MoH / Provincial Health Office / ZNPHI / Partner",
+    "ph_role": "Programme officer, Provincial Health Director, Researcher"
+  },
+  "dashboards": {
+    "_note": "Audiences on the 'Open a dashboard' launcher. The first names Zambia's sub-national bodies (Provincial Health Offices).",
+    "bi_audience": "MoH staff · Provincial Health Offices · programme directors",
+    "admin_audience": "IT operations · security officers",
+    "workshop_audience": "Researchers · analysts · community contributors"
+  },
+  "articles": [],
+  "_articles_note": "Empty. The newsroom is served live from ops_governance.public_article; when that is empty the page shows nothing rather than falling back to Ethiopian bulletins, which would be worse than blank."
+}

@@ -1,0 +1,5 @@
+id: internal-bi/settings
+title: Profile & Settings
+ordering: 60
+sections:
+- internal-bi/settings/prefs

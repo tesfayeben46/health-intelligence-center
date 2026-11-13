@@ -1,0 +1,9 @@
+{
+  "version": "1.18.2",
+  "host": "127.0.0.1",
+  "port": 8094,
+  "protocol": "https",
+  "rejectUnauthorized": false,
+  "polling": 30,
+  "showFhirCapabilities": true
+}

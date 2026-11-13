@@ -1,0 +1,17 @@
+# dbt profile for postgres-vault.
+nhdw_vault:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('PG_HOST', 'postgres-vault') }}"
+      port: "{{ env_var('PG_PORT', '5432') | int }}"
+      user: "{{ env_var('PG_USER', 'vault_writer') }}"
+      password: "{{ env_var('PG_PASSWORD') }}"
+      dbname: "{{ env_var('PG_DATABASE', 'nhdw_vault') }}"
+      # Profile-level schema is unused: every model overrides via +schema
+      # and the generate_schema_name macro maps that verbatim.
+      schema: "{{ env_var('PG_SCHEMA', 'public') }}"
+      threads: 4
+      connect_timeout: 10
+      keepalives_idle: 0

@@ -1,0 +1,8 @@
+id: ct-movement
+title: Movement network
+kind: map
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

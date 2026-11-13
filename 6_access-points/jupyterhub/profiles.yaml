@@ -1,0 +1,58 @@
+# JupyterHub spawner profile catalogue. Each profile maps to a k8s pod-spec
+# resource block; the workshop UI lists them under "Open Workspace" and
+# "Request bigger pod".
+#
+# Single source for profile definitions: the hub spawner config and the
+# gateway's /api/workspace routes both mount this file.
+#
+# self_serve_roles lists the roles that may start a profile directly. A profile
+# with no self-serve roles is reached through the resource-request flow
+# (ops_governance.resource_request): an admin approves, and the next spawn uses
+# the granted resources.
+
+default_profile: Small
+
+profiles:
+  - slug: Small
+    display_name: "Small (1 CPU / 2 GiB)"
+    description: "Default. Notebooks, light pandas, charting, REST API exploration."
+    resources:
+      cpu_request:    "500m"
+      cpu_limit:      "1"
+      memory_request: "1Gi"
+      memory_limit:   "2Gi"
+    pvc_size: "5Gi"
+    self_serve_roles: ["R-CONS-ANA", "R-CONS-SCI", "R-CONS-RES", "R-CONS-PRT", "R-STEW"]
+
+  - slug: Medium
+    display_name: "Medium (2 CPU / 4 GiB)"
+    description: "ML notebooks, sklearn / xgboost / statsmodels at meaningful scale."
+    resources:
+      cpu_request:    "1"
+      cpu_limit:      "2"
+      memory_request: "2Gi"
+      memory_limit:   "4Gi"
+    pvc_size: "10Gi"
+    self_serve_roles: ["R-CONS-SCI", "R-STEW"]
+
+  - slug: Large
+    display_name: "Large (4 CPU / 8 GiB)"
+    description: "Whole-dataset analysis. Subject to admin approval via the resource-request flow."
+    resources:
+      cpu_request:    "2"
+      cpu_limit:      "4"
+      memory_request: "4Gi"
+      memory_limit:   "8Gi"
+    pvc_size: "20Gi"
+    self_serve_roles: []        # request-only
+
+  - slug: XLarge
+    display_name: "XLarge (8 CPU / 16 GiB)"
+    description: "Heavy ML training / wide federated queries. Request-only."
+    resources:
+      cpu_request:    "4"
+      cpu_limit:      "8"
+      memory_request: "8Gi"
+      memory_limit:   "16Gi"
+    pvc_size: "40Gi"
+    self_serve_roles: []        # request-only

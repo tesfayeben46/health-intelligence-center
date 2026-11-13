@@ -1,0 +1,70 @@
+# MFR source replica, external to the k8s cluster: stands in for the Ministry of
+# Health's Master Facility Registry. Real HAPI FHIR R4 JPA server.
+#
+# The real MFR exposes FHIR R4 at https://mfr.moh.gov.et/fhir/Organization
+# behind TLS and Keycloak bearer tokens. The replica replaces that edge with a
+# plain HAPI FHIR JPA server on H2 so it runs offline; the dlt-MFR ingestor uses
+# the same path (/fhir/Organization), so the wiring matches production.
+#
+# Seeding from a fresh clone:
+#   1. docker compose -f 0_external/sources/MFR/docker-compose.yml up -d
+#   2. wait until healthy (curl :8093/fhir/metadata)
+#   3. python3 0_external/sources/MFR/scripts/seed.py   (posts transaction bundles:
+#      country root, regions, zones, woredas and facilities from the shared entity model)
+#   4. bash 0_external/sources/MFR/scripts/verify.sh
+# The in-cluster dlt ingestor then pulls /fhir/* through host.k3d.internal:8093.
+# The warehouse's MFR landing tables are loaded directly by
+# bundle/scripts/seed-realistic.sh (see docs/data-provenance.md).
+#
+# Ports are published on 0.0.0.0 (not 127.0.0.1) so k3d pods can reach them
+# through host.k3d.internal. The stack has no nhdw_net attachment: it is the
+# outside world.
+services:
+  mfr-fhir:
+    image: hapiproject/hapi:v8.0.0
+    container_name: nhdw-mfr-fhir
+    restart: unless-stopped
+    # The HAPI v8 image runs as a non-root jetty user, but named docker volumes
+    # default to root ownership, which blocks H2 from writing its trace/MV files.
+    # Root is acceptable for a local source replica; change it before exposing
+    # the server.
+    user: "0:0"
+    environment:
+      # FHIR engine settings
+      hapi.fhir.fhir_version:           R4
+      hapi.fhir.openapi_enabled:        "true"
+      hapi.fhir.cors.allow_Credentials: "false"
+      hapi.fhir.cors.allowed_origin:    "*"
+      hapi.fhir.allowed_bundle_types:   "TRANSACTION,BATCH,COLLECTION"
+      hapi.fhir.bulk_export_enabled:    "true"
+      # H2 persistent backing store (survives container restarts); heap capped at 1 GB.
+      spring.datasource.url:            "jdbc:h2:file:/data/h2/mfr;DB_CLOSE_DELAY=-1;CACHE_SIZE=131072"
+      spring.datasource.username:       sa
+      spring.datasource.password:       ${MFR_DB_PASSWORD:-}
+      spring.datasource.driverClassName: "org.h2.Driver"
+      spring.jpa.properties.hibernate.dialect: "ca.uhn.fhir.jpa.model.dialect.HapiFhirH2Dialect"
+      JAVA_OPTS: "-Xms256m -Xmx1024m"
+    ports:
+      - "8093:8080"          # 0.0.0.0: reachable from k3d pods through host.k3d.internal
+    volumes:
+      # Named docker volumes avoid the container-user vs host-uid mismatch of bind
+      # mounts and persist across restarts and `docker compose down`. Do not run
+      # `down -v`: re-seeding regenerates fhir_id, the vault hub business key,
+      # which orphans the vault.
+      - mfr_h2:/data/h2
+      - mfr_lucene:/var/lib/jetty/target/lucenefiles
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/fhir/metadata | grep -q resourceType || exit 1"]
+      interval: 10s
+      timeout:  5s
+      retries:  30
+      start_period: 30s
+    networks: [mfr_net]
+
+networks:
+  mfr_net:
+    driver: bridge
+
+volumes:
+  mfr_h2:
+  mfr_lucene:

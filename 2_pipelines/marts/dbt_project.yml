@@ -1,0 +1,150 @@
+name: 'nhdw_marts'
+version: '0.1.0'
+config-version: 2
+
+profile: 'nhdw_marts'
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# --- materialisation defaults ---
+#
+# Marts default to `view`: cheap and always fresh against the vault. Promote
+# individual heavy ones to `materialized: table` with an explicit override
+# when query cost shows up.
+#
+# Public marts (bi_public.*) are tables, because Trino's Postgres connector
+# reads aggregate column types reliably only from tables. Each marts run
+# rebuilds them from the vault, applying the k-anonymity filters in SQL.
+#
+# The bi_* schemas themselves are not created here; they are declared in
+# 3_storage/postgres/init/01_schemas.sql and owned by vault_writer.
+
+seeds:
+  nhdw_marts:
+    # Public reference seeds (indicator labels + HSDIP targets, region names)
+    # land in bi_public and are readable by bi_reader / Trino, same as the
+    # public marts that join them.
+    +schema: bi_public
+    +post-hook:
+      - "ALTER TABLE {{ this }} OWNER TO vault_admin"
+      - "GRANT SELECT ON {{ this }} TO bi_reader"
+    # Governance contract seed sits with its consumer (mart_data_quality),
+    # not with the public reference seeds.
+    reporting_deadlines:
+      +schema: bi_quality
+    # PCT seeds describe the Zambia eLMIS archive, which is internal-only; they
+    # must never land in bi_public beside the public reference seeds.
+    pct_gf_tracer_category:
+      +schema: bi_supply
+      +column_types: { product_code: text }
+    pct_kpi_definitions:
+      +schema: bi_supply
+      +column_types: { target: numeric }
+    pct_policy_parameters:
+      +schema: bi_supply
+      +column_types: { value: numeric }
+
+on-run-end:
+  - "GRANT USAGE ON SCHEMA bi_mdm TO bi_reader"
+
+models:
+  nhdw_marts:
+    +materialized: view
+    # Push the description: field from _models.yml down into Postgres as
+    # COMMENT ON. The Internal BI dataset-catalog page reads it via
+    # obj_description() and shows it to data stewards (R-STEW).
+    +persist_docs:
+      relation: true
+      columns: true
+
+    # When dbt is run by an OpenBao-issued short-TTL Postgres user, the
+    # CREATE VIEW makes that user the OWNER. Once OpenBao revokes the
+    # lease, the view becomes orphaned and nobody can SELECT from it.
+    #
+    # Two post-hooks fix that for every model in this project:
+    #   1. ALTER … OWNER TO vault_admin: stable, never revoked.
+    #   2. GRANT  SELECT TO bi_reader: explicit; cannot fall off
+    #      because the user that issued the GRANT goes away.
+    +post-hook:
+      - "ALTER {{ 'TABLE' if config.get('materialized') == 'table' else 'VIEW' }} {{ this }} OWNER TO vault_admin"
+      - "GRANT SELECT ON {{ this }} TO bi_reader"
+
+    facility_distribution:
+      +schema: bi_facility
+      +tags: ["mart:facility"]
+      public:
+        +schema: bi_public
+
+    # Marts pending governance approval. Models land in bi_staging and
+    # are promoted to bi_<domain> via the gateway graduation flow
+    # (POST /api/graduation/{id}/promote).
+    staging:
+      +schema: bi_staging
+      +tags: ["mart:staging", "promotion-required"]
+
+    mdm:
+      +schema: bi_mdm
+      +tags: ["mart:mdm"]
+      # bi_mdm is declared in 3_storage/postgres/init/07_marts_schemas_extras.sql for cold
+      # boots; on a cluster booted before that, dbt creates it as vault_writer. The USAGE
+      # grant for bi_reader is issued once in on-run-end (below): a per-model post-hook
+      # makes parallel threads collide on the schema row ("tuple concurrently updated").
+    supply_chain:
+      +schema: bi_supply
+      +tags: ["mart:supply"]
+      public:
+        +schema: bi_public
+
+    # Mart families read the business vault: coverage counts ride
+    # the BV spine (lnk_facility_indicator_period by dim_facility / dim_period /
+    # hub_indicator_conformed), identity decode comes from the resolution
+    # views (v_facility_resolution / v_programme_resolution), period parsing
+    # from sat_dhis2_period_resolved, and every satellite read goes through
+    # the v_*_current views. Raw-vault reads are limited to hubs (BKs) and
+    # links (fact edges).
+    hmis_coverage:
+      +schema: bi_hmis
+      +tags: ["mart:hmis"]
+      +materialized: table
+      public:
+        +schema: bi_public
+
+    idsr:
+      +schema: bi_idsr
+      +tags: ["mart:idsr"]
+      +materialized: table
+      public:
+        +schema: bi_public
+
+    service_performance:
+      +schema: bi_service
+      +tags: ["mart:service"]
+      +materialized: table
+
+    data_quality:
+      +schema: bi_quality
+      +tags: ["mart:quality"]
+      +materialized: table
+      public:
+        +schema: bi_public
+
+    governance:
+      +schema: bi_governance
+      +tags: ["mart:governance"]
+      +materialized: table
+      # bi_governance is declared in 3_storage/postgres/init/
+      # 07_marts_schemas_extras.sql (cold boot). On a cluster booted before
+      # that file knew the schema, dbt creates it as vault_writer and
+      # bi_reader would lack USAGE, so it is granted here (hooks are additive with
+      # the project-level owner/SELECT hooks) so the governed read path
+      # (Trino/bi_reader) always sees governance marts.
+      +post-hook:
+        - "GRANT USAGE ON SCHEMA {{ this.schema }} TO bi_reader"

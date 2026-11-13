@@ -1,0 +1,19 @@
+# lake catalog: Iceberg over the SeaweedFS object store (nhdw-lake bucket).
+#
+# The hadoop catalog stores Iceberg metadata files alongside the data
+# inside the bucket, so no separate Hive Metastore container is needed.
+# Tables are created by the marts->parquet snapshot job at
+# paths like  s3a://nhdw-lake/marts/<mart_name>/dt=YYYY-MM-DD/.
+#
+# Until that snapshot job runs the catalog has no tables; Trino still
+# starts and the catalog is reachable; SELECTs just return empty.
+
+connector.name=iceberg
+iceberg.catalog.type=hadoop
+iceberg.file-format=PARQUET
+hive.s3.aws-access-key=changeme-lake-s3-access-key
+hive.s3.aws-secret-key=changeme-lake-s3-secret-key
+hive.s3.endpoint=http://minio:9000
+hive.s3.path-style-access=true
+hive.s3.ssl.enabled=false
+hive.metastore.catalog.dir=s3a://nhdw-lake/_catalog/

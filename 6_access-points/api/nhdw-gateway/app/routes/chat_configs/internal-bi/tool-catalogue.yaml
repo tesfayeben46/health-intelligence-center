@@ -1,0 +1,138 @@
+# Declarative chatbot tool catalogue for Internal-BI.
+#
+# Each tool entry:
+#   id              tool name passed to the LLM
+#   tool_group      'read' | 'run_sql' | 'interact'; the user must hold the
+#                   matching 'assistant:<tool_group>' role_capability
+#                   (assistant:read, assistant:run_sql, assistant:interact)
+#                   for the tool to be exposed.
+#   requires        optional further checks the gateway computes at
+#                   request time before exposing the tool:
+#                   - capability: <code>  user must have this role_capability
+#                   - widget: <id>        user must have role_widget for the
+#                                         given widget_id on dashboard internal-bi
+#                                         (e.g. ex-sql-editor for SQL Lab tools)
+#   description     fed to the LLM as the tool description
+#   executor        'spa' (gateway returns tool call to SPA which executes
+#                   via window.__nhdwDashboard) | 'gateway' (gateway calls
+#                   another endpoint and returns the result directly)
+#   parameters      JSON-schema-style spec passed to Ollama tools[]
+
+tools:
+  # read
+  - id: read_page
+    tool_group: read
+    description: "Read the current dashboard page. Returns the page id, global filters applied, and a summary of every visible widget."
+    executor: spa
+    parameters:
+      type: object
+      properties: {}
+
+  - id: read_widget
+    tool_group: read
+    description: "Read a specific widget's currently-displayed data. Returns {id, title, data:{columns, rows}, text_preview}; `data` is the widget's REAL last-fetched rows (use these numbers); it is null for non-tabular widgets, in which case fall back to `text_preview`."
+    executor: spa
+    parameters:
+      type: object
+      properties:
+        widget_id: {type: string, description: "the widget id (e.g. 'dz-outbreaks-table', 'sv-cascade-hiv')"}
+      required: [widget_id]
+
+  - id: read_widget_input
+    tool_group: read
+    requires:
+      widget: ex-sql-editor       # only available if the SQL editor widget is granted
+    description: "Read the current value of an input widget (e.g. the SQL editor on the Export page)."
+    executor: spa
+    parameters:
+      type: object
+      properties:
+        widget_id: {type: string}
+      required: [widget_id]
+
+  # run_sql (query narrowing loop: list_marts -> describe_mart -> run_sql)
+  - id: list_marts
+    tool_group: run_sql
+    description: "List the data marts you can query: each mart's name (schema.table), subject, granularity and a one-line description. Call this FIRST when the answer is a number that isn't on any page, to find the right mart. Returns catalog metadata only, no rows."
+    executor: gateway
+    parameters:
+      type: object
+      properties: {}
+
+  - id: describe_mart
+    tool_group: run_sql
+    description: "Return the columns (name + type) of ONE mart from list_marts. Call this after list_marts and BEFORE run_sql, so you write SQL against columns that actually exist."
+    executor: gateway
+    parameters:
+      type: object
+      properties:
+        mart: {type: string, description: "a mart as schema.table, e.g. 'bi_public.mart_public_summary' (from list_marts)"}
+      required: [mart]
+
+  - id: run_sql
+    tool_group: run_sql
+    description: "Run a single SELECT (PostgreSQL/Trino dialect, fully-qualified table names, LIMIT mandatory). Returns up to 500 rows. Use ONLY mart/column names you have already seen via list_marts + describe_mart; never invent a name. Call this ONLY when the user explicitly asks to run/execute a query. If they only asked to write/place/draft a query in the editor, use write_widget_input with and_run:false instead and do NOT run."
+    executor: gateway              # gateway calls /api/sql/execute internally
+    parameters:
+      type: object
+      properties:
+        sql: {type: string, description: "one SELECT statement, fully qualified"}
+      required: [sql]
+
+  # interact
+  - id: navigate_to_page
+    tool_group: interact
+    description: "Switch the user to a different page on this dashboard. Returns {ok} or {error: 'no access'}."
+    executor: spa
+    parameters:
+      type: object
+      properties:
+        page_id: {type: string, description: "page id (e.g. 'internal-bi/disease')"}
+      required: [page_id]
+
+  - id: apply_global_filter
+    tool_group: interact
+    description: "Set a page-level filter (region, period, programme, etc.). Values are intersected with the user's allowed scope."
+    executor: spa
+    parameters:
+      type: object
+      properties:
+        name:  {type: string}
+        value: {type: string}
+      required: [name, value]
+
+  - id: apply_widget_filter
+    tool_group: interact
+    description: "Set a widget-local filter."
+    executor: spa
+    parameters:
+      type: object
+      properties:
+        widget_id: {type: string}
+        name:      {type: string}
+        value:     {type: string}
+      required: [widget_id, name, value]
+
+  - id: write_widget_input
+    tool_group: interact
+    requires:
+      widget: ex-sql-editor
+    description: "Replace the contents of an input widget. Targets the editor control inside the card (e.g. the SQL Lab textarea on the Export page, widget_id 'ex-sql-editor'). Build SQL ONLY from marts/columns seen via list_marts + describe_mart; never invent a name. DEFAULT to and_run:false: this just PLACES the SQL and clicks nothing; use it when the user says write/place/put/draft, then STOP (do not call run_sql, do not report a result). Set and_run:true to also click Run (executes the SQL) ONLY when the user explicitly asks to run/execute. Call this LAST; never navigate_to_page after writing, it re-mounts the page and wipes the editor."
+    executor: spa
+    parameters:
+      type: object
+      properties:
+        widget_id: {type: string}
+        value:     {type: string}
+        and_run:   {type: boolean, description: "omit or false = only place the SQL, run nothing (use when asked to write/place/draft); true = click Run after writing (use ONLY when explicitly asked to run/execute)"}
+      required: [widget_id, value]
+
+  - id: scroll_to_widget
+    tool_group: interact
+    description: "Scroll the page so the named widget is in view + briefly highlight it."
+    executor: spa
+    parameters:
+      type: object
+      properties:
+        widget_id: {type: string}
+      required: [widget_id]

@@ -1,0 +1,119 @@
+name: Deploy to k3s (push -> redeploy)
+
+# Continuous deployment on pushes to main and develop only. Runs on a self-hosted
+# runner on the k3s host, so it has docker, kubectl and the repo without SSH. It
+# rebuilds only the images whose source changed, imports them into k3s, restarts the
+# affected workloads, reseeds catalog and RBAC when those seeds changed, and verifies.
+# develop is the integration branch: feature work merges there and is deployed and
+# tested on the cluster before it reaches main.
+# The from-bare install (provision k3s and run the full seed) is `provision.yml`.
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      # app tier
+      - '6_access-points/**'
+      - '5_orchestrator/**'                       # DAGs baked into nhdw/airflow
+      - 'bundle/seed-pack/app/security/**'
+      - '7_security/scripts/**'
+      - '7_security/opa/**'                       # policy source -> regen + reload
+      - 'bundle/roles/**'                         # role YAMLs -> reseed + policy regen
+      - '2_pipelines/ml/registry/validators.py'   # baked into nhdw/gateway
+      - 'bundle/scripts/ci-redeploy.sh'
+      # k8s manifests: checked against the cluster, not applied (see ci-redeploy)
+      - '1_infrastructure/k8s/**'
+      # data tier (pipeline images, init DDL, reference vocabulary, MDM)
+      - '2_pipelines/staging/**'
+      - '2_pipelines/vault/**'
+      - '2_pipelines/marts/**'
+      - '2_pipelines/mdm/**'
+      - '3_storage/postgres/init/**'
+      - 'bundle/seeds/ref-vocab/**'
+      # Country profiles are a hostPath the gateway reads; a profile edit must
+      # trigger a redeploy to reach the deployment.
+      - 'bundle/profiles/**'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Redeploy scope: "all" for everything, or blank for changed-only'
+        required: false
+        default: ''
+
+concurrency:
+  # One group for every workflow that mutates the cluster. Provisioning and a
+  # redeploy both drive the same release; running them at once races two
+  # upgrades and can leave the release stuck mid-transaction. Queue rather than
+  # cancel: an interrupted deploy is worse than a slow one.
+  #
+  # GitHub keeps at most one pending run per group, so a third arrival cancels
+  # the one already waiting. A push while a manual scope=all dispatch is queued
+  # cancels that dispatch; re-trigger it after the in-flight run finishes.
+  group: nhdw-cluster
+  cancel-in-progress: false
+
+jobs:
+  redeploy:
+    runs-on: [self-hosted, nhdw]
+    env:
+      KUBECONFIG: ${{ secrets.NHDW_KUBECONFIG_PATH }}
+      NS: nhdw
+      # verify-system probes the live ingress, so this must match the deployed
+      # hostBase (it defaults to 127.0.0.1.nip.io and would report a false outage)
+      NHDW_HOSTBASE: ${{ vars.NHDW_HOSTBASE }}
+      # The deployment's own secrets.yaml (gitignored), used only to render the
+      # overlay; Secrets are never applied from CI.
+      NHDW_SECRETS_FILE: ${{ vars.NHDW_SECRETS_FILE }}
+    steps:
+      # Checkout cleans this work dir (git clean -ffdx, then delete and recreate if
+      # that fails), which removes files that containers or systemd units run from.
+      # Refuse to run while anything on the host lives in the work dir or checkout
+      # cannot clean it. Runs before checkout, so it is inline;
+      # bundle/scripts/predeploy-check.sh is the fuller pre-flight.
+      # Actions runs this with bash -eo pipefail: a grep that finds nothing exits 1,
+      # so every lookup ends in `|| true` or a clean work dir fails the guard.
+      - name: Guard, the runner work dir must be disposable
+        shell: bash
+        run: |
+          ws="$GITHUB_WORKSPACE"; me="$(id -un)"; bad=0
+          if [ -d "$ws" ]; then
+            m=$(docker ps -aq | xargs -r docker inspect -f '{{.Name}} {{range .Mounts}}{{.Source}} {{end}}' \
+                | grep -F "$ws" | awk '{print $1}' | tr -d / | tr '\n' ' ' || true)
+            [ -n "$m" ] && { echo "::error::containers mount files from $ws: $m"; bad=1; }
+            u=$(grep -lF "$ws" /etc/systemd/system/*.service 2>/dev/null | xargs -r -n1 basename | tr '\n' ' ' || true)
+            [ -n "$u" ] && { echo "::error::systemd units run from $ws: $u"; bad=1; }
+            f=$(find "$ws" -xdev ! -user "$me" -print -quit 2>/dev/null || true)
+            [ -n "$f" ] && { echo "::error::checkout cannot clean $ws, not owned by $me: $f"; bad=1; }
+          fi
+          [ "$bad" = 0 ] && echo "work dir is disposable: $ws"
+          exit "$bad"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute redeploy scope
+        id: scope
+        run: |
+          if [ -n "${{ github.event.inputs.scope }}" ]; then
+            echo "value=${{ github.event.inputs.scope }}" >> "$GITHUB_OUTPUT"
+          else
+            # whole push range, not just the last commit (HEAD~1 misses the
+            # earlier commits of a multi-commit push); fall back on force-push
+            # or first push where event.before is unknown/all-zeros
+            changed="$(git diff --name-only "${{ github.event.before }}" "${{ github.event.after }}" 2>/dev/null | tr '\n' ' ')" \
+              || changed=""
+            [ -z "$changed" ] && changed="$(git diff --name-only HEAD~1 HEAD | tr '\n' ' ')"
+            echo "value=${changed:-all}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Redeploy changed components
+        run: bash bundle/scripts/ci-redeploy.sh "${{ steps.scope.outputs.value }}"
+
+      # Host services (the profile-swap worker) run from /opt/nhdw-runtime, never
+      # from this work dir; keep that copy at the commit that just deployed.
+      - name: Sync the host runtime copy
+        run: |
+          [ -d /opt/nhdw-runtime ] || { echo "no /opt/nhdw-runtime on this host, skipped"; exit 0; }
+          rsync -a --delete --exclude .git --exclude 0_external/llm/models "$GITHUB_WORKSPACE"/ /opt/nhdw-runtime/
+          echo "$GITHUB_SHA" > /opt/nhdw-runtime/.deployed-sha

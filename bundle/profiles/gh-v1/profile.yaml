@@ -1,0 +1,93 @@
+# Profile · gh-v1 · Ghana
+#
+# The third country profile, exercising the mechanism beyond the first two: a
+# different administrative vocabulary (Region -> District, like Zambia but with
+# sixteen regions), a different currency and health plan, and an English-only
+# masthead with no native script.
+#
+# Based on public reference data: Ghana's sixteen regions (the 2019
+# reorganisation), their capitals and 2021 PHC populations; boundaries are
+# geoBoundaries ADM1 (CC BY 4.0). Published national indicators are cited on
+# each figure in the copy deck; no coverage figures are invented.
+#
+# Presentation layer only. This profile swaps chrome, copy, geography,
+# reference vocabulary and the public portal. It carries no ingested Ghana
+# source data (that would be a full additive pipeline run, like the Zambian
+# eLMIS data), so catalog.yaml disables the data-bound internal-BI pages. The
+# public portal stands on its own: its headline figures are published
+# GDHS/WUENIC numbers in the copy deck.
+#
+# As with Zambia, there is no native block: English is Ghana's official
+# language, so the SPA omits the native headline rather than rendering an empty
+# element.
+key: gh-v1
+label: Ghana
+revision: 1
+
+country:
+  name: Ghana
+  official_name: Republic of Ghana
+  adjective: Ghanaian
+  iso2: GH
+  iso3: GHA
+  # No native block: English is the official language.
+
+ministry:
+  abbr: Palladium
+  name: Palladium
+  # logo omitted: the SPA falls back to the bundled Palladium wordmark. A
+  # production deployment ships the operating organisation's own file here.
+
+platform:
+  name: Data Intelligence Platform
+  abbr: Palladium
+
+geography:
+  # Ghana: Region -> District (MMDA) -> sub-district. Two levels, like Zambia, but
+  # sixteen regions and 261 districts. The dashboards read these labels instead
+  # of saying "woreda" or "province" in their own markup.
+  levels:
+    - {code: admin1, singular: Region,   plural: Regions}
+    - {code: admin2, singular: District, plural: Districts}
+  admin1: geo/admin1.geojson
+  world: _shared/world-land-110m.geojson
+
+brand:
+  # Ghana flag red, far from Ethiopia's blue and Zambia's green so a
+  # profile swap is unmistakable on screen.
+  accent: "#ce1126"
+
+locale:
+  default: en
+  fiscal_calendar: gregorian
+  currency: {code: GHS, symbol: "₵"}
+
+health_plan:
+  abbr: HSMTDP
+  name: Health Sector Medium-Term Development Plan
+
+# No `identity` block: Ghana's national-ID (the Ghana Card) is not wired behind
+# this gateway, so the public access modal drops the verification card rather
+# than offering a form that posts to an endpoint that does not exist here.
+
+# The other two layers
+# Named here so one profile key resolves all three, but applied by the seed
+# steps rather than read by the browser. gh-v1 has no ingested data layer;
+# these point at the scaffolding a pipeline run would use.
+layers:
+  appsec:
+    users: seed-pack/app/security/users.yaml
+    note: >-
+      No Ghana-specific demo cast yet; a Ghana appsec seed (regional scopes over
+      the sixteen regions) is pending alongside the data layer.
+  data:
+    sources: bundle/seeds/sources
+    entity_model: bundle/seeds/entity-model/entity-model.yaml
+    note: >-
+      PENDING. Ghana carries no ingested source data. A coherent internal-BI
+      under gh-v1 needs synthetic Ghana sources (DHIS2 org units over the
+      sixteen regions, a supply system, an EMR) ingested as ADDITIVE tables that
+      coexist with the Ethiopian and Zambian data; never a pipeline run that
+      overwrites the shared vault/marts, which would break the et-v3 demo. Until
+      then catalog.yaml turns the data-bound BI pages off and the public portal
+      stands on its own published figures.

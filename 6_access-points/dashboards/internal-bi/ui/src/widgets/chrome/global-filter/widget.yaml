@@ -1,0 +1,7 @@
+id: chrome/global-filter
+title: Global filter bar
+kind: custom
+placement: chrome.topbar
+description: Per-page global filters (Region / Period / Programme), a registry widget
+  mounted in the pageframe chrome slot; chips + allowed values are driven entirely
+  by ops_perm role_global_filter grants (everything-is-a-widget).

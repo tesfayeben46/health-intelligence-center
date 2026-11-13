@@ -1,0 +1,221 @@
+# Sample users (fictional) and their initial role assignments. Loaded into
+# ops_identity.user (upsert) and ops_perm.user_role (granted with
+# source='admin_grant' so later JIT logins do not overwrite them).
+#
+# kc_sub UUIDs match the DEV_AUTH defaults used by the dashboards and the
+# gateway, so local development without Keycloak resolves to these accounts.
+#
+# Realm reference:
+#   moh-staff       ministry staff (BI, admin, workshop)
+#   privileged-ops  privileged actions (admin, security)
+# (Fayda is a verification-only integration on the public access-request
+#  form, not a login realm; there is no citizen sign-in.)
+
+- kc_sub:     a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+  username:   solomon.m
+  email:      solomon.m@moh.gov.et
+  full_name:  Solomon Mengistu
+  realm:      privileged-ops
+  role_label: R-OPS-ADM
+  roles:      [R-OPS-ADM]
+
+- kc_sub:     11111111-2222-3333-4444-555555555555
+  username:   hana.d
+  email:      hana.d@moh.gov.et
+  full_name:  Hana Demissie
+  realm:      privileged-ops
+  role_label: R-OPS-ADM
+  roles:      [R-OPS-ADM]
+
+- kc_sub:     22222222-3333-4444-5555-666666666666
+  username:   selam.t
+  email:      selam.t@nhdw.gov.et
+  full_name:  Selam Tesema
+  realm:      moh-staff
+  role_label: R-CONS-ANA
+  roles:      [R-CONS-ANA]
+
+- kc_sub:     33333333-4444-5555-6666-777777777777
+  username:   abebe.bekele
+  email:      abebe.bekele@moh.gov.et
+  full_name:  Dr Abebe Bekele
+  realm:      moh-staff
+  role_label: R-PD-HIV
+  roles:      [R-PD-HIV]
+  # HIV programme director: data and filters scoped to the HIV programme
+  # (OPA row_filter via ops_identity.user_scope; see common.rego R-PD-HIV route).
+  scope:
+    programme: [HIV]
+
+- kc_sub:     44444444-5555-6666-7777-888888888888
+  username:   tadesse.h
+  email:      tadesse.h@moh.gov.et
+  full_name:  Dr Tadesse Haile
+  realm:      moh-staff
+  role_label: R-DEC
+  roles:      [R-DEC]
+
+- kc_sub:     55555555-6666-7777-8888-999999999999
+  username:   kebede.asfaw
+  email:      k.asfaw@rhb-oromia.gov.et
+  full_name:  Kebede Asfaw
+  realm:      moh-staff
+  role_label: R-RHB-OROMIA
+  roles:      [R-RHB-OROMIA]
+  # Oromia Regional Health Bureau head: data and filters scoped to region OR.
+  scope:
+    geography: [OR]
+
+- kc_sub:     66666666-7777-8888-9999-aaaaaaaaaaaa
+  username:   yohannes.h
+  email:      yohannes@ephi.gov.et
+  full_name:  Dr Yohannes Hadgu
+  realm:      moh-staff
+  role_label: R-OPS-ENG
+  roles:      [R-OPS-ENG]
+
+- kc_sub:     77777777-8888-9999-aaaa-bbbbbbbbbbbb
+  username:   tigist.bekele
+  email:      tigist.b@moh.gov.et
+  full_name:  Dr Tigist Bekele
+  realm:      moh-staff
+  role_label: R-CONS-SCI
+  roles:      [R-CONS-SCI]
+
+- kc_sub:     88888888-9999-aaaa-bbbb-cccccccccccc
+  username:   genet.e
+  email:      genet.e@aau.edu.et
+  full_name:  Genet Endale
+  realm:      moh-staff
+  role_label: R-CONS-RES
+  roles:      [R-CONS-RES]
+
+- kc_sub:     99999999-aaaa-bbbb-cccc-dddddddddddd
+  username:   shewaye.a
+  email:      shewaye@partners.org
+  full_name:  Shewaye Ayele
+  realm:      moh-staff
+  role_label: R-CONS-PRT
+  roles:      [R-CONS-PRT]
+
+# PHEM / EPHI
+- kc_sub:     aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+  username:   meron.m
+  email:      meron@epss.gov.et
+  full_name:  Meron Mengistu
+  realm:      moh-staff
+  role_label: R-DEC
+  roles:      [R-DEC]
+
+- kc_sub:     bbbbbbbb-cccc-dddd-eeee-ffffffffffff
+  username:   demo.steward
+  email:      stew@nhdw.gov.et
+  full_name:  Demo Data Steward
+  realm:      moh-staff
+  role_label: R-STEW
+  roles:      [R-STEW]
+
+# The steward's decision-console identity. The MDM stewardship page lives on
+# the admin dashboard, which authenticates against privileged-ops; a moh-staff
+# steward (demo.steward above, whose home is the workshop) cannot log in there,
+# and one Keycloak user cannot span realms. Same person, ops-realm account.
+- kc_sub:     bbbbbbbb-cccc-dddd-eeee-000000000001
+  username:   steward.ops
+  email:      stew.ops@nhdw.gov.et
+  full_name:  Demo Data Steward (Ops)
+  realm:      privileged-ops
+  role_label: R-STEW
+  roles:      [R-STEW]
+
+# Sec officer
+- kc_sub:     cccccccc-dddd-eeee-ffff-000000000000
+  username:   sec.officer
+  email:      sec@nhdw.gov.et
+  full_name:  Demo Security Officer
+  realm:      privileged-ops
+  role_label: R-OPS-SEC
+  roles:      [R-OPS-SEC]
+  mfa:        true   # TOTP enrolment: CONFIGURE_TOTP required action
+
+# Super-user
+- kc_sub:     dddddddd-eeee-ffff-0000-111111111111
+  username:   root
+  email:      root@nhdw.local
+  full_name:  NHDW Root
+  realm:      privileged-ops
+  role_label: R-SUPER
+  roles:      [R-SUPER]
+
+# Cross-realm super-user (test account: R-SUPER in both realms, so access to
+#    every access point: internal-bi, workshop, public and admin). Password is
+#    SEED_PASSWORD like every seeded user. Two Keycloak identities (one per
+#    realm), same username and password.
+- kc_sub:     55555555-5555-5555-5555-555555555555
+  username:   superadmin
+  email:      superadmin@nhdw.local
+  full_name:  NHDW Super Admin
+  realm:      moh-staff
+  role_label: R-SUPER
+  roles:      [R-SUPER]
+- kc_sub:     66666666-6666-6666-6666-666666666666
+  username:   superadmin
+  email:      superadmin@nhdw.local
+  full_name:  NHDW Super Admin
+  realm:      privileged-ops
+  role_label: R-SUPER
+  roles:      [R-SUPER]
+
+# Root login (admin)
+#    R-SUPER in both realms, so every access point. Uses SEED_PASSWORD like every
+#    other seeded user. This account (same kc_sub) is defined in every profile's user
+#    file (users.zm.yaml too), so the login is stable across a profile switch.
+- kc_sub:     aaaaaaaa-0000-0000-0000-000000000001
+  username:   admin
+  email:      admin@nhdw.local
+  full_name:  NHDW Admin
+  realm:      moh-staff
+  role_label: R-SUPER
+  roles:      [R-SUPER]
+- kc_sub:     aaaaaaaa-0000-0000-0000-000000000002
+  username:   admin
+  email:      admin@nhdw.local
+  full_name:  NHDW Admin
+  realm:      privileged-ops
+  role_label: R-SUPER
+  roles:      [R-SUPER]
+# Personas referenced by bundle/seeds/demo/scenarios.json.
+# Each persona is a distinct Keycloak user with its own kc_sub.
+- kc_sub:     11111111-aaaa-bbbb-cccc-dddddddddddd
+  username:   dec.nat
+  email:      dec.nat@moh.gov.et
+  full_name:  National Decision-Maker
+  realm:      moh-staff
+  role_label: R-DEC
+  roles:      [R-DEC]
+
+- kc_sub:     22222222-aaaa-bbbb-cccc-dddddddddddd
+  username:   kebede.oromia
+  email:      kebede.oromia@moh.gov.et
+  full_name:  Kebede Asfaw (RHB Director · Oromia)
+  realm:      moh-staff
+  role_label: R-RHB-OROMIA
+  roles:      [R-RHB-OROMIA]
+  # Oromia Regional Health Bureau head: data and filters scoped to region OR.
+  scope:
+    geography: [OR]
+
+- kc_sub:     33333333-aaaa-bbbb-cccc-dddddddddddd
+  username:   analyst.ana
+  email:      analyst.ana@moh.gov.et
+  full_name:  Demo Analyst
+  realm:      moh-staff
+  role_label: R-CONS-ANA
+  roles:      [R-CONS-ANA]
+
+- kc_sub:     44444444-aaaa-bbbb-cccc-dddddddddddd
+  username:   sci.demo
+  email:      sci.demo@moh.gov.et
+  full_name:  Demo Data Scientist
+  realm:      moh-staff
+  role_label: R-CONS-SCI
+  roles:      [R-CONS-SCI]

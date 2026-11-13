@@ -1,0 +1,31 @@
+---
+# NHDW deploy: one command, inventory-driven, single node or fleet.
+#
+#   cd 1_infrastructure/ansible
+#   ansible-playbook site.yml                              # single node (default inventory)
+#   ansible-playbook -i inventory/fleet.example.yml site.yml   # fleet
+#
+# The stages follow bundle/scripts/bootstrap.sh as inventory-driven roles. The roles wrap
+# the bundle scripts (cache-images, gen-secrets, gen-tls, sources-up, seed-realistic,
+# seed-app-security, regen-opa-policy) and the Helm chart; they do not reimplement seeding
+# or the pipeline. Moving from one node to a fleet changes only the inventory and its
+# nhdw_topology, which selects values-single.yaml or values-fleet.yaml.
+
+- name: Provision each node + bring up the CNI
+  hosts: control_plane:workers
+  gather_facts: true
+  roles:
+    - role: provision       # k3s server and agents from the inventory (or legacy k3d, per nhdw_runtime)
+    - role: cni             # Cilium and Hubble, plus the node-IP drift repair
+    - role: images          # load bundle/images/*.tar into the node's container runtime
+
+- name: Deploy the app tier, seed it, and verify (once, from the control plane)
+  hosts: control_plane
+  gather_facts: false
+  run_once: true
+  roles:
+    - role: deploy          # external-file ConfigMaps, Secrets, `helm upgrade --install`, metrics-server
+    # nhdw_run_seed=false skips seeding (deploy only, for example to re-seed a healthy cluster by hand):
+    - role: seed            # sources-up, seed-realistic, seed-app-security, regen-opa (compat-gated)
+      when: nhdw_run_seed | default(true) | bool
+    - role: verify          # health gate: workloads Ready, every dashboard reachable, OPA enforcing

@@ -1,0 +1,38 @@
+# HorizontalPodAutoscaler for the gateway. When average CPU passes 60% of the
+# requested 100m, it scales nhdw-gateway from 1 up to 6 replicas, and back down
+# after the stabilization window. metrics-server (base/metrics-server.yaml)
+# provides the CPU metric. The admin topology widget and POST
+# /api/topology/scale show and drive replica counts.
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nhdw-gateway
+  namespace: nhdw
+  labels: { app: nhdw-gateway, tier: access }
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nhdw-gateway
+  minReplicas: 1
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+  behavior:
+    scaleUp:
+      # React fast to a spike: no stabilization, +100% per 15s.
+      stabilizationWindowSeconds: 0
+      policies:
+        - { type: Percent, value: 100, periodSeconds: 15 }
+        - { type: Pods, value: 2, periodSeconds: 15 }
+      selectPolicy: Max
+    scaleDown:
+      # Settle before scaling back so replica counts do not flap.
+      stabilizationWindowSeconds: 120
+      policies:
+        - { type: Pods, value: 1, periodSeconds: 30 }

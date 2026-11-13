@@ -1,0 +1,69 @@
+{{- $ns := .Values.namespace -}}
+{{- $h  := .Values.hostBase -}}
+# Ingress: consistent HTTPS hostnames under hostBase (dev: *.127.0.0.1.nip.io,
+# which resolves to 127.0.0.1 without hosts-file edits). TLS terminates at Traefik
+# with the wildcard cert in secret nhdw-wildcard-tls, created outside the chart by
+# gen-tls.sh and referenced by name. HTTPS is required so Keycloak's cross-origin
+# session cookies (SameSite=None; Secure) survive the dashboard-to-Keycloak OIDC
+# handshake. Hosts and namespace come from values, so the chart can be hosted on
+# any domain.
+{{- range $ing := list
+  (dict "name" "ing-keycloak"      "sub" "keycloak"      "svc" "keycloak"          "port" 8080)
+  (dict "name" "ing-internal-bi"   "sub" "internal-bi"   "svc" "internal-bi"       "port" 80)
+  (dict "name" "ing-dbt-docs"      "sub" "dbt-docs"      "svc" "dbt-docs"          "port" 80)
+  (dict "name" "ing-superset"      "sub" "superset"      "svc" "superset"          "port" 8088)
+  (dict "name" "ing-mlflow"        "sub" "mlflow"        "svc" "mlflow-gate"       "port" 80)
+  (dict "name" "ing-admin"         "sub" "admin"         "svc" "admin"             "port" 80)
+  (dict "name" "ing-workshop"      "sub" "workshop"      "svc" "workshop"          "port" 80)
+  (dict "name" "ing-public"        "sub" "public"        "svc" "public-dashboard"  "port" 80)
+  (dict "name" "ing-gateway"       "sub" "gateway"       "svc" "nhdw-gateway"      "port" 8000)
+  (dict "name" "ing-airflow"       "sub" "airflow"       "svc" "airflow"           "port" 8080)
+  (dict "name" "ing-s3"            "sub" "s3"            "svc" "seaweedfs-s3"      "port" 8333)
+  (dict "name" "ing-prometheus"    "sub" "prometheus"    "svc" "prometheus-gate"   "port" 80)
+  (dict "name" "ing-alertmanager"  "sub" "alertmanager"  "svc" "alertmanager-gate" "port" 80)
+  (dict "name" "ing-jupyter"       "sub" "jupyter"       "svc" "jupyterhub"        "port" 8000)
+  (dict "name" "ing-openmetadata"  "sub" "openmetadata"  "svc" "openmetadata"      "port" 8585 "if" "openmetadata")
+}}
+{{- if or (not (hasKey $ing "if")) (index $.Values $ing.if).enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: {{ $ing.name }}, namespace: {{ $ns }} }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ {{ $ing.sub }}.{{ $h }} ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: {{ $ing.sub }}.{{ $h }}
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: {{ $ing.svc }}, port: { number: {{ $ing.port }} } } } } ] }
+{{- end }}
+{{- end }}
+---
+# Headlamp (cluster console): /k8s and /oauth2gate on the admin host so the
+# dashboard's relative link works over TLS. headlamp-gate (nhdw/tool-gate) both
+# enforces per-role OIDC (R-OPS-* / R-SUPER) and injects the ServiceAccount bearer.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-headlamp, namespace: {{ $ns }} }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ admin.{{ $h }} ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: admin.{{ $h }}
+      http:
+        paths:
+          - path: /k8s
+            pathType: Prefix
+            backend: { service: { name: headlamp-gate, port: { number: 80 } } }
+          - path: /oauth2gate
+            pathType: Prefix
+            backend: { service: { name: headlamp-gate, port: { number: 80 } } }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: { name: ing-seaweedfs, namespace: nhdw }
+spec:
+  ingressClassName: traefik
+  tls: [ { hosts: [ seaweedfs.{{ .Values.hostBase }} ], secretName: nhdw-wildcard-tls } ]
+  rules:
+    - host: seaweedfs.{{ .Values.hostBase }}
+      http: { paths: [ { path: /, pathType: Prefix, backend: { service: { name: seaweedfs-gate, port: { number: 80 } } } } ] }

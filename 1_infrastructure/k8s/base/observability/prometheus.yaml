@@ -1,0 +1,247 @@
+# Prometheus: single-replica metrics server that works offline. Plain manifests
+# (no kube-prometheus-stack, no Helm): one Deployment, a TSDB PVC (local-path), an
+# inline scrape config and a small set of alert rules routed to Alertmanager and
+# the external SMTP relay.
+#
+# Wiring contracts (do not rename without updating consumers):
+#   * Service DNS  prometheus.nhdw.svc.cluster.local:9090  is the gateway's
+#     PROMETHEUS_URL (routes/observability.py, routes/alerts.py) and serves the
+#     admin topology RED queries. The Service is named `prometheus` so the gateway
+#     default `http://prometheus:9090` also resolves in-namespace.
+#   * The static job_name labels below (prometheus, loki, nhdw-gateway, mlflow,
+#     keycloak, clickhouse) must match the up{job="..."} queries in
+#     routes/observability.py::_HEALTH_COMPONENTS, which drive the admin health widget.
+#   * job=nhdw-gateway targets are labelled service=gateway so the RED PromQL and
+#     the alerts.py DEFAULT_ROUTING match_label="service=gateway" line up.
+#
+# Targets that expose no /metrics endpoint yet (keycloak mgmt :9000, clickhouse
+# :9363, mlflow, the gateway itself) are declared anyway: Prometheus reports them
+# `down` until those endpoints are enabled.
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: prometheus, namespace: nhdw, labels: { app: prometheus, tier: observability } }
+---
+# Cluster-scoped read for kubernetes_sd_configs (pod discovery). Discovery is
+# filtered to the nhdw namespace in the scrape config; the API access itself is
+# cluster-scoped as the SD client requires.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata: { name: nhdw-prometheus, labels: { app: prometheus, tier: observability } }
+rules:
+  - apiGroups: [""]
+    resources: [nodes, nodes/metrics, services, endpoints, pods]
+    verbs: [get, list, watch]
+  - nonResourceURLs: ["/metrics"]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata: { name: nhdw-prometheus, labels: { app: prometheus, tier: observability } }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: ClusterRole, name: nhdw-prometheus }
+subjects:
+  - { kind: ServiceAccount, name: prometheus, namespace: nhdw }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata: { name: prometheus-config, namespace: nhdw, labels: { app: prometheus, tier: observability } }
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 30s
+      scrape_timeout: 10s
+      evaluation_interval: 30s
+      external_labels:
+        cluster: nhdw-dev
+
+    alerting:
+      alertmanagers:
+        - static_configs:
+            - targets: ["alertmanager.nhdw.svc.cluster.local:9093"]
+
+    rule_files:
+      - /etc/prometheus/alerts.yml
+
+    scrape_configs:
+      # self + observability plane (these expose /metrics natively)
+      - job_name: prometheus
+        static_configs:
+          - targets: ["localhost:9090"]
+
+      - job_name: alertmanager
+        static_configs:
+          - targets: ["alertmanager.nhdw.svc.cluster.local:9093"]
+
+      - job_name: loki
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["loki.nhdw.svc.cluster.local:3100"]
+
+      - job_name: promtail
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["promtail.nhdw.svc.cluster.local:9080"]
+
+      # NHDW workloads. job_name == topology node id / health-widget key.
+      # nhdw-gateway: no /metrics yet (FastAPI has no instrumentator) -> shown
+      # `down` until the endpoint is added (docs/observability-integration.md).
+      - job_name: nhdw-gateway
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["nhdw-gateway.nhdw.svc.cluster.local:8000"]
+            labels: { service: gateway }
+
+      # mlflow: MLflow's server does not export Prometheus metrics by default.
+      - job_name: mlflow
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["mlflow.nhdw.svc.cluster.local:5000"]
+            labels: { service: mlflow }
+
+      # keycloak: needs KC_METRICS_ENABLED=true + the :9000 mgmt port on the
+      # Service (currently only :8080 is exposed) -> down until both land.
+      - job_name: keycloak
+        metrics_path: /metrics
+        static_configs:
+          - targets: ["keycloak.nhdw.svc.cluster.local:9000"]
+            labels: { service: keycloak }
+
+      # clickhouse: needs the <prometheus> server block + :9363 on the Service.
+      - job_name: clickhouse
+        static_configs:
+          - targets: ["clickhouse.nhdw.svc.cluster.local:9363"]
+            labels: { service: clickhouse }
+
+      # forward-ready generic discovery
+      # Any nhdw pod that opts in with prometheus.io/scrape="true" (+ optional
+      # prometheus.io/port and prometheus.io/path annotations) is scraped
+      # automatically once it exposes metrics, with no Prometheus config change.
+      # Hubble flow metrics: the topology page's traffic source.
+      # Cilium agents (kube-system, k8s-app=cilium) expose hubble metrics on
+      # :9965: hubble_flows_processed_total with source/destination workload|pod
+      # labels. This is what makes controller-less lab pods visible
+      # (coroot-node-agent only traced controller-owned pods).
+      - job_name: hubble
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [kube-system]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_label_k8s_app]
+            action: keep
+            regex: cilium
+          - source_labels: [__address__]
+            action: replace
+            regex: '([^:]+)(?::\d+)?'
+            replacement: '$1:9965'
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_node_name]
+            target_label: node
+
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: [nhdw]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: '([^:]+)(?::\d+)?;(\d+)'
+            replacement: '$1:$2'
+            target_label: __address__
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            target_label: app
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_container_name]
+            target_label: container
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+  alerts.yml: |
+    groups:
+      - name: nhdw-platform
+        rules:
+          # Always-firing heartbeat: proves Prometheus -> Alertmanager -> Google
+          # relay end to end (mirrors the kube-prometheus "Watchdog" convention).
+          - alert: Watchdog
+            expr: vector(1)
+            labels: { severity: info, service: prometheus }
+            annotations:
+              summary: "Observability pipeline heartbeat"
+              description: "Always-on watchdog: if this stops firing, alerting is broken."
+          # Liveness signal: fires for any scrape target that stays down.
+          - alert: TargetDown
+            expr: up == 0
+            for: 5m
+            labels: { severity: warning }
+            annotations:
+              summary: "Scrape target {{ $labels.job }} is down"
+              description: "Prometheus could not scrape {{ $labels.job }} ({{ $labels.instance }}) for 5m."
+          # Lights up once the gateway exposes /metrics (see integration doc).
+          - alert: GatewayHighErrorRate
+            expr: >-
+              sum(rate(http_requests_total{job="nhdw-gateway",status=~"5.."}[5m]))
+              / clamp_min(sum(rate(http_requests_total{job="nhdw-gateway"}[5m])), 1) > 0.05
+            for: 2m
+            labels: { severity: critical, service: gateway }
+            annotations:
+              summary: "Gateway 5xx error ratio > 5% for 2m"
+              description: "Requires the gateway /metrics endpoint (docs/observability-integration.md)."
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: prometheus-data, namespace: nhdw, labels: { app: prometheus, tier: observability } }
+spec:
+  accessModes: [ ReadWriteOnce ]
+  resources: { requests: { storage: 4Gi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: prometheus, namespace: nhdw, labels: { app: prometheus, tier: observability } }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }          # single RWO PVC: never two writers
+  selector: { matchLabels: { app: prometheus } }
+  template:
+    metadata: { labels: { app: prometheus, tier: observability } }
+    spec:
+      serviceAccountName: prometheus
+      securityContext: { runAsUser: 65534, runAsNonRoot: true, fsGroup: 65534 }
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v2.53.2
+          imagePullPolicy: IfNotPresent
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --storage.tsdb.retention.time=15d
+            - --web.enable-lifecycle          # POST /-/reload after a config change
+            - --web.console.libraries=/usr/share/prometheus/console_libraries
+            - --web.console.templates=/usr/share/prometheus/consoles
+          ports: [ { name: http, containerPort: 9090 } ]
+          readinessProbe: { httpGet: { path: /-/ready,   port: http }, initialDelaySeconds: 10, periodSeconds: 10 }
+          livenessProbe:  { httpGet: { path: /-/healthy, port: http }, initialDelaySeconds: 20, periodSeconds: 15 }
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+          volumeMounts:
+            - { name: config, mountPath: /etc/prometheus }
+            - { name: data,   mountPath: /prometheus }
+      volumes:
+        - { name: config, configMap: { name: prometheus-config } }
+        - { name: data,   persistentVolumeClaim: { claimName: prometheus-data } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: prometheus, namespace: nhdw, labels: { app: prometheus, tier: observability } }
+spec:
+  selector: { app: prometheus }
+  ports: [ { name: http, port: 9090, targetPort: http } ]

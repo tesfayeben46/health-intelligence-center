@@ -1,0 +1,25 @@
+# Feature query for the stockout forecaster. Monthly commodity grain from the
+# supply-chain mart (columns: month_id, commodity_name, amc, soh_eom_avg,
+# received, wastage_units, stockout_days, mos). Full history per
+# commodity so Holt-Winters can fit.
+input:
+  query: |
+    SELECT month_id,
+           commodity_name,
+           amc,
+           soh_eom_avg,
+           received,
+           wastage_units,
+           stockout_days,
+           mos
+    FROM bi_supply.mart_resource_allocation
+    ORDER BY commodity_name, month_id
+  signature:
+    - { name: month_id,       dtype: string }
+    - { name: commodity_name, dtype: string }
+    - { name: amc,            dtype: float }
+    - { name: soh_eom_avg,    dtype: float }
+    - { name: received,       dtype: float }
+    - { name: wastage_units,  dtype: float }
+    - { name: stockout_days,  dtype: int }
+    - { name: mos,            dtype: float }

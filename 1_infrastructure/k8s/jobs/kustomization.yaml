@@ -1,0 +1,34 @@
+# One-shot pipeline Jobs (dbt stages, source ingestors, MDM matcher), applied
+# per job by seed-realistic.sh through `kustomize build`. They are not part of
+# the base deploy: they run to completion rather than staying resident.
+#
+# This kustomization remaps the CI-registry image names to the locally built
+# nhdw/* images with kustomize's built-in images transform, so the manifests
+# are never rewritten by scripts.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: nhdw
+resources:
+  - ../base/dbt-jobs.yaml
+  - ../base/ingestor-jobs.yaml
+  - ../base/mdm-jobs.yaml
+
+images:
+  - { name: "nhdw-registry:5500/nhdw/staging-dbt",       newName: nhdw/staging-dbt,       newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/vault-dbt",         newName: nhdw/vault-dbt,         newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/vault-bridge",      newName: nhdw/vault-bridge,      newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/marts-dbt",         newName: nhdw/marts-dbt,         newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/dhis2-ingestor",    newName: nhdw/dhis2-ingestor,    newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/climate-ingestor",  newName: nhdw/climate-ingestor,  newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/ethioemr-ingestor", newName: nhdw/ethioemr-ingestor, newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/hcmiswdm-ingestor", newName: nhdw/hcmiswdm-ingestor, newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/mbrana-ingestor",   newName: nhdw/mbrana-ingestor,   newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/mfr-ingestor",      newName: nhdw/mfr-ingestor,      newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/openlmis-ingestor", newName: nhdw/openlmis-ingestor, newTag: 1.0.0 }
+  - { name: "nhdw-registry:5500/nhdw/mdm-matcher",       newName: nhdw/mdm-matcher,       newTag: 1.0.0 }
+
+patches:
+  # Local images are pre-imported into the cluster; never pull from a registry.
+  - target: { kind: Job }
+    patch: |
+      - { op: add, path: /spec/template/spec/containers/0/imagePullPolicy, value: IfNotPresent }

@@ -1,0 +1,8 @@
+id: dz-climate-corr
+title: Climate Lag Correlation
+kind: heatmap
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

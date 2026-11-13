@@ -1,0 +1,61 @@
+---
+# Shared config for every NHDW deploy play. Paths derive from the repo checkout so the
+# same playbook runs from any clone; override nhdw_repo_root to deploy an out-of-tree copy.
+# nhdw_topology and nhdw_cluster_name come from the inventory (single-node.yml, fleet.example.yml).
+nhdw_repo_root: "{{ (playbook_dir ~ '/../..') | realpath }}"
+nhdw_namespace: nhdw
+# Ingress host base (must match the Helm chart's hostBase for the values profile in use). The
+# verify role probes https://<sub>.{{ nhdw_host_base }}/ and the deploy role passes it to
+# `helm --set hostBase=`.
+#
+# Set it per inventory as nhdw_host_base_inventory. A plain `nhdw_host_base:` in playbook
+# group_vars outranks inventory vars in Ansible precedence and would silently override the
+# inventory value. The fallback applies only when the inventory sets nothing.
+nhdw_host_base_default: 127.0.0.1.nip.io
+nhdw_host_base: "{{ hostvars[inventory_hostname].get('nhdw_host_base_inventory', nhdw_host_base_default) }}"
+
+# Topology (single|fleet, from the inventory) selects the matching Helm values profile.
+nhdw_values_file: "{{ nhdw_repo_root }}/1_infrastructure/helm/nhdw/values-{{ nhdw_topology }}.yaml"
+
+# Shared artifacts. The roles orchestrate these and never reimplement seeding or image
+# logic: one implementation, thin orchestration.
+nhdw_scripts_dir: "{{ nhdw_repo_root }}/bundle/scripts"
+nhdw_chart_dir: "{{ nhdw_repo_root }}/1_infrastructure/helm/nhdw"
+nhdw_overlay_dir: "{{ nhdw_repo_root }}/1_infrastructure/k8s/overlays/dev"
+nhdw_helm: "{{ nhdw_repo_root }}/bundle/bin/helm"
+
+# Cluster runtime; selects the provision and cni path:
+#   k3s = k3s on the host, installed from a bare machine (default; remote and production)
+#   k3d = legacy Docker-in-Docker laptop form
+nhdw_runtime: k3s
+
+# k3s install version and node IP (the address the API and host.k3d.internal bind to). The
+# node IP defaults to the host's primary IPv4; override it per inventory on a multi-NIC or private VM.
+nhdw_k3s_version: v1.31.5+k3s1
+# nhdw_node_ip: 10.0.0.4        # optional override; otherwise ansible_default_ipv4.address
+
+# GPU (optional): installs the Canonical pre-signed nvidia module (works under Secure Boot) and
+# the container toolkit so the external Ollama can run the 14b model on the GPU. Set true per
+# GPU-host inventory.
+nhdw_gpu: false
+nhdw_gpu_driver_branch: 535-server
+
+# k3d shape for the legacy laptop path (matches bootstrap.sh: 1 server, 1 agent).
+nhdw_k3d_agents: 1
+
+# Pinned k3s node image for the k3d path. The bundled k3s system images
+# (bundle/images/system/, from fetch-system-images.sh) are the versions this k3s ships, so an
+# offline boot imports them instead of pulling pause, coredns and traefik from a registry.
+nhdw_k3s_image: rancher/k3s:v1.35.5-k3s1
+
+# ConfigMaps the Helm chart owns (inline in its templates: OPA, Trino and observability config).
+# The deploy role must not re-apply these from the overlay, or they would collide with Helm.
+# Everything else the overlay generates (the external-file ConfigMaps and all Secrets) is
+# applied by the deploy role. Keep in step with the chart README's deploy-role contract.
+nhdw_chart_owned_configmaps:
+  - opa-config
+  - trino-catalog
+  - trino-etc
+  - prometheus-config
+  - loki-config
+  - promtail-config

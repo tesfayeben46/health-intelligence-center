@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: clickhouse-data, namespace: {{ .Values.namespace }} }
+spec:
+  accessModes: [ ReadWriteOnce ]
+  storageClassName: {{ .Values.storageClass }}
+  resources: { requests: { storage: 10Gi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: clickhouse, namespace: {{ .Values.namespace }}, labels: { app: clickhouse, tier: storage } }
+spec:
+  replicas: 1
+  # Recreate: the data PVC is RWO, so the default RollingUpdate deadlocks (the new
+  # pod stays Pending on the volume while the old one waits to be replaced).
+  strategy: { type: Recreate }
+  selector: { matchLabels: { app: clickhouse } }
+  template:
+    metadata: { labels: { app: clickhouse, tier: storage } }
+    spec:
+      containers:
+        - name: clickhouse
+          image: clickhouse/clickhouse-server:24.3
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - { containerPort: 8123, name: http }
+            - { containerPort: 9000, name: tcp }
+          env:
+            - { name: CLICKHOUSE_DB,       value: "nhdw_marts" }
+            - { name: CLICKHOUSE_USER,     value: "nhdw" }
+            - { name: CLICKHOUSE_PASSWORD, valueFrom: { secretKeyRef: { name: clickhouse-secrets, key: PASSWORD } } }
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/clickhouse }
+            # nhdw_minio named collection (object-store credentials, server-side) from a
+            # Secret; raw views use s3(nhdw_minio, url=...) so SQL never carries credentials.
+            # The name is historical; the store is SeaweedFS. Values are literals because
+            # from_env in this XML crashes ClickHouse 24.3 at startup.
+            - { name: named-collections, mountPath: /etc/clickhouse-server/config.d/named_collections.xml, subPath: named_collections.xml, readOnly: true }
+            # Config-level grant so `nhdw` may use the collection (no SQL grants or scripts)
+            - { name: users-d, mountPath: /etc/clickhouse-server/users.d/nhdw-named-collections.xml, subPath: nhdw-named-collections.xml, readOnly: true }
+          readinessProbe:
+            httpGet: { path: /ping, port: 8123 }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - { name: data,               persistentVolumeClaim: { claimName: clickhouse-data } }
+        - { name: named-collections,  secret: { secretName: clickhouse-named-collections } }
+        - { name: users-d,             configMap: { name: clickhouse-users-d } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: clickhouse, namespace: {{ .Values.namespace }}, labels: { app: clickhouse } }
+spec:
+  selector: { app: clickhouse }
+  ports:
+    - { port: 8123, targetPort: http, name: http }
+    - { port: 9000, targetPort: tcp,  name: tcp }

@@ -1,0 +1,56 @@
+# gateway-loadgen: an in-cluster Job that drives sustained request load at the
+# gateway so its CPU crosses the HPA threshold (60% of the 100m request) and the
+# HPA (base/nhdw-gateway-hpa.yaml) adds replicas. Uses the already cached
+# python:3.12-alpine image (stdlib only). Run on demand; not part of the base
+# kustomization:
+#   kubectl -n nhdw create -f 1_infrastructure/k8s/jobs/gateway-loadgen.yaml
+#   watch kubectl -n nhdw get hpa,deploy/nhdw-gateway
+# TTL auto-cleans it 60s after it finishes.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gateway-loadgen
+  namespace: nhdw
+  labels: { app: gateway-loadgen, tier: demo }
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: 60
+  template:
+    metadata: { labels: { app: gateway-loadgen, tier: demo } }
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: loadgen
+          image: python:3.12-alpine
+          imagePullPolicy: IfNotPresent
+          env:
+            - { name: TARGET,   value: "http://nhdw-gateway.nhdw.svc.cluster.local:8000/health" }
+            - { name: DURATION, value: "150" }
+            - { name: WORKERS,  value: "96" }
+          command: [ "python3", "-c" ]
+          args:
+            - |
+              import os, time, threading, urllib.request
+              url = os.environ["TARGET"]
+              end = time.time() + int(os.environ["DURATION"])
+              n = int(os.environ["WORKERS"])
+              count = [0]
+              lock = threading.Lock()
+              def worker():
+                  local = 0
+                  while time.time() < end:
+                      try:
+                          urllib.request.urlopen(url, timeout=5).read()
+                          local += 1
+                      except Exception:
+                          pass
+                  with lock:
+                      count[0] += local
+              print(f"load-gen: {n} workers -> {url} for {int(os.environ['DURATION'])}s", flush=True)
+              ts = [threading.Thread(target=worker, daemon=True) for _ in range(n)]
+              [t.start() for t in ts]
+              [t.join() for t in ts]
+              print(f"load-gen done: {count[0]} requests", flush=True)
+          resources:
+            requests: { cpu: "200m", memory: "64Mi" }
+            limits:   { cpu: "2",    memory: "128Mi" }

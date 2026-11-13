@@ -1,0 +1,16 @@
+<!--
+  Grants the `nhdw` user USAGE of server-defined named collections (the
+  nhdw_minio MinIO credentials collection). CH 24.x denies named-collection
+  access by default (ACCESS_DENIED: "necessary to have the grant NAMED
+  COLLECTION ON nhdw_minio"); this is the config-level grant, defined next to
+  the user, not patched in by a script. Mounted via the
+  clickhouse-users-d configMap (subPath) into /etc/clickhouse-server/users.d/.
+  No secret material in this file.
+-->
+<clickhouse>
+    <users>
+        <nhdw>
+            <named_collection_control>1</named_collection_control>
+        </nhdw>
+    </users>
+</clickhouse>

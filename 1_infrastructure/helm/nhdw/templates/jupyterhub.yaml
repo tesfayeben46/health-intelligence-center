@@ -1,0 +1,146 @@
+# JupyterHub: the in-cluster notebook hub (workshop compute).
+# Hub and proxy run in one pod; per-user JupyterLab pods are spawned by
+# KubeSpawner under the ServiceAccount below. OIDC against the moh-staff realm
+# (confidential client `jupyterhub`, secret seeded from env by setup-keycloak.py,
+# as for dbt-docs and Airflow). The gateway spawns through the hub API with the
+# hub service token (jupyterhub-secrets/API_TOKEN, the same credential its
+# JUPYTERHUB_API_TOKEN env reads). Profiles come from the workspace-profiles
+# configMap, the same file (6_access-points/jupyterhub/profiles.yaml) the
+# gateway's /api/workspace reads, so UI, gateway and spawner cannot drift.
+apiVersion: v1
+kind: ServiceAccount
+metadata: { name: jupyterhub, namespace: {{ .Values.namespace }} }
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata: { name: jupyterhub-spawner, namespace: {{ .Values.namespace }} }
+rules:
+  # KubeSpawner's working set: user pods + their per-user PVCs + spawn events.
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list, watch, create, delete]
+  - apiGroups: [""]
+    resources: [persistentvolumeclaims]
+    verbs: [get, list, watch, create, delete]
+  - apiGroups: [""]
+    resources: [events]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata: { name: jupyterhub-spawner, namespace: {{ .Values.namespace }} }
+roleRef: { apiGroup: rbac.authorization.k8s.io, kind: Role, name: jupyterhub-spawner }
+subjects:
+  - { kind: ServiceAccount, name: jupyterhub, namespace: {{ .Values.namespace }} }
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata: { name: jupyterhub-state, namespace: {{ .Values.namespace }} }
+spec:
+  accessModes: [ReadWriteOnce]
+  resources: { requests: { storage: 1Gi } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyterhub
+  namespace: {{ .Values.namespace }}
+  labels: { app: jupyterhub, tier: access }
+spec:
+  replicas: 1
+  strategy: { type: Recreate }        # sqlite state on an RWO PVC: never two hubs
+  selector: { matchLabels: { app: jupyterhub } }
+  template:
+    # `component: hub` distinguishes this pod from KubeSpawner's singleuser
+    # pods (which also carry app=jupyterhub) so the Service selects only the hub.
+    metadata: { labels: { app: jupyterhub, tier: access, component: hub } }
+    spec:
+      serviceAccountName: jupyterhub
+      containers:
+        - name: hub
+          image: {{ include "nhdw.image" (dict "name" "jupyterhub" "ctx" .) }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - { containerPort: 8000, name: proxy-public }
+            - { containerPort: 8081, name: hub-api }
+          env:
+            # Spawned-lab image. Env values are not covered by the kustomize images:
+            # transform, so the dev overlay patches this value (as for ML_RUNNER_IMAGE)
+            # and the strategic merge puts it at the front of the env list.
+            - { name: SINGLEUSER_IMAGE, value: {{ include "nhdw.image" (dict "name" "jupyterlab" "ctx" .) | quote }} }
+            # SeaweedFS S3 allows a zero-byte final part on multipart PUTs; without this
+            # setting the boto client in spawned labs gets a 400 on empty uploads.
+            - { name: BOTO_EXPERIMENTAL__NO_EMPTY_CONTINUE, value: "true" }
+            - name: POD_NAMESPACE
+              valueFrom: { fieldRef: { fieldPath: metadata.namespace } }
+            # Hub pod IP: the connect address for the in-pod proxy and singleuser pods
+            # (the Service ClusterIP hairpins from the same pod and returns 502).
+            - name: POD_IP
+              valueFrom: { fieldRef: { fieldPath: status.podIP } }
+            # OIDC consistent-hostname contract: browser legs use the public ingress
+            # hosts, server legs go pod to pod.
+            - { name: KEYCLOAK_BASE,        value: "http://keycloak.{{ .Values.namespace }}.svc.cluster.local:8080" }
+            - { name: KEYCLOAK_PUBLIC_BASE, value: "https://keycloak.{{ .Values.hostBase }}" }
+            - { name: JUPYTER_PUBLIC_BASE,  value: "https://jupyter.{{ .Values.hostBase }}" }
+            - { name: OIDC_REALM,     value: "moh-staff" }
+            - { name: OIDC_CLIENT_ID, value: "jupyterhub" }
+            - name: OIDC_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: jupyterhub-secrets, key: OIDC_CLIENT_SECRET } }
+            # Gateway service token (POST /api/workspace/* calls the hub REST API).
+            - name: GATEWAY_API_TOKEN
+              valueFrom: { secretKeyRef: { name: jupyterhub-secrets, key: API_TOKEN } }
+            # Encrypts auth_state at rest; required by enable_auth_state=True.
+            - name: JUPYTERHUB_CRYPT_KEY
+              valueFrom: { secretKeyRef: { name: jupyterhub-secrets, key: CRYPT_KEY } }
+            - { name: WORKSPACE_PROFILES_PATH, value: "/srv/jupyterhub/profiles.yaml" }
+            # Injected into spawned labs by the pre-spawn hook:
+            - { name: MLFLOW_TRACKING_URI, value: "http://mlflow.{{ .Values.namespace }}.svc.cluster.local:5000" }
+            - { name: MINIO_ENDPOINT,   value: "http://seaweedfs-s3.{{ .Values.namespace }}.svc.cluster.local:8333" }   # SeaweedFS S3 API
+            - { name: ARTIFACTS_BUCKET, value: "nhdw-artifacts" }
+            # Least-privilege project-sync credentials (scoped to
+            # nhdw-artifacts/projects/* by seaweedfs-init). They are exposed inside
+            # user notebook pods, so they must never be root credentials.
+            - name: MINIO_SYNC_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: minio-secrets, key: PROJECT_SYNC_ACCESS_KEY, optional: true } }
+            - name: MINIO_SYNC_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: minio-secrets, key: PROJECT_SYNC_SECRET_KEY, optional: true } }
+            # Read-only warehouse access for notebooks, with static credentials
+            # (no short-TTL credential minting).
+            - { name: TRINO_HOST, value: "nhdw-trino.{{ .Values.namespace }}.svc.cluster.local" }
+            - { name: TRINO_PORT, value: "8080" }
+            - { name: PG_READ_HOST, value: "postgres-vault.{{ .Values.namespace }}.svc.cluster.local" }
+            - { name: PG_READ_DB,   value: "nhdw_vault" }
+            - { name: PG_READ_USER, value: "bi_reader" }
+            - name: PG_READ_PASSWORD
+              valueFrom: { secretKeyRef: { name: postgres-vault-secrets, key: BI_READER_PASSWORD, optional: true } }
+          volumeMounts:
+            - { name: profiles, mountPath: /srv/jupyterhub/profiles.yaml, subPath: profiles.yaml, readOnly: true }
+            - { name: state, mountPath: /srv/jupyterhub-state }
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits:   { cpu: "1",  memory: 1Gi }
+          readinessProbe:
+            httpGet: { path: /hub/health, port: 8081 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /hub/health, port: 8081 }
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      volumes:
+        - name: profiles
+          configMap: { name: workspace-profiles }
+        - name: state
+          persistentVolumeClaim: { claimName: jupyterhub-state }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: jupyterhub, namespace: {{ .Values.namespace }}, labels: { app: jupyterhub } }
+spec:
+  # Must include component: hub. KubeSpawner also labels singleuser pods
+  # app=jupyterhub, so a bare app=jupyterhub selector puts every lab pod in this
+  # Service's endpoints and proxy or hub-API traffic returns 502 on a lab pod.
+  selector: { app: jupyterhub, component: hub }
+  ports:
+    - { name: proxy-public, port: 8000, targetPort: 8000 }
+    - { name: hub-api,      port: 8081, targetPort: 8081 }

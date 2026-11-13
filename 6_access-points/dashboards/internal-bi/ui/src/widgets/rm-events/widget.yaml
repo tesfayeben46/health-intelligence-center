@@ -1,0 +1,8 @@
+id: rm-events
+title: Resource · Recent stockout events
+kind: table
+requires:
+  subject: PRD
+  verb: read
+  granularity: aggregate
+  sensitivity: default

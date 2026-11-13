@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: stg_dhis2__data_value_sets
+    description: "Typed + deduped DHIS2 dataValueSets. One row per (data_element, period, org_unit, category_option_combo, attribute_option_combo); last write wins by `last_updated`."
+    columns:
+      - name: data_element
+        description: "DHIS2 dataElement id (11-char UID)."
+        data_tests:
+          - not_null
+      - name: period
+        description: "DHIS2 period code (e.g. '202401', '2024Q1')."
+        data_tests:
+          - not_null
+      - name: org_unit
+        description: "DHIS2 organisationUnit id (11-char UID)."
+        data_tests:
+          - not_null
+      - name: category_option_combo
+        data_tests:
+          - not_null
+      - name: attribute_option_combo
+        data_tests:
+          - not_null
+      - name: value
+        description: "Reported value, typed by data_element.valueType."
+      - name: last_updated
+        description: "DHIS2 server-side last write timestamp."
+      - name: data_set
+        description: "DHIS2 dataSet id this row was extracted under."
+        data_tests:
+          - not_null
+      - name: source_record_hash
+        description: "Stable per-row fingerprint for vault change-detection."
+        data_tests:
+          - not_null
+
+    # Natural-key uniqueness: proves the dedupe window worked.
+    data_tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - data_element
+            - period
+            - org_unit
+            - category_option_combo
+            - attribute_option_combo

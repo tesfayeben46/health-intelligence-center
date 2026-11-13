@@ -1,0 +1,8 @@
+id: ct-kpis
+title: Movement KPIs
+kind: kpi
+requires:
+  subject: PRG
+  verb: read
+  granularity: aggregate
+  sensitivity: default

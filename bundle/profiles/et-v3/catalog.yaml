@@ -1,0 +1,38 @@
+# Widgets this country's shape does not support.
+#
+# Only disable is expressible. The seam the gateway applies this through can
+# only subtract visibility, and an `enable` here would be a second, weaker grant
+# path competing with the role model. A widget that suits one country and not
+# another is listed in the catalog for everyone and disabled by the profiles it
+# does not suit.
+#
+# `why` is not rendered; it records for readers of this file why a widget is
+# missing.
+disable:
+  # pages
+  page:
+    - id: internal-bi/control-tower
+      why: >-
+        The Control Tower / PCT page reads the Zambian eLMIS supply marts
+        (mart_pct_demand_month -> mart_pct_forecast, incl. the elmis
+        consumption forecast). eLMIS is Zambia's supply system; Ethiopia's
+        supply story is the Resource page on HCMIS. Under et-v3 this page would
+        render Zambian supply data, so it is off here -- symmetric to zm-v1
+        disabling the Ethiopian-only pages (overview/disease/service/resource).
+  widget:
+    - id: pub-zm-kpi
+      why: Zambia eLMIS supply KPI fetcher; Ethiopia's public story is DHIS2 coverage.
+    - id: pub-zm-province
+      why: Zambia eLMIS availability-by-province fetcher; off for Ethiopia.
+    - id: pub-zm-supply
+      why: >-
+        Zambia eLMIS supply insights. Ethiopia's public supply/coverage story is
+        pub-insights + pub-region on DHIS2; the Zambian sibling stays off here.
+    - id: sv-rr-timeliness
+      why: >-
+        Measured reporting timeliness needs a per-report arrival time at the
+        source. Ethiopia's six sources land as bulk snapshots: DHIS2's `created`
+        column holds 143 distinct values across 701,338 rows, all inside a
+        five-minute window on the seed date, so a percentage from it would
+        measure the loader, not the reporter. Shown only where the source
+        records when a report actually arrived.

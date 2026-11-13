@@ -1,0 +1,40 @@
+# NHDW staging: dbt-clickhouse project.
+#
+# Produces view-materialised stg_<source>__<object> models in
+# nhdw_staging on the shared ClickHouse engine (see 3_storage/
+# clickhouse). No rows persisted: these are queries compiled into CH views
+# over the raw_<source>__<object> ext views.
+
+name: 'nhdw_staging'
+version: '0.1.0'
+config-version: 2
+
+profile: 'nhdw_staging'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# All models default to view materialisation. Ephemeral staging = zero rows
+# on disk in nhdw_staging; queries re-execute against the lake's Parquet (SeaweedFS) on read.
+models:
+  nhdw_staging:
+    +materialized: view
+    # No +schema: dbt uses the profile's target schema (nhdw_staging) as-is.
+    # Setting +schema: "" makes dbt concat as `<target>_` (trailing underscore).
+    dhis2:
+      +tags: ["source:dhis2"]
+    ethioemr:
+      +tags: ["source:ethioemr"]
+    hcmiswdm:
+      +tags: ["source:hcmiswdm"]
+    mbrana:
+      +tags: ["source:mbrana"]

@@ -1,0 +1,134 @@
+{{- if .Values.openmetadata.enabled }}
+# OpenMetadata: catalog, glossary, column lineage and classification.
+#
+# Backend store : postgres-vault / nhdw_openmetadata (writer = openmetadata_writer,
+#                 init/37_openmetadata_db.sh)
+# Search        : opensearch:9200 (opensearch.yaml; OM is its only consumer)
+# Never in the enforcement path: OPA reads the committed ops_perm seed, and
+# classification flows one way, OM -> ops_perm, through a sync task.
+#
+# The db-migrate initContainer runs OM's own schema migrations before the
+# server starts (OM refuses to boot against an unmigrated DB). The pipeline
+# service client is disabled: connector ingestion runs as our own Airflow
+# KubernetesPodOperator DAG, not from inside OM.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openmetadata
+  namespace: {{ .Values.namespace }}
+  labels: { app: openmetadata, tier: metadata }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: openmetadata } }
+  template:
+    metadata:
+      labels: { app: openmetadata, tier: metadata }
+    spec:
+      initContainers:
+        - name: db-migrate
+          image: docker.getcollate.io/openmetadata/server:{{ .Values.openmetadata.tag }}
+          imagePullPolicy: IfNotPresent
+          command: [ "./bootstrap/openmetadata-ops.sh", "migrate" ]
+          envFrom: [ { configMapRef: { name: openmetadata-env } } ]
+          env:
+            - name: DB_USER_PASSWORD
+              valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: DB_PASSWORD } }
+      containers:
+        - name: openmetadata
+          image: docker.getcollate.io/openmetadata/server:{{ .Values.openmetadata.tag }}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { containerPort: 8585, name: http }
+            - { containerPort: 8586, name: admin }
+          envFrom: [ { configMapRef: { name: openmetadata-env } } ]
+          env:
+            - name: DB_USER_PASSWORD
+              valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: DB_PASSWORD } }
+            - name: OIDC_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: openmetadata-secrets, key: OIDC_CLIENT_SECRET, optional: true } }
+          resources:
+            requests: { memory: "2Gi", cpu: "500m" }
+            limits:   { memory: "3Gi" }
+          readinessProbe:
+            httpGet: { path: /healthcheck, port: admin }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /healthcheck, port: admin }
+            initialDelaySeconds: 120
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openmetadata-env
+  namespace: {{ .Values.namespace }}
+  labels: { app: openmetadata, tier: metadata }
+data:
+  OPENMETADATA_CLUSTER_NAME: "nhdw"
+  SERVER_PORT: "8585"
+  SERVER_ADMIN_PORT: "8586"
+  LOG_LEVEL: "INFO"
+  # backend store (init/37_openmetadata_db.sh)
+  # HikariCP pool caps: OM's default maxSize of 100 alone can exhaust
+  # postgres-vault's max_connections=100 and starve Airflow and other clients.
+  DB_CONNECTION_POOL_MAX_SIZE: "10"
+  DB_CONNECTION_POOL_MIN_SIZE: "2"
+  DB_CONNECTION_POOL_MIN_IDLE: "2"
+  DB_CONNECTION_POOL_INITIAL_SIZE: "2"
+  DB_DRIVER_CLASS: "org.postgresql.Driver"
+  DB_SCHEME: "postgresql"
+  DB_PARAMS: "allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC"
+  DB_USER: "openmetadata_writer"
+  DB_HOST: "postgres-vault.{{ .Values.namespace }}.svc.cluster.local"
+  DB_PORT: "5432"
+  OM_DATABASE: "nhdw_openmetadata"
+  # search backend
+  SEARCH_TYPE: "opensearch"
+  ELASTICSEARCH_HOST: "opensearch"
+  ELASTICSEARCH_PORT: "9200"
+  ELASTICSEARCH_SCHEME: "http"
+  # connector ingestion runs as our own Airflow DAG (KubernetesPodOperator);
+  # OM's built-in pipeline client stays off.
+  PIPELINE_SERVICE_CLIENT_ENABLED: "false"
+  # java heap
+  OPENMETADATA_HEAP_OPTS: "-Xmx2G -Xms2G"
+# Operational note: OM persists its authentication and authorizer config in its
+# DB on first boot and prefers the DB copy afterwards. Changing the OIDC env here
+# requires clearing the stored rows (openmetadata_settings) and a restart.
+  # Native Keycloak OIDC (moh-staff). The OM server exchanges the code at
+  # /callback (discovery and JWKS over internal HTTP, browser redirects on the
+  # public host) and forwards the browser to the UI with a session cookie.
+  # OIDC_SERVER_URL is the trusted-redirect base; without it OM rejects the UI's
+  # redirect (it defaults to localhost:8585). The public hosts derive from
+  # .Values.hostBase, so one --set hostBase moves all four. The kustomize base
+  # carries the same values as 127.0.0.1.nip.io literals.
+  AUTHENTICATION_PROVIDER: "custom-oidc"
+  AUTHENTICATION_CLIENT_TYPE: "confidential"
+  AUTHENTICATION_RESPONSE_TYPE: "code"
+  AUTHENTICATION_CLIENT_ID: "openmetadata"
+  AUTHENTICATION_AUTHORITY: "https://keycloak.{{ .Values.hostBase }}/realms/moh-staff"
+  AUTHENTICATION_CALLBACK_URL: "https://openmetadata.{{ .Values.hostBase }}/callback"
+  OIDC_CLIENT_ID: "openmetadata"
+  OIDC_DISCOVERY_URI: "http://keycloak.{{ .Values.namespace }}.svc.cluster.local:8080/realms/moh-staff/.well-known/openid-configuration"
+  OIDC_CALLBACK: "https://openmetadata.{{ .Values.hostBase }}/callback"
+  OIDC_SERVER_URL: "https://openmetadata.{{ .Values.hostBase }}"
+  AUTHENTICATION_PUBLIC_KEYS: "[http://keycloak.{{ .Values.namespace }}.svc.cluster.local:8080/realms/moh-staff/protocol/openid-connect/certs, http://localhost:8585/api/v1/system/config/jwks]"
+  # Admin principals (username part): the bootstrap basic admin and the platform
+  # superadmin (via SSO). Other users arrive through SSO; connector bot tokens are
+  # issued by an admin through the UI or API.
+  AUTHORIZER_ADMIN_PRINCIPALS: "[admin, superadmin]"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openmetadata
+  namespace: {{ .Values.namespace }}
+  labels: { app: openmetadata, tier: metadata }
+spec:
+  type: ClusterIP
+  selector: { app: openmetadata }
+  ports:
+    - { port: 8585, targetPort: http, name: http }
+{{- end }}

@@ -1,0 +1,55 @@
+---
+# Populate the node's container runtime with every image the deploy needs. Offline first,
+# with a fallback when the pre-built tars are absent (a from-bare rebuild: a CI checkout has
+# code only, no bundle/images). Uses the same two scripts as bootstrap.sh's image step:
+#
+#   pre-built tars present          -> cache-images.sh --load-only   (no network)
+#   no tars, or nhdw_rebuild_images -> build-images.sh (builds nhdw/* from the Dockerfiles in git)
+#                                     and cache-images.sh (pulls the public images); both import
+#                                     into the node's runtime and re-save the tars.
+
+- name: Ensure bundle/images exists (a fresh CI checkout has no tars dir)
+  ansible.builtin.file:
+    path: "{{ nhdw_repo_root }}/bundle/images"
+    state: directory
+    mode: "0755"
+
+- name: Check for pre-baked image tars
+  ansible.builtin.find:
+    paths: "{{ nhdw_repo_root }}/bundle/images"
+    patterns: "*.tar"
+  register: images_tars
+
+- name: Decide image sourcing mode (build-from-source vs load-tars)
+  ansible.builtin.set_fact:
+    images_do_build: "{{ (nhdw_rebuild_images | default(false) | bool) or (images_tars.files | length == 0) }}"
+
+- name: Build the nhdw/* images from source + import (from-bare / forced rebuild)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/build-images.sh --import --runtime={{ nhdw_runtime }}"
+  args:
+    chdir: "{{ nhdw_repo_root }}"
+  register: images_build
+  changed_when: true
+  when:
+    - nhdw_load_images | default(true) | bool
+    - images_do_build | bool
+
+- name: Pull + import the public images + re-save tars (from-bare / forced rebuild)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/cache-images.sh --runtime={{ nhdw_runtime }}"
+  args:
+    chdir: "{{ nhdw_repo_root }}"
+  register: images_cache_full
+  changed_when: true
+  when:
+    - nhdw_load_images | default(true) | bool
+    - images_do_build | bool
+
+- name: Load + import the pre-baked image tars (offline-first)
+  ansible.builtin.command: "bash {{ nhdw_scripts_dir }}/cache-images.sh --load-only --runtime={{ nhdw_runtime }}"
+  args:
+    chdir: "{{ nhdw_repo_root }}"
+  register: images_load
+  changed_when: true
+  when:
+    - nhdw_load_images | default(true) | bool
+    - not (images_do_build | bool)

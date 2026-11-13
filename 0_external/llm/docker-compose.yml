@@ -1,0 +1,53 @@
+# External LLM (Ollama): the dashboard assistant's model runtime, external to the
+# k8s cluster like every other 0_external/ system. In production the model server
+# is a backing resource run outside the warehouse, so it is a docker-compose stack
+# rather than a k8s manifest.
+#
+# Why external: on WSL2 a GPU cannot be used from inside a nested k3d node and pod
+# (ollama's cuInit fails with error 304 CUDA_ERROR_OPERATING_SYSTEM). A stock
+# ollama container on the host docker daemon, with the GPU passed through, can.
+# See README.md and baremetal/ for the bare-metal Linux in-cluster alternative.
+#
+# Published on 0.0.0.0:11434 so the gateway pod reaches it at
+# http://host.k3d.internal:11434, the same host route the source replicas and
+# fayda use. Brought up by bundle/scripts/sources-up.sh (up_llm).
+#
+# CPU by default: this base file runs unchanged on a CPU-only host. GPU is an
+# additive overlay: sources-up.sh layers `-f docker-compose.gpu.yml` on top only
+# when the host reports an NVIDIA GPU (nvidia-smi).
+#
+# Weights: ./models is the ollama home (mounted at /root/.ollama). In a bundle it
+# ships with qwen2.5:3b (CPU default) and qwen2.5:14b (GPU) already pulled, so no
+# pull is needed at bring-up; on a fresh clone the directory is absent and
+# sources-up.sh pulls the missing model. The image is stock ollama/ollama:0.6.8;
+# the baked image in image/ is only for the bare-metal recipe.
+services:
+  ollama:
+    image: ollama/ollama:0.6.8
+    container_name: nhdw-ollama
+    restart: unless-stopped
+    environment:
+      OLLAMA_MODELS: /root/.ollama/models
+      # Keep the loaded model resident between turns (matches the gateway's
+      # per-request keep_alive default in routes/chat.py) so an answer does not
+      # pay a cold model reload.
+      OLLAMA_KEEP_ALIVE: "24h"   # keep the model resident across idle gaps
+    ports:
+      - "11434:11434"        # 0.0.0.0: reachable from k3d pods through host.k3d.internal
+    volumes:
+      - ./models:/root/.ollama
+    healthcheck:
+      # `ollama list` succeeds only once the daemon is serving on :11434, the same
+      # readiness the gateway depends on (/api/tags). The ollama CLI ships in the image.
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 20s
+    networks: [llm_net]
+
+# Private bridge only: this is the outside world, with no nhdw_net attachment
+# (pods reach it through host.k3d.internal, never a shared docker network).
+networks:
+  llm_net:
+    driver: bridge

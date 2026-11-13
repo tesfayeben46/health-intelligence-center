@@ -1,0 +1,8 @@
+id: rm-hero
+title: Stockout Watch
+kind: kpi
+requires:
+  subject: PRD
+  verb: read
+  granularity: aggregate
+  sensitivity: default

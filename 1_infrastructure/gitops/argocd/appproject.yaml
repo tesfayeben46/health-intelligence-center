@@ -1,0 +1,25 @@
+# Argo CD AppProject scoping the NHDW day-2 install. Limits what the nhdw Application
+# may deploy: the app-tier Helm chart into the nhdw namespace, plus the cluster-scoped
+# RBAC kinds the chart needs (ClusterRole/Binding for gateway node metrics, Headlamp,
+# Prometheus and Promtail) and the Namespace object.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: nhdw
+  namespace: argocd
+spec:
+  description: NHDW application tier (Helm chart), day-2 continuous reconciliation.
+  # Set this to your repo (same value as the Application's repoURL).
+  sourceRepos:
+    - https://github.com/YOUR-ORG/nhdw.git
+  destinations:
+    - namespace: nhdw
+      server: https://kubernetes.default.svc
+  # The chart's namespaced objects: allow all kinds within the nhdw namespace.
+  namespaceResourceWhitelist:
+    - { group: "*", kind: "*" }
+  # The only cluster-scoped kinds that may be created.
+  clusterResourceWhitelist:
+    - { group: "", kind: Namespace }
+    - { group: rbac.authorization.k8s.io, kind: ClusterRole }
+    - { group: rbac.authorization.k8s.io, kind: ClusterRoleBinding }

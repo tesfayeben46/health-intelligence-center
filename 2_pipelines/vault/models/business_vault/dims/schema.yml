@@ -1,0 +1,59 @@
+# Hand-maintained (dim_* is outside gen-vault-tests.py scope, like current/).
+# Thin dimension views over the conformed hubs: the mart-facing surface of
+# the BV spine. Exactly one row per conformed hub key is the contract.
+
+models:
+  - name: dim_facility
+    description: 'One row per conformed facility: id, canonical name, source coverage.'
+    columns:
+      - name: hk_facility_conformed
+        description: 'Conformed hub key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+      - name: facility_id
+        description: 'Conformed BK (shared FAC-… id; normalised name for name-matched rows).'
+        tests:
+          - not_null
+      - name: master_entity_uid
+        description: 'Stable master identity: UUIDv5 over the conformed BK in the per-context namespace.'
+        tests:
+          - not_null
+          - unique
+      - name: mdm_state
+        description: 'conformed (>1 source system) | single_source; provenance marker for downstream surfaces.'
+        tests:
+          - not_null
+          - accepted_values: { values: ['conformed', 'single_source'] }
+  - name: dim_period
+    description: 'One row per (period_id, period_grain) with calendar bounds from sat_dhis2_period_resolved.'
+    columns:
+      - name: hk_period_conformed
+        description: 'Conformed hub key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+      - name: period_id
+        description: 'YYYY-MM (monthly) / YYYY-MM-DD (daily).'
+        tests:
+          - not_null
+      - name: start_date
+        description: 'Inclusive period start.'
+        tests:
+          - not_null
+      - name: end_date
+        description: 'Inclusive period end.'
+        tests:
+          - not_null
+  - name: dim_programme
+    description: 'One row per programme with its live mapped-indicator count.'
+    columns:
+      - name: hk_programme_conformed
+        description: 'Conformed hub key: PK of the view; exactly one row each.'
+        tests:
+          - not_null
+          - unique
+      - name: programme_id
+        description: 'Programme BK (HIV | TB | EPI | MNCH | NCD | MALARIA | FP | NUTRITION | OTHER).'
+        tests:
+          - not_null

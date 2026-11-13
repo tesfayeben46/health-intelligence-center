@@ -1,0 +1,29 @@
+# R-CONS-RES: External Researcher (bounded by a data-sharing agreement)
+#
+# Deny-all on internal marts by design. External researchers are meant to
+# get k-anonymised public-tier marts (a separate set under marts_public.*,
+# not built in this reference deployment). Their workshop access is
+# governed by workshop_group_membership, not OPA.
+role:
+  id: R-CONS-RES
+  name: "External Researcher"
+  group: Consumer
+  identity_provider: MoH-Keycloak
+  mfa_required: true
+  mfa_factor: TOTP
+  phase_activated: 1
+  audit_class: enhanced
+  notes: |
+    DC.CAT exception: same catalogue-metadata rationale as R-CONS-SCI.
+    DSA-bounded external research access. Internal mart access denied;
+    a future R-CONS-RES-PUBLIC role will grant read on marts_public.*
+    after k-anon review.
+  intentional_deny: true
+  permissions:
+    - subject: PRG
+      data_class: [DC.CAT]
+      members: all
+      granularity: aggregate
+      sensitivity: []
+      verbs: [read]
+      purpose_of_use: [public-health]

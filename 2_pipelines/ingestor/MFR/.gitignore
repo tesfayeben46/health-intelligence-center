@@ -1,0 +1,4 @@
+.env
+state/dlt/
+state/*.json
+!state/.gitkeep

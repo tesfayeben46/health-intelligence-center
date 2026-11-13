@@ -1,0 +1,37 @@
+# Suggested prompts shown to the user when the chat panel opens.
+# Per-role lists: the chat endpoint picks the list for the user's primary_role
+# at /api/chat/intro time.
+#
+# Keep each suggestion short (≤ 60 chars) so chips fit on one line.
+
+default:
+  - "What's on this page?"
+  - "Take me to the HIV cascade"
+  - "Which woredas had the highest disease alarm last week?"
+
+R-DEC:
+  - "Top-stress regions right now?"
+  - "Stockouts in the next 14 days?"
+  - "Show MNCH continuum"
+  - "Which programmes missed HSTP-II targets?"
+
+R-RHB-OROMIA:
+  - "Resource stress in Oromia this week"
+  - "Oromia stockouts in the next 14 days"
+  - "Take me to disease surveillance for Oromia"
+
+R-PD-HIV:
+  - "Latest HIV cascade snapshot"
+  - "Which regions are below 95-95-95?"
+  - "TB co-infection rate by region"
+
+R-CONS-ANA:
+  - "Compare HIV vs TB cascade attainment"
+  - "Pull weekly cases for cholera, last 12wk"
+  - "Run a query: facility coverage by woreda"
+  - "Draft a SQL for stockout forecast next 30 days"
+
+R-STEW:
+  - "What datasets feed the disease page?"
+  - "Show last data-quality run for HMIS"
+  - "Lineage for the HIV cascade mart"

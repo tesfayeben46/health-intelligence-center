@@ -1,0 +1,110 @@
+[
+  {
+    "id": "HP",
+    "name": "Health Post",
+    "count": 320,
+    "weight_per_woreda": 6.0,
+    "ownership_mix": {
+      "public": 0.95,
+      "private": 0.0,
+      "ngo": 0.04,
+      "military": 0.01
+    }
+  },
+  {
+    "id": "HC",
+    "name": "Health Centre",
+    "count": 240,
+    "weight_per_woreda": 4.0,
+    "ownership_mix": {
+      "public": 0.88,
+      "private": 0.05,
+      "ngo": 0.06,
+      "military": 0.01
+    }
+  },
+  {
+    "id": "PHC",
+    "name": "Primary Clinic",
+    "count": 120,
+    "weight_per_woreda": 2.0,
+    "ownership_mix": {
+      "public": 0.25,
+      "private": 0.65,
+      "ngo": 0.08,
+      "military": 0.02
+    }
+  },
+  {
+    "id": "MC",
+    "name": "Medium Clinic",
+    "count": 80,
+    "weight_per_woreda": 1.5,
+    "ownership_mix": {
+      "public": 0.15,
+      "private": 0.78,
+      "ngo": 0.06,
+      "military": 0.01
+    }
+  },
+  {
+    "id": "PH",
+    "name": "Primary Hospital",
+    "count": 60,
+    "weight_per_woreda": 1.0,
+    "ownership_mix": {
+      "public": 0.85,
+      "private": 0.1,
+      "ngo": 0.04,
+      "military": 0.01
+    }
+  },
+  {
+    "id": "GH",
+    "name": "General Hospital",
+    "count": 35,
+    "weight_per_woreda": 0.6,
+    "ownership_mix": {
+      "public": 0.78,
+      "private": 0.14,
+      "ngo": 0.06,
+      "military": 0.02
+    }
+  },
+  {
+    "id": "SH",
+    "name": "Specialised Hospital",
+    "count": 10,
+    "weight_per_woreda": 0.2,
+    "ownership_mix": {
+      "public": 0.7,
+      "private": 0.2,
+      "ngo": 0.08,
+      "military": 0.02
+    }
+  },
+  {
+    "id": "PH-",
+    "name": "Pharmacy",
+    "count": 20,
+    "weight_per_woreda": 0.5,
+    "ownership_mix": {
+      "public": 0.1,
+      "private": 0.85,
+      "ngo": 0.04,
+      "military": 0.01
+    }
+  },
+  {
+    "id": "DS",
+    "name": "Drug Store",
+    "count": 15,
+    "weight_per_woreda": 0.5,
+    "ownership_mix": {
+      "public": 0.05,
+      "private": 0.92,
+      "ngo": 0.02,
+      "military": 0.01
+    }
+  }
+]
